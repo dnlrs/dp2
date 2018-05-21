@@ -1,97 +1,102 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema 
-	xmlns="http://www.w3.org/2001/XMLSchema" 
-	targetNamespace="http://www.example.org/nfvInfo" 
-	xmlns:ns="http://www.example.org/nfvInfo" 
+<schema
+	xmlns="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://www.example.org/nfvInfo"
+	xmlns:ns="http://www.example.org/nfvInfo"
 	elementFormDefault="qualified">
-	
-	
+
+<!-- ====================================================================== -->
+<!-- Assignment 1                                                           -->
+<!--                                                                        -->
+<!-- @author    Daniel C. Rusu                                              -->
+<!-- @studentID 234428                                                      -->
+<!-- ======================================= XML Schema =================== -->
+
  <!-- global element and root of XML document -->
  <element name="NFVSystem" type="ns:NFVSystemType">
-  
-  
+
+
   <!-- ======================== HOST ======================== -->
-  
-  <!-- each Host's name is unique in the system, non nullable and always present -->
+
+  <!-- (H1) each Host's name is unique in the system, non nullable and always present -->
   <key name="keyHostName">
    <selector xpath="ns:IN/ns:hosts/ns:host" />
    <field    xpath="ns:name" />
   </key>
-  
-  <!-- each Connection's sourceHost and destinationHost must exist -->
+
+  <!-- (C1) each Connection's sourceHost and destinationHost must exist -->
   <keyref name="keyrefConnectionSourceHost" refer="ns:keyHostName">
    <selector xpath="ns:IN/ns:connections/ns:connection/ns:connectionID" />
    <field    xpath="ns:sourceHost" />
   </keyref>
-  
+
   <keyref name="keyrefConnectionDestinationHost" refer="ns:keyHostName">
    <selector xpath="ns:IN/ns:connections/ns:connection/ns:connectionID" />
    <field    xpath="ns:destionationHost" />
-  </keyref>  
+  </keyref>
 
-  <!-- each Connection must be present only once -->
+  <!-- (C2) each Connection must be present only once -->
   <unique name="uniqueConnectionID">
    <selector xpath="ns:IN/ns:connections/ns:connection/ns:connectionID" />
    <field    xpath="ns:sourceHost" />
    <field    xpath="ns:destionationHost" />
   </unique>
-   
-  <!-- each Node's hostingHost must exist -->
+
+  <!-- (D3) each Node's hostingHost must exist -->
   <keyref name="keyrefNodeHostingHost" refer="ns:keyHostName">
    <selector xpath="ns:deployedNFFGs/ns:nffg/ns:nodes/ns:node" />
    <field    xpath="ns:hostingHost" />
   </keyref>
-  
-   <!-- inside an allocatedNodes node each node must be repeated only once
+
+   <!-- (H2) inside an allocatedNodes node each node must be repeated only once
         and the same node cannot appear in 2 different hosts                -->
    <unique name="uniqueAllocatedNodes">
-    <selector xpath="ns:IN/ns:hosts/ns:host/ns:allocatedNodes" />
-    <field xpath="ns:node" />
+    <selector xpath="ns:IN/ns:hosts/ns:host/ns:allocatedNodes/ns:node" />
+    <field xpath="." />
    </unique>
-   
-   
+
   <!-- ======================== NODE ======================== -->
-  
-  <!-- each Node's name is unique in the system, non nullable and always present -->
+
+  <!-- (D1) each Node's name is unique in the system, non nullable and always present -->
   <key name="keyNodeName">
    <selector xpath="ns:deployedNFFGs/ns:nffg/ns:nodes/ns:node" />
    <field    xpath="ns:name" />
   </key>
-  
+
   <!-- each Host's allocatedNode must exist -->
   <keyref name="keyrefAllocatedNodesNode" refer="ns:keyNodeName">
-   <selector xpath="ns:IN/ns:hosts/ns:host/ns:allocatedNodes" />
-   <field    xpath="ns:node" />
-  </keyref>  
- 
-  
+   <selector xpath="ns:IN/ns:hosts/ns:host/ns:allocatedNodes/ns:node" />
+   <field    xpath="." />
+  </keyref>
+
+
   <!-- ======================== CATALOGUE ======================== -->
 
-  <!-- each VNF's name is unique in the system, non nullable and always present -->
+  <!-- (V1) each VNF's name is unique in the system, non nullable and always present -->
   <key name="keyVNF">
    <selector xpath="ns:catalogue/ns:vnf" />
    <field    xpath="ns:name" />
-  </key> 
-  
-  <!-- each Node's functionalType must exist in the Catalogue -->
+  </key>
+
+  <!-- (D4) each Node's functionalType must exist in the Catalogue -->
   <keyref name="keyref" refer="ns:keyVNF">
    <selector xpath="ns:deployedNFFGs/ns:nffg/ns:nodes/ns:node" />
    <field    xpath="ns:functionalType" />
-  </keyref> 
-  
-  
+  </keyref>
+
+
   <!-- ======================== NFFG ======================== -->
 
-  <!-- each NFFG's name is unique in the system -->  
+  <!-- (N1) each NFFG's name is unique in the system -->
   <unique name="uniqueNFFGName">
    <selector xpath="ns:deployedNFFGs/ns:nffg" />
    <field    xpath="ns:name" />
   </unique>
 
  </element>
- 
- 
- 
+
+
+
  <complexType name="NFVSystemType">
   <sequence>
    <element name="IN" type="ns:InfrastructureNetwork" />
@@ -101,23 +106,23 @@
      <sequence>
       <element name="nffg" type="ns:NFFG" minOccurs="0" maxOccurs="unbounded">
 
-       <!-- within a NFFG each Node's associatedNFFG must correspond to the NFFG -->
+       <!-- (D2) within a NFFG each Node's associatedNFFG must correspond to the NFFG -->
 	   <key name="keyNFFGNFFGName">
 	    <selector xpath="." />
 	    <field    xpath="ns:name" />
-	   </key> 
+	   </key>
        <keyref name="keyrefNFFGNodeName" refer="ns:keyNFFGNFFGName">
 	    <selector xpath="ns:nodes/ns:node" />
 	    <field    xpath="ns:associatedNFFG" />
-	   </keyref> 
-	  
-	   <!-- within a NFFG each Link's name is unique -->
+	   </keyref>
+
+	   <!-- (L1) within a NFFG each Link's name is unique -->
        <unique name="uniqueLinkName">
         <selector xpath="ns:nodes/ns:node/ns:links/ns:link" />
         <field    xpath="ns:name" />
        </unique>
-       
-       <!-- within a NFFG each Link's destinationNode must exist -->
+
+       <!-- (L3) within a NFFG each Link's destinationNode must exist -->
        <key name="keyNFFGNodeName">
         <selector xpath="ns:nodes/ns:node" />
         <field    xpath="ns:name" />
@@ -126,16 +131,16 @@
         <selector xpath="ns:nodes/ns:node/ns:links/ns:link" />
         <field    xpath="ns:destinationNode" />
        </keyref>
-      
+
       </element>
      </sequence>
     </complexType>
-   </element>   
+   </element>
   </sequence>
  </complexType>
- 
- 
- 
+
+
+
  <complexType name="InfrastructureNetwork">
   <sequence>
    <element name="hosts">
@@ -154,18 +159,18 @@
    </element>
   </sequence>
  </complexType>
- 
- 
- 
+
+
+
  <!-- Catalogue type declaration -->
  <complexType name="Catalogue">
   <sequence>
    <element name="vnf" type="ns:VNF" maxOccurs="unbounded" />
   </sequence>
  </complexType>
- 
- 
- 
+
+
+
  <!-- VNF type declaration -->
  <complexType name="VNF">
   <sequence>
@@ -175,9 +180,9 @@
    <element name="requiredStorage" type="ns:sizeInMB" />
   </sequence>
  </complexType>
- 
- 
- 
+
+
+
  <!-- NFFG type declaration -->
  <complexType name="NFFG">
   <sequence>
@@ -187,8 +192,8 @@
     <complexType>
      <sequence>
       <element name="node" type="ns:Node" maxOccurs="unbounded">
-      
-      <!-- within a Node each Link's sourceNode must correspond to the node -->
+
+      <!-- (L2) within a Node each Link's sourceNode must correspond to the node -->
       <key name="keyNodeNodeName">
        <selector xpath="." />
        <field    xpath="ns:name" />
@@ -197,23 +202,23 @@
         <selector xpath="ns:links/ns:link" />
        <field    xpath="ns:sourceNode" />
       </keyref>
-      
-      <!-- within a Node the same link must not be repeated (even if with different Link names) -->
+
+      <!-- (L4) within a Node the same link must not be repeated (even if with different Link names) -->
       <unique name="uniqueNodeLinkSourceNodeDestinationNode">
        <selector xpath="ns:links/ns:link" />
        <field    xpath="ns:sourceNode" />
        <field    xpath="ns:destinationNode" />
       </unique>
-      
+
       </element>
      </sequence>
     </complexType>
    </element>
   </sequence>
  </complexType>
- 
- 
- 
+
+
+
  <!-- Node type declaration -->
  <complexType name="Node">
   <sequence>
@@ -230,9 +235,9 @@
    </element>
   </sequence>
  </complexType>
- 
- 
- 
+
+
+
  <!-- Link type declaration -->
  <complexType name="Link">
   <sequence>
@@ -243,9 +248,9 @@
    <element name="maxLatency" type="ns:Latency" minOccurs="0" />
   </sequence>
  </complexType>
- 
- 
- 
+
+
+
  <!-- Host type declaration -->
  <complexType name="Host">
   <sequence>
@@ -254,7 +259,7 @@
    <!-- Host maximum number of deployable VNFs -->
    <element name="maxVNFs" type="int" />
    <!-- Host available memory -->
-   <element name="installedMemory" type="ns:sizeInMB" /> 
+   <element name="installedMemory" type="ns:sizeInMB" />
    <!-- Host available storage -->
    <element name="installedStorage" type="ns:sizeInMB" />
    <!-- Reference to the allocated nodes on the current Host -->
@@ -263,13 +268,13 @@
      <sequence>
       <element name="node" type="string" maxOccurs="unbounded" />
      </sequence>
-    </complexType>  
-   </element>   
+    </complexType>
+   </element>
   </sequence>
  </complexType>
- 
- 
- 
+
+
+
  <complexType name="sizeInMB">
   <simpleContent>
    <extension base="int">
@@ -277,7 +282,7 @@
    </extension>
   </simpleContent>
  </complexType>
- 
+
 
 
  <!-- Connection type declaration -->
@@ -299,9 +304,9 @@
    <element name="latency" type="ns:Latency" />
   </sequence>
  </complexType>
- 
- 
- 
+
+
+
  <!-- Throughput type declaration -->
  <complexType name="Throughput">
   <simpleContent>
@@ -310,18 +315,18 @@
    </extension>
   </simpleContent>
  </complexType>
- 
- 
- 
+
+
+
  <!-- simple float type with precision no worse than 0.1 -->
  <simpleType name="floatWithPrecision">
   <restriction base="float">
    <pattern value="(0|([1-9][0-9]*))[\.,][0-9]+" />
   </restriction>
  </simpleType>
-    
-    
-    
+
+
+
  <!-- Latency type declaration -->
  <complexType name="Latency">
   <simpleContent>
@@ -331,8 +336,8 @@
   </simpleContent>
  </complexType>
 
- 
- 
+
+
  <simpleType name="FunctionalTypeEnum">
   <restriction base="string">
    <enumeration value="CACHE" />
