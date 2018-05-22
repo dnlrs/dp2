@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ====================================================================== -->
+<!-- Assignment 1                                                           -->
+<!--                                                                        -->
+<!-- @author    Daniel C. Rusu                                              -->
+<!-- @studentID 234428                                                      -->
+<!-- ====================================== Schema-validated XML ========== -->
+
+<NFVSystem 
+        xmlns="http://www.example.org/nfvInfo"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.example.org/nfvInfo nfvInfo.xsd"
+        >
+
+ <IN>
+  <hosts>
+   <host>
+    <name>host1</name>
+    <maxVNFs>5</maxVNFs>
+    <installedMemory unit="MB">4096</installedMemory>
+    <installedStorage unit="MB">1024000</installedStorage>
+    <allocatedNodes>
+     <node>node1</node>
+     <node>node2</node>
+     <node>node3</node>
+    </allocatedNodes>
+   </host>
+   <host>
+    <name>host2</name>
+    <maxVNFs>10</maxVNFs>
+    <installedMemory unit="MB">4096</installedMemory>
+    <installedStorage unit="MB">1024000</installedStorage>
+    <allocatedNodes>
+     <node>node4</node>
+     <node>node5</node>
+    </allocatedNodes>
+   </host>
+  </hosts>
+  
+  <connections>
+   <connection>
+    <connectionID>
+     <sourceHost>host1</sourceHost>
+     <destionationHost>host2</destionationHost>
+    </connectionID>
+    <averageThroughput unit="Mbps">40.0</averageThroughput>
+    <latency unit="ms">50</latency>
+   </connection>
+   <connection>
+    <connectionID>
+     <sourceHost>host2</sourceHost>
+     <destionationHost>host1</destionationHost>
+    </connectionID>
+    <averageThroughput unit="Mbps">40.0</averageThroughput>
+    <latency unit="ms">50</latency>
+   </connection>
+  </connections>
+ </IN>
+ 
+ <catalogue>
+  <vnf>
+   <name>web client</name>
+   <functionalType>WEB_CLIENT</functionalType>
+   <requiredMemory unit="MB">256</requiredMemory>
+   <requiredStorage unit="MB">25</requiredStorage>
+  </vnf>
+  <vnf>
+  <name>web server</name>
+   <functionalType>WEB_SERVER</functionalType>
+   <requiredMemory unit="MB">512</requiredMemory>
+   <requiredStorage unit="MB">160</requiredStorage>
+  </vnf>
+ </catalogue>
+
+ <deployedNFFGs>
+  <nffg>
+   <name>nffg1</name>
+   <deployTime>2017-11-11T10:00:00+01:00</deployTime>
+   <nodes>
+    <node>
+     <name>node1</name>
+     <functionalType>web client</functionalType>
+     <hostingHost>host1</hostingHost>
+     <associatedNFFG>nffg1</associatedNFFG>
+     <links>
+      <link>
+       <name>link1</name>
+       <sourceNode>node1</sourceNode>
+       <destinationNode>node2</destinationNode>
+       <minThroughput unit="Mbps">20.0</minThroughput>
+       <maxLatency unit="ms">100</maxLatency>
+      </link>
+     </links>
+    </node>
+    <node>
+     <name>node2</name>
+     <functionalType>web client</functionalType>
+     <hostingHost>host1</hostingHost>
+     <associatedNFFG>nffg1</associatedNFFG>
+     <links>
+      <link>
+       <name>link2</name>
+       <sourceNode>node2</sourceNode>
+       <destinationNode>node1</destinationNode>
+       <minThroughput unit="Mbps">20.0</minThroughput>
+       <maxLatency unit="ms">100</maxLatency>
+      </link>
+     </links>
+    </node>
+    <node>
+     <name>node3</name>
+     <functionalType>web client</functionalType>
+     <hostingHost>host1</hostingHost>
+     <associatedNFFG>nffg1</associatedNFFG>
+     <links>
+      <link>
+       <name>link3</name>
+       <sourceNode>node3</sourceNode>
+       <destinationNode>node2</destinationNode>
+       <minThroughput unit="Mbps">20.0</minThroughput>
+       <maxLatency unit="ms">100</maxLatency>
+      </link>
+     </links>
+    </node>
+   </nodes>
+  </nffg>
+  <nffg>
+   <name>nffg2</name>
+   <deployTime>2017-11-11T10:00:00+01:00</deployTime>
+   <nodes>
+    <node>
+     <name>node4</name>
+     <functionalType>web client</functionalType>
+     <hostingHost>host2</hostingHost>
+     <associatedNFFG>nffg2</associatedNFFG>
+     <links>
+      <link>
+       <name>link1</name>
+       <sourceNode>node4</sourceNode>
+       <destinationNode>node5</destinationNode>
+       <minThroughput unit="Mbps">20.0</minThroughput>
+       <maxLatency unit="ms">100</maxLatency>
+      </link>
+     </links>
+    </node>
+    <node>
+     <name>node5</name>
+     <functionalType>web server</functionalType>
+     <hostingHost>host2</hostingHost>
+     <associatedNFFG>nffg2</associatedNFFG>
+     <links>
+      <link>
+       <name>link2</name>
+       <sourceNode>node5</sourceNode>
+       <destinationNode>node4</destinationNode>
+       <minThroughput unit="Mbps">20.0</minThroughput>
+       <maxLatency unit="ms">100</maxLatency>
+      </link>
+     </links>
+    </node>
+   </nodes>
+  </nffg>
+ </deployedNFFGs>
+</NFVSystem>
