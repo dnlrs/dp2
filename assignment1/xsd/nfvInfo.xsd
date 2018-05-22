@@ -42,18 +42,24 @@
    <field    xpath="ns:destionationHost" />
   </unique>
 
-  <!-- (D3) each Node's hostingHost must exist -->
-  <keyref name="keyrefNodeHostingHost" refer="ns:keyHostName">
-   <selector xpath="ns:deployedNFFGs/ns:nffg/ns:nodes/ns:node" />
-   <field    xpath="ns:hostingHost" />
-  </keyref>
-
    <!-- (H2) inside an allocatedNodes node each node must be repeated only once
         and the same node cannot appear in 2 different hosts                -->
    <unique name="uniqueAllocatedNodes">
     <selector xpath="ns:IN/ns:hosts/ns:host/ns:allocatedNodes/ns:node" />
-    <field xpath="." />
+    <field xpath="@name" />
    </unique>
+   
+  <!-- (H3.a) each Host's allocatedNode name must exist -->
+  <keyref name="keyrefAllocatedNodesNode" refer="ns:keyNodeName">
+   <selector xpath="ns:IN/ns:hosts/ns:host/ns:allocatedNodes/ns:node" />
+   <field    xpath="@name" />
+  </keyref>
+  
+  <!-- (H3.b) each Host's allocatedNode associatedNFFG must exist -->
+  <keyref name="keyrefAllocatedNodesNodeANFFG" refer="ns:keyNFFGName">
+  <selector xpath="ns:IN/ns:hosts/ns:host/ns:allocatedNodes/ns:node" />
+   <field    xpath="@associatedNFFG" />
+  </keyref>
 
   <!-- ======================== NODE ======================== -->
 
@@ -62,11 +68,11 @@
    <selector xpath="ns:deployedNFFGs/ns:nffg/ns:nodes/ns:node" />
    <field    xpath="ns:name" />
   </key>
-
-  <!-- each Host's allocatedNode must exist -->
-  <keyref name="keyrefAllocatedNodesNode" refer="ns:keyNodeName">
-   <selector xpath="ns:IN/ns:hosts/ns:host/ns:allocatedNodes/ns:node" />
-   <field    xpath="." />
+  
+  <!-- (D3) each Node's hostingHost must exist -->
+  <keyref name="keyrefNodeHostingHost" refer="ns:keyHostName">
+   <selector xpath="ns:deployedNFFGs/ns:nffg/ns:nodes/ns:node" />
+   <field    xpath="ns:hostingHost" />
   </keyref>
 
 
@@ -88,10 +94,15 @@
   <!-- ======================== NFFG ======================== -->
 
   <!-- (N1) each NFFG's name is unique in the system -->
-  <unique name="uniqueNFFGName">
+<!--   <unique name="uniqueNFFGName"> -->
+<!--    <selector xpath="ns:deployedNFFGs/ns:nffg" /> -->
+<!--    <field    xpath="ns:name" /> -->
+<!--   </unique> -->
+  
+  <key name="keyNFFGName">
    <selector xpath="ns:deployedNFFGs/ns:nffg" />
    <field    xpath="ns:name" />
-  </unique>
+  </key>
 
  </element>
 
@@ -266,18 +277,21 @@
    <element name="allocatedNodes">
     <complexType>
      <sequence>
-      <element name="node" type="string" maxOccurs="unbounded" />
+      <element name="node" type="ns:NodeRef" maxOccurs="unbounded" />
      </sequence>
     </complexType>
    </element>
   </sequence>
  </complexType>
 
-
+ <complexType name="NodeRef"> 
+    <attribute name="name" type="string" use="required"/>
+    <attribute name="associatedNFFG" type="string" use="required"/>
+ </complexType>
 
  <complexType name="sizeInMB">
   <simpleContent>
-   <extension base="int">
+   <extension base="integer">
     <attribute name="unit" type="string" fixed="MB" />
    </extension>
   </simpleContent>

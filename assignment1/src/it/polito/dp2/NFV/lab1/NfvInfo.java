@@ -14,7 +14,7 @@ public class NfvInfo {
 
 	
 	/**
-	 * Default constructror
+	 * Default constructor
 	 * @throws NfvReaderException 
 	 */
 	public NfvInfo() throws NfvReaderException {

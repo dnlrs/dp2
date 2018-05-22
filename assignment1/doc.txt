@@ -27,6 +27,8 @@ NFVSystem
     |   |       \---allocatedNodes
     |   |           |
     |   |           \---node*
+    |   |               |---@name
+    |   |               \---@associatedNFFG
     |   |
     |   \---connections
     |       |
@@ -59,7 +61,7 @@ NFVSystem
     |
     \---deployedNFFGs
         |
-        \---nffg
+        \---nffg*
             |
             +---name
             +---deployTime
@@ -89,6 +91,10 @@ NOTE:
   - The IN is a well connected graph so I list all the nodes and all the 
     vertices (adjacency matrix)
   - The NFFV is often not a well connected graph so I use adjacency list
+  - In order to provide fast access to all info available through the 
+    interfaces without introducing redundancy, for each host the name and
+    the associated nffg of allocated nodes are stored, while full node
+    data is stored only in the nffg part of the xml
 
 
 ## DTD
@@ -142,6 +148,8 @@ Constraints
         [H2] the nodes in allocatedNodes must not repeat and
              the same node cannot be hosted on 2 hosts
         [H3] the nodes must exist within the deployedNFFGs
+              a) node name must exist
+              b) associated nffg must exist
 
     CONNECTION
         [C1] the sourceHost must exist within the system

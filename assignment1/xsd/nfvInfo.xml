@@ -21,9 +21,9 @@
     <installedMemory unit="MB">4096</installedMemory>
     <installedStorage unit="MB">1024000</installedStorage>
     <allocatedNodes>
-     <node>node1</node>
-     <node>node2</node>
-     <node>node3</node>
+     <node name="node1" associatedNFFG="nffg1"/>
+     <node name="node2" associatedNFFG="nffg1"/>
+     <node name="node3" associatedNFFG="nffg1"/>
     </allocatedNodes>
    </host>
    <host>
@@ -32,8 +32,8 @@
     <installedMemory unit="MB">4096</installedMemory>
     <installedStorage unit="MB">1024000</installedStorage>
     <allocatedNodes>
-     <node>node4</node>
-     <node>node5</node>
+     <node name="node4" associatedNFFG="nffg2"/>
+     <node name="node5" associatedNFFG="nffg2"/>
     </allocatedNodes>
    </host>
   </hosts>
