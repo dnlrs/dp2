@@ -1,6 +1,7 @@
 examples/
 examples/*
 **/*~
+assignment1/build/*
 assignment_1a/.project
 assignment_1a/Assignment1a/.project
 assignment_1a/Assignment1a/.settings/
