@@ -1,0 +1,11 @@
+# ignore output xml file
+file.xml
+
+# ignore prof's library
+lib/
+
+# ignore builds
+build/
+
+# ignore xjc java classes auto-created
+gen/

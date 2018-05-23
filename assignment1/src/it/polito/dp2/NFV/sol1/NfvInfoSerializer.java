@@ -150,7 +150,7 @@ public class NfvInfoSerializer {
 				m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 				
 				if ( schemaFile != null )
-					m.setProperty(Marshaller.JAXB_SCHEMA_LOCATION, schemaFile );				
+					m.setProperty(Marshaller.JAXB_SCHEMA_LOCATION, ("http://www.example.org/nfvInfo "+schemaFile) );				
 				
 				if ( schema != null ) {
 					

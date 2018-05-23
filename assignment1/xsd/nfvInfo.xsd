@@ -240,7 +240,7 @@
    <element name="links">
     <complexType>
      <sequence>
-      <element name="link" type="ns:Link" maxOccurs="unbounded" />
+      <element name="link" type="ns:Link" minOccurs="0" maxOccurs="unbounded" />
      </sequence>
     </complexType>
    </element>
