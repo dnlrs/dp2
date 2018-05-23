@@ -48,13 +48,13 @@
     <selector xpath="ns:IN/ns:hosts/ns:host/ns:allocatedNodes/ns:node" />
     <field xpath="@name" />
    </unique>
-   
+
   <!-- (H3.a) each Host's allocatedNode name must exist -->
   <keyref name="keyrefAllocatedNodesNode" refer="ns:keyNodeName">
    <selector xpath="ns:IN/ns:hosts/ns:host/ns:allocatedNodes/ns:node" />
    <field    xpath="@name" />
   </keyref>
-  
+
   <!-- (H3.b) each Host's allocatedNode associatedNFFG must exist -->
   <keyref name="keyrefAllocatedNodesNodeANFFG" refer="ns:keyNFFGName">
   <selector xpath="ns:IN/ns:hosts/ns:host/ns:allocatedNodes/ns:node" />
@@ -68,7 +68,7 @@
    <selector xpath="ns:deployedNFFGs/ns:nffg/ns:nodes/ns:node" />
    <field    xpath="ns:name" />
   </key>
-  
+
   <!-- (D3) each Node's hostingHost must exist -->
   <keyref name="keyrefNodeHostingHost" refer="ns:keyHostName">
    <selector xpath="ns:deployedNFFGs/ns:nffg/ns:nodes/ns:node" />
@@ -98,7 +98,7 @@
 <!--    <selector xpath="ns:deployedNFFGs/ns:nffg" /> -->
 <!--    <field    xpath="ns:name" /> -->
 <!--   </unique> -->
-  
+
   <key name="keyNFFGName">
    <selector xpath="ns:deployedNFFGs/ns:nffg" />
    <field    xpath="ns:name" />
@@ -284,7 +284,7 @@
   </sequence>
  </complexType>
 
- <complexType name="NodeRef"> 
+ <complexType name="NodeRef">
     <attribute name="name" type="string" use="required"/>
     <attribute name="associatedNFFG" type="string" use="required"/>
  </complexType>
