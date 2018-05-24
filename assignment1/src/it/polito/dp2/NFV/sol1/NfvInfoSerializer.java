@@ -44,7 +44,8 @@ public class NfvInfoSerializer {
 	private ObjectFactory of    = null;
 
 	/**
-	 * Default constructor
+	 * Class constructor.
+	 * 
 	 * @throws NfvReaderException
 	 */
 	public NfvInfoSerializer() throws NfvReaderException {
@@ -53,9 +54,11 @@ public class NfvInfoSerializer {
 		of      = new ObjectFactory();
 	}
 
+
 	/**
-	 * @param oxml  Output XML file name
-	 *
+	 * Class constructor setting the name of the XML file to be created.
+	 * 
+	 * @param oxml
 	 * @throws NfvReaderException
 	 */
 	public NfvInfoSerializer(String oxml) throws NfvReaderException {
@@ -68,7 +71,6 @@ public class NfvInfoSerializer {
 
 	public static void main(String[] args) {
 
-		NfvInfoSerializer nis = null;
 
 		// Check args
 		if ( (args.length == 0) || (args.length > 1) ) {
@@ -77,6 +79,8 @@ public class NfvInfoSerializer {
 		}
 
 		// Instantiate data generator
+		NfvInfoSerializer nis = null;
+
 		try {
 
 			nis = new NfvInfoSerializer(args[0]);
@@ -89,7 +93,7 @@ public class NfvInfoSerializer {
 		// Start data retrieval and marshalling
 		try {
 
-			nis.do_marshal();
+			nis.do_work();
 
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -99,16 +103,21 @@ public class NfvInfoSerializer {
 		System.exit(0);
 	}
 
-	private void do_marshal() {
+	/**
+	 * Retrieves data from NFVSystem interfaces and marshalls it to the output
+	 * XML file.
+	 */
+	private void do_work() {
 		
 		final String contxtPath     = new String( "it.polito.dp2.NFV.sol1.jaxb" );
+		final String namespace      = new String( "http://www.example.org/nfvInfo" );
 		final String schemaLocation = new String( "/xsd/nfvInfo.xsd" );
 		
 		String schemaFile = null;
 		Schema schema     = null;
 		
 		try {
-			/*
+			/* --------------------------------------------------------------
 			 *  get current working directory (which should be [ROOT])
 			 *  and find the xml schema to be used for validation
 			 *  under "[ROOT]/xsd/"
@@ -150,7 +159,7 @@ public class NfvInfoSerializer {
 				m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 				
 				if ( schemaFile != null )
-					m.setProperty(Marshaller.JAXB_SCHEMA_LOCATION, ("http://www.example.org/nfvInfo "+schemaFile) );				
+					m.setProperty(Marshaller.JAXB_SCHEMA_LOCATION, (namespace+" "+schemaFile) );				
 				
 				if ( schema != null ) {
 					
@@ -202,8 +211,14 @@ public class NfvInfoSerializer {
 			System.exit(-1);
         }
 	}
-
-
+	
+	/**
+	 * Retrieves all the Infrastructure Network data structure from
+	 * NFVSystem interfaces and creates java objects to be
+	 * marshalled into the XML file.
+	 * 
+	 * @param nfvs NFVSystem to be updated with Infrastructure Network
+	 */
 	protected void retrieveIN(NFVSystemType nfvs) {
 
 		// retrieve hosts ---------------------------------------------------
@@ -247,6 +262,13 @@ public class NfvInfoSerializer {
 	}
 	
 	
+	/**
+	 * Retrieves all the Catalogue data structure from NFVSystem
+	 * interfaces and creates corresponding jaxb java objects to be
+	 * marshalled into the XML file
+	 * 
+	 * @param nfvs NFVSystem to be updated with Catalogue
+	 */
 	private void retrieveCatalogue(NFVSystemType nfvs) {
 
 		// retrieve vnfs ----------------------------------------------------
@@ -265,7 +287,14 @@ public class NfvInfoSerializer {
 		nfvs.setCatalogue( catalogue ); // add catalogue to NFVSystem
 	}
 
-
+	
+	/**
+	 * Retrieves all the deployed NFFGs from NFVSystem interfaces and
+	 * creates corresponding java jaxb java objects to be marshalled into
+	 * the XML file.
+	 * 
+	 * @param nfvs NFVSystem to be updated with deployed NFFGs
+	 */
 	private void retrieveDeployedNFFGs(NFVSystemType nfvs) {
 		
 		// retrieve nffgs ---------------------------------------------------
@@ -285,7 +314,14 @@ public class NfvInfoSerializer {
 		nfvs.setDeployedNFFGs( deployedNFFGs ); // add deployedNFFGs to NFVSystem
 	}
 
-
+	
+	/**
+	 * Creates a new Host jaxb java object by reading required data from a
+	 * NFVSystem HostReader interface.
+	 * 
+	 * @param  hr HostReader interface
+	 * @return    a new Host jaxb java object
+	 */
 	public Host buildHost( HostReader hr ) {
 
 		// retrieve available memory  and storage ---------------------------
@@ -321,7 +357,13 @@ public class NfvInfoSerializer {
 		return host;
 	}
 
-
+	
+	/**
+	 * Creates a new SizeInMB jaxb java object given a BigInteger value.
+	 * 
+	 * @param  value a BigInteger value
+	 * @return       a new SizeInMB jaxb java object
+	 */
 	protected SizeInMB buildSizeInMB(BigInteger value) {
 		SizeInMB sim = of.createSizeInMB();
 		sim.setValue( value );
@@ -330,7 +372,14 @@ public class NfvInfoSerializer {
 		return sim;
 	}
 
-
+	
+	/**
+	 * Creates a new Connection jaxb java object given two end point hosts.
+	 * 
+	 * @param  sourceHost the source Host
+	 * @param  destHost   the destination Host
+	 * @return            a new Connection jaxb java object
+	 */
 	protected Connection buildConnection( HostReader sourceHost,
 			                              HostReader destHost    ) {
 
@@ -362,6 +411,13 @@ public class NfvInfoSerializer {
 		return connection;
 	}
 
+	/**
+	 * Creates a new VNF jaxb java object by reading required data from a
+	 * VNFTypeReader interface.
+	 * 
+	 * @param  vnftr a VNFTypeReader interface
+	 * @return       a new VNF jaxb java object
+	 */
 	protected VNF buildVNF( VNFTypeReader vnftr ) {
 
 		// retrieve required memory and storage -----------------------------
@@ -382,7 +438,13 @@ public class NfvInfoSerializer {
 	}
 
 
-
+	/**
+	 * Creates a new NFFG jaxb java object by reading required data from a
+	 * NffgReader interface.
+	 * 
+	 * @param  nr a NffgReader interface
+	 * @return    a new NFFG jaxb java object
+	 */
 	protected NFFG buildNFFG( NffgReader nr ) {
 
 		// retrieve nffg's nodes --------------------------------------------
@@ -427,7 +489,14 @@ public class NfvInfoSerializer {
 
 		return nffg;
 	}
-
+	
+	/**
+	 * Creates a new Node jaxb java object by reading required data form a
+	 * NodeReader interface.
+	 * 
+	 * @param  nr a NodeReader interface
+	 * @return    a new Node jaxb java object
+	 */
 	protected Node buildNode ( NodeReader nr ) {
 
 		// retrieve links ---------------------------------------------------
@@ -453,7 +522,13 @@ public class NfvInfoSerializer {
 		return node;
 	}
 
-
+	/**
+	 * Creates a new Link jaxb java object by reading required data from a
+	 * LinkReader interface.
+	 * 
+	 * @param  lr a LinkReader interface
+	 * @return    a new Link jaxb java object
+	 */
 	protected Link buildLink ( LinkReader lr ) {
 
 		// retrieve link minThroughput --------------------------------------
