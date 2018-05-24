@@ -181,7 +181,8 @@ public class NfvInfoSerializer {
 									
 									return false;
 								}
-							} );
+							}
+					);
 				}
 			} 
 			catch ( PropertyException pre )             { System.err.println(pre); } 
@@ -246,10 +247,11 @@ public class NfvInfoSerializer {
 		Connection       connection       = null;
 		
 		for ( int i = 0; i < allhosts.size(); i++ )
-			for ( int j = i; j < allhosts.size(); j++ ) {
+			for ( int j = 0; j < allhosts.size(); j++ ) {
 				connection = buildConnection( allhosts.get(i), 
 						                      allhosts.get(j) );
-				connections_list.add( connection );
+				if ( connection != null )
+					connections_list.add( connection );
 			}
 
 		// prepare IN -------------------------------------------------------
@@ -271,7 +273,7 @@ public class NfvInfoSerializer {
 	 */
 	private void retrieveCatalogue(NFVSystemType nfvs) {
 
-		// retrieve vnfs ----------------------------------------------------
+		// retrieve VNFs ----------------------------------------------------
 		Catalogue catalogue = of.createCatalogue();
 		
 		List<VNF> vnfs = catalogue.getVnf(); // live list
@@ -297,7 +299,7 @@ public class NfvInfoSerializer {
 	 */
 	private void retrieveDeployedNFFGs(NFVSystemType nfvs) {
 		
-		// retrieve nffgs ---------------------------------------------------
+		// retrieve NFFGs ---------------------------------------------------
 		NFVSystemType.DeployedNFFGs deployedNFFGs = 
 				of.createNFVSystemTypeDeployedNFFGs();
 		
@@ -386,7 +388,10 @@ public class NfvInfoSerializer {
 
 		ConnectionPerformanceReader cpr = 
 				monitor.getConnectionPerformance( sourceHost, destHost );
-
+		
+		if ( cpr == null )
+			return null;
+		
 		// retrieve connection ID (source and destination host name) --------
 		Connection.ConnectionID cID = of.createConnectionConnectionID();
 		cID.setSourceHost( sourceHost.getName() );

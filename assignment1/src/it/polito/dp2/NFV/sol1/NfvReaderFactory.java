@@ -6,16 +6,23 @@ import it.polito.dp2.NFV.NfvReaderException;
 public class NfvReaderFactory extends it.polito.dp2.NFV.NfvReaderFactory {
 	
 	
-	public static NfvReaderFactory newInstance() {
-		NfvReaderFactory nrf = new NfvReaderFactory();
-		
-		return nrf;
+	public static NfvReaderFactory newInstance() {	
+		return new NfvReaderFactory();
 	}
 	
 	@Override
 	public NfvReader newNfvReader() throws NfvReaderException {
+		NfvReaderImpl nri;
 		
-		return new NfvReaderImpl();
+		try {
+			
+			nri = new NfvReaderImpl();
+			
+		} catch (Exception e) {
+			throw new NfvReaderException();
+		}
+		
+		return nri;
 	}
 
 }
