@@ -2,8 +2,6 @@ package it.polito.dp2.NFV.sol1;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,8 +22,8 @@ import javax.xml.validation.SchemaFactory;
 import org.xml.sax.SAXException;
 
 import it.polito.dp2.NFV.ConnectionPerformanceReader;
-import it.polito.dp2.NFV.FunctionalType;
 import it.polito.dp2.NFV.HostReader;
+import it.polito.dp2.NFV.LinkReader;
 import it.polito.dp2.NFV.NffgReader;
 import it.polito.dp2.NFV.NfvReader;
 import it.polito.dp2.NFV.NodeReader;
@@ -37,15 +35,15 @@ public class NfvReaderImpl implements NfvReader {
 	private final NFVSystemType nfvSystem;
 	private final String        xmlFile;
 	
-//	private final HashMap<String, HostReaderImpl>    dbHosts;
-//	private final HashMap<String, NodeReaderImpl>    dbNodes;
-//	private final HashMap<String, NffgReaderImpl>    dbNffgs;
-//	private final HashMap<String, VNFTypeReaderImpl> dbVNFs;
-//	private final HashMap<String, ConnectionPerformanceReaderImpl> dbConns;
-//	private final HashMap<String, HashMap<String, LinkReaderImpl>> dbLinks;
+	private HashMap<String, HostReader> dbHosts;
+	private HashMap<String, NffgReader> dbNFFGs;
+	private HashMap<String, NodeReader> dbNodes;
+	private HashMap<String, VNFTypeReader> dbVNFs;
+	private HashMap<String, ConnectionPerformanceReader> dbConns;
+	private HashMap<String, HashMap<String, LinkReader>> dbLinks;
 	
-	
-	public NfvReaderImpl() throws Exception {
+
+	protected NfvReaderImpl() throws Exception {
 	
 		final String contxtPath     = new String( "it.polito.dp2.NFV.sol1.jaxb" );
 		final String fileSysPro     = new String( "it.polito.dp2.NFV.sol1.NfvInfo.file" );
@@ -108,296 +106,206 @@ public class NfvReaderImpl implements NfvReader {
 		
 		nfvSystem = element.getValue();
 		
-//		dbHosts = new HashMap<String, HostReaderImpl>();
-//		dbNffgs = new HashMap<String, NffgReaderImpl>();
-//		dbNodes = new HashMap<String, NodeReaderImpl>();
-//		dbLinks = new HashMap<String, HashMap<String, LinkReaderImpl>>();
-//		dbVNFs  = new HashMap<String, VNFTypeReaderImpl>();
-//		dbConns = new HashMap<String, ConnectionPerformanceReaderImpl>();
-//		
-//		initNfvReader();
+		dbHosts = new HashMap<String, HostReader>();
+		dbNodes = new HashMap<String, NodeReader>();
+		dbVNFs  = new HashMap<String, VNFTypeReader>();
+		dbConns = new HashMap<String, ConnectionPerformanceReader>();
+		dbLinks = new HashMap<String, HashMap<String, LinkReader>>();
+		
+		init();
+		
 	}
-//	
-//	private void initNfvReader() throws Exception {
-//		
-//		InfrastructureNetwork in = nfvSystem.getIN(); 
-//		
-//		if ( in == null ) // NFV system didn't have a infrastructure network
-//			throw new Exception("Invalid Infrastructure Network.");
-//			
-//		// ------------------------------------------------------------------
-//		// create hosts
-//		// ------------------------------------------------------------------
-//		InfrastructureNetwork.Hosts hosts = in.getHosts();
-//		
-//		if ( hosts == null ) // the infrastructure network doesn't have any host
-//			throw new Exception("No hosts in Infrastructure Network.");
-//		
-//		List<Host> listHosts = hosts.getHost();
-//		
-//		if ( listHosts.size() <= 0 ) // the infrastructure network doesn't have any host
-//			throw new Exception("No hosts in Infrastructure Network.");
-//		
-//		for ( Host h : listHosts ) {
-//			
-//			HostReaderImpl host = createHost( h );
-//			
-//			if ( host == null )
-//				continue; // invalid host
-//			
-//			if ( !( dbHosts.containsKey( host.getName() ) ) )
-//				dbHosts.put(host.getName(), host);
-//		}
-//		
-//		// ------------------------------------------------------------------
-//		// create connections
-//		// ------------------------------------------------------------------
-//		InfrastructureNetwork.Connections connections = in.getConnections();
-//		
-//		if ( connections == null ) // the infrastructure network doesn't have any connection
-//			throw new Exception("No connections in Infrastructure Network.");
-//		
-//		List<Connection> listConnections = connections.getConnection();
-//		
-//		if ( listConnections.size() <= 0 ) // the infrastructure network doesn't have any connection
-//			throw new Exception("No connections in Infrastructure Network.");
-//		
-//		for ( Connection c : listConnections ) {
-//			
-//			ConnectionPerformanceReaderImpl connection = createConnection( c );
-//			
-//			if ( connection == null )
-//				continue; // invalid connection
-//			
-//			if ( !( dbConns.containsKey( connection.getConnectionID() ) ) ) {
-//				dbConns.put(connection.getConnectionID(), connection);
-//			}
-//			
-//		}
-//		
-//		// ------------------------------------------------------------------
-//		// create catalogue
-//		// ------------------------------------------------------------------
-//		Catalogue catalogue = nfvSystem.getCatalogue();
-//		
-//		if ( catalogue == null )
-//			throw new Exception("No catalogue found in nfv system.");
-//		
-//		List<VNF> listVNFs = catalogue.getVnf();
-//		
-//		if ( listVNFs.size() == 0 )
-//			throw new Exception("No VNFs found in catalogue.");
-//		
-//		for ( VNF v : listVNFs ) {
-//			
-//			VNFTypeReaderImpl vnf = createVNF( v );
-//			
-//			if ( vnf == null )
-//				continue; // invalid VNF
-//			
-//			if ( !( dbVNFs.containsKey( vnf.getName() ) ) )
-//				dbVNFs.put(vnf.getName(), vnf);
-//		}
-//		
-//		// ------------------------------------------------------------------
-//		// create catalogue
-//		// ------------------------------------------------------------------
-//		NFVSystemType.DeployedNFFGs deployedNFFGs = nfvSystem.getDeployedNFFGs();
-//		
-//		if ( deployedNFFGs == null )
-//			throw new Exception("No deployedNffgs found.");
-//		
-//		List<NFFG> listNFFGs = deployedNFFGs.getNffg();
-//		
-//		if ( listNFFGs.size() == 0 )
-//			throw new Exception("No deployedNffgs found.");
-//		
-//		for ( NFFG n : listNFFGs ) {
-//			
-//			NffgReaderImpl nffg = createNFFG( n );
-//			
-//			if ( nffg == null )
-//				continue;
-//			
-//			if ( !( dbNffgs.containsKey( nffg.getName() ) ) )
-//				dbNffgs.put(nffg.getName(), nffg);
-//		}
-//		
-//		
-//		
-//		
-//	}
 	
-//	
-//	/**
-//	 * Creates a HostReader readable object and fills it with
-//	 * data taken from the jaxb object passed as argument.
-//	 *  
-//	 * NOTE: does not set host allocated nodes references 
-//	 * 
-//	 * @param  h jaxb Host Object
-//	 * @return   a HostReader readable object
-//	 */
-//	private HostReaderImpl createHost( Host h ) {
-//		
-//		if ( h == null )
-//			return null; // wrong parameter
-//		
-//		if ( h.getName() == null )
-//			return null; // host without name
-//		
-//		if ( dbHosts.containsKey( h.getName() ) )
-//			return dbHosts.get( h.getName() ); // host already created
-//		
-//		
-//		SizeInMB s_am = h.getInstalledMemory();
-//		SizeInMB s_as = h.getInstalledStorage();
-//		
-//		if ( ( s_am == null ) || ( s_as == null ) )
-//			return null; // host doesn't have installed Memory and installed Storage
-//		
-//		BigInteger am = s_am.getValue();
-//		BigInteger as = s_as.getValue();
-//		
-//		if ( ( am.intValue() < 0 ) || ( as.intValue() < 0 ) )
-//			return null; // wrong values for available memory or storage
-//		
-//		if ( h.getMaxVNFs() < 0 )
-//			return null; // wrong value for maxVNFs
-//		
-//		
-//		HostReaderImpl host = new HostReaderImpl();
-//		
-//		host.setName( h.getName() );
-//		host.setMaxVNFs( h.getMaxVNFs() );
-//		host.setAvailableMemory( am.intValue() );
-//		host.setAvailableStorage( as.intValue() );
-//
-//		// reference to allocated nodes will be added once all nodes have been created
-//		Set<NodeReader> setNodeReader = new HashSet<NodeReader>();
-//		host.setNodes( setNodeReader );
-//		
-//		return host;
-//		
-//	}
-//	
+	private void init() throws Exception {
+		
+		Validator check = new Validator();
+		
+		InfrastructureNetwork in = nfvSystem.getIN(); 
+		
+		if ( in == null ) // NFV system didn't have a infrastructure network
+			throw new Exception("Invalid Infrastructure Network.");
+			
+		
+		// ------------------------------------------------------------------
+		// create hosts readers
+		// ------------------------------------------------------------------
+		InfrastructureNetwork.Hosts hosts = in.getHosts();
+		
+		if ( hosts == null ) // the infrastructure network doesn't have any host
+			throw new Exception("No hosts in Infrastructure Network.");
+		
+		List<Host> listHosts = hosts.getHost();
+		// TODO: list size?
+		if ( listHosts.size() <= 0 ) // the infrastructure network doesn't have any host
+			throw new Exception("No hosts in Infrastructure Network.");
+		
+		for ( Host h : listHosts ) {
+			
+			if ( !(check.isValidHost( h )) ) 
+				continue; // invalid host
+			
+			Host.AllocatedNodes allocatedNodes = h.getAllocatedNodes();
+			
+			List<NodeRef> listNodeRefs = allocatedNodes.getNode();
+			Set<String> nodes = new HashSet<String>();
+			
+			for ( NodeRef nr : listNodeRefs ) {
+				
+				if ( !(check.isValidNodeRef( nr )) )
+					continue; // invalid nodeRef
+				
+				nodes.add( nr.getName() );
+			}
+
+			HostReaderImpl host = new HostReaderImpl(this);
+			host.setHost(h);
+			host.setNodes(nodes);
+			
+			// Add HostReader to HostReader database
+			dbHosts.put(host.getName(), host);
+		}
+		
+		
+		// ------------------------------------------------------------------
+		// create connections performance readers
+		// ------------------------------------------------------------------
+		InfrastructureNetwork.Connections connections = in.getConnections();
+		
+		if ( connections == null ) // the infrastructure network doesn't have any connection
+			throw new Exception("No connections in Infrastructure Network.");
+		
+		List<Connection> listConnections = connections.getConnection();
+		// TODO: list size?
+		if ( listConnections.size() <= 0 ) // the infrastructure network doesn't have any connection
+			throw new Exception("No connections in Infrastructure Network.");
+		
+		for ( Connection c : listConnections ) {
+			
+			if ( !(check.isValidConnection( c )) )
+				continue; // invalid connection
+			
+			ConnectionPerformanceReaderImpl connection = new ConnectionPerformanceReaderImpl();
+			connection.setConnection(c);
+			
+			String cID = new String( c.getConnectionID().getSourceHost() + "-" +
+			                         c.getConnectionID().getDestionationHost() );
+			// add connection to connections database
+			dbConns.put( cID, connection );
+		}
+		
+		// ------------------------------------------------------------------
+		// create VNF type readers
+		// ------------------------------------------------------------------
+		Catalogue catalogue = nfvSystem.getCatalogue();
+		
+		if ( catalogue == null )
+			throw new Exception("No catalogue found in nfv system.");
+		
+		List<VNF> listVNFs = catalogue.getVnf();
+		// TODO: list size zero?
+		if ( listVNFs.size() == 0 )
+			throw new Exception("No VNFs found in catalogue.");
+		
+		for ( VNF v : listVNFs ) {
+			
+			if ( !(check.isValidVNF( v )) )
+				continue; // invalid VNF
+			
+			VNFTypeReaderImpl vnf = new VNFTypeReaderImpl();
+			vnf.setVNF(v);
+			
+			// add VNF to VNFs database
+			dbVNFs.put(v.getName(), vnf);
+		}
+		
+		// ------------------------------------------------------------------
+		// create NFFG readers && nodes readers && links
+		// ------------------------------------------------------------------
+		NFVSystemType.DeployedNFFGs deployedNFFGs = nfvSystem.getDeployedNFFGs();
+		
+		if ( deployedNFFGs == null )
+			throw new Exception("No deployedNffgs found.");
+		
+		List<NFFG> listNFFGs = deployedNFFGs.getNffg();
+		// TODO: check list size?????
+		if ( listNFFGs.size() == 0 )
+			throw new Exception("No deployedNffgs found.");
+		
+		for ( NFFG n : listNFFGs ) {
+			
+			if ( !(check.isValidNFFG( n )) )
+				continue; // invalid NFFG
+			
+			List<Node> listNodes = n.getNodes().getNode();
+			Set<String> setNodes = new HashSet<String>();
+			
+			// create Links HashMap associated with current NFFG
+			HashMap<String, LinkReader> hmLinks = new HashMap<String, LinkReader>();
+			
+
+			for ( Node nd : listNodes ) {
+				
+				if ( !(check.isValidNode( nd )) )
+					continue; // invalid node
+				
+				// ----------------------------------------------------------
+				// manage node && links
+				// ----------------------------------------------------------
+				
+				List<Link> listLinks = nd.getLinks().getLink();
+				Set<String> setLinks = new HashSet<String>();
+				
+				for ( Link l : listLinks ) {
+					
+					if ( !(check.isValidLink( l )) )
+						continue; // invalid Link
+					
+					LinkReaderImpl link = new LinkReaderImpl(this);
+					link.setLink(l);
+					
+					setLinks.add( l.getName() );    // add link to node
+					hmLinks.put(l.getName(), link); // add link to links database for current NFFG
+				}
+				
+				
+				NodeReaderImpl node = new NodeReaderImpl(this);
+				node.setNode( nd );
+				node.setLinks( setLinks );
+				
+				setNodes.add( nd.getName() ); // add node to nffg's list of nodes
+				dbNodes.put(nd.getName(), node);
+				
+			}
+			
+			NffgReaderImpl nffg = new NffgReaderImpl(this);
+			nffg.setNffg( n );
+			nffg.setNodes( setNodes );
+			
+			// add links to links database under current NFFG
+			dbLinks.put(n.getName(), hmLinks);
+
+			// add NFFG reader to database
+			dbNFFGs.put(n.getName(), nffg);
+		}	
+		
+	}
 	
-//	
-//	/**
-//	 * Creates a ConnectionPerformanceReader accessible object with data taken
-//	 * from the jaxb object passed as parameter.
-//	 * 
-//	 * @param  c jaxb Connection object
-//	 * @return   a ConnectionPerformanceReader accessible object
-//	 */
-//	private ConnectionPerformanceReaderImpl createConnection( Connection c ) {
-//		
-//		if ( c == null )
-//			return null; // wrong parameter
-//		
-//		Connection.ConnectionID cID = c.getConnectionID();
-//		
-//		if ( cID == null )
-//			return null; // missing connection ID
-//		
-//		Throughput throughput = c.getAverageThroughput();
-//		if ( throughput == null )
-//			return null; // missing average throughput
-//		
-//		Latency latency = c.getLatency();
-//		if ( latency == null )
-//			return null; // missing latency
-//		
-//		if ( ( throughput.getValue() < 0 ) || ( latency.getValue() < 0 ) )
-//			return null; // wrong throughput or latency values
-//		
-//		String sHost = cID.getSourceHost();
-//		String dHost = cID.getDestionationHost();
-//		
-//		if ( ( sHost == null ) || ( dHost == null ) )
-//			return null; // missing connection end points
-//
-//		ConnectionPerformanceReaderImpl connection = 
-//				new ConnectionPerformanceReaderImpl(sHost, dHost);
-//		
-//		connection.setLatency(latency.getValue());
-//		connection.setThroughput(throughput.getValue());
-//		
-//		return connection;
-//	}
-//	
-//	
-//	/**
-//	 * Creates a VNFTypeReader accessible object with data from
-//	 * the jaxb VNF object passed as argument.
-//	 * 
-//	 * @param  v jaxb VNF object
-//	 * @return   a VNFTypeReader accessible object
-//	 */
-//	private VNFTypeReaderImpl createVNF( VNF v ) {
-//		
-//		if ( v == null )
-//			return null; // invalid argument
-//		
-//		if ( v.getName() == null )
-//			return null; // VNF hasn't got a name
-//		
-//		if ( ( v.getRequiredMemory() == null ) || ( v.getRequiredStorage() == null ) )
-//			return null; // VNF hasn't got required memory or storage
-//		
-//		if ( ( v.getRequiredMemory().getValue().intValue() < 0 ) || 
-//			 ( v.getRequiredStorage().getValue().intValue() < 0 )   )
-//			return null; // wrong required memory or storage values
-//		
-//		if ( v.getFunctionalType() == null )
-//			return null; // wrong functional type
-//		
-//		VNFTypeReaderImpl vnf = new VNFTypeReaderImpl();
-//		
-//		vnf.setName( v.getName() );
-//		vnf.setRequiredMemory( v.getRequiredMemory().getValue().intValue() );
-//		vnf.setRequiredStorage( v.getRequiredStorage().getValue().intValue() );
-//		vnf.setFunctionctionalType( FunctionalType.fromValue( v.getFunctionalType().value() ) );
-//		
-//		return vnf;
-//	}
-//	
-//	
-//	
-//	
-//	
-//	private NffgReaderImpl createNFFG( NFFG n ) {
-//		
-//		if ( n == null )
-//			return null; // wrong parameter
-//		
-//		if ( n.getName() == null )
-//			return null; // missing nffg name
-//		
-//		if ( n.getDeployTime() == null )
-//			return null; // missing deploy time
-//		
-//		
-//		
-//	}
-//	
-//	
-//	
-//	
+	
+	
 	
 	
 	/**
-	 * Searches for a connection in the infrastructure network between the two
-	 * hosts passed as parameters.
+	 * Retrieves a ConnectionPerformanceReader if one exists between hosts
+	 * passed as arguments.
 	 * 
-	 * @param  sourceHost source host end point of connection
-	 * @param  destHost   destination host end point of connection
+	 * @param  sourceHost source Host end point of connection
+	 * @param  destHost   destination Host end point of connection
 	 * @return            a new ConnectionPerformanceReader interface, null if
 	 *                    a connection doesn't exist or an error occurred
 	 */
 	@Override
-	public ConnectionPerformanceReader getConnectionPerformance(HostReader sourceHost, 
-																HostReader destHost ) {
+	public ConnectionPerformanceReader 
+	getConnectionPerformance(HostReader sourceHost, HostReader destHost ) {
 		
 		if ( sourceHost == null || destHost == null )
 			return null; // wrong arguments
@@ -408,256 +316,167 @@ public class NfvReaderImpl implements NfvReader {
 		if ( sHost == null || dHost == null )
 			return null; // source or destination hosts didn't have a name
 		
-		InfrastructureNetwork in = nfvSystem.getIN(); 
+		String key = new String( sHost+"-"+dHost );
+		ConnectionPerformanceReader cpri = dbConns.get(key);
 		
-		if ( in == null )
-			return null; // NFV system didn't have a infrastructure network
-		
-		InfrastructureNetwork.Connections connections = in.getConnections();
-		
-		if ( connections == null )
-			return null; // the infrastructure network doesn't have any connection
-		
-		
-		List<Connection> connections_list = connections.getConnection();
-		
-		if ( connections_list.size() == 0 )
-			return null; // the infrastructure network doesn't have any connection 
-		
-		/* ------------------------------------------------------------------
-		 * find required connection
-		 */
-		for ( Connection c : connections_list ) {
-			 
-			if ( sHost.equals( c.getConnectionID().getSourceHost() ) &&
-				 dHost.equals( c.getConnectionID().getDestionationHost() ) ) {
-				
-				Latency    l = c.getLatency();
-				Throughput t = c.getAverageThroughput();
-				
-				if ( ( l == null ) || ( t == null ) )
-					return null; // latency of throughput missing
-				
-				int latency      = l.getValue();
-				float throughput = t.getValue();
-				
-				if ( ( latency < 0 ) || ( throughput < 0.0 )  )
-					return null; // wrong values for latency or throughputs
-				
-				ConnectionPerformanceReaderImpl cpri = 
-						new ConnectionPerformanceReaderImpl();
-				
-				cpri.setLatency( latency );
-				cpri.setThroughput( throughput );
-				
-				return cpri;
-			}
-		}
-		
-		return null; // a connection between sourceHost and destHost doesn't exist
+		return cpri; // a connection between sourceHost and destHost doesn't exist
 	}
 
 	
 	
-	
+	/**
+	 * Retrieves a HostReader if one exists with the name passed as argument.
+	 * 
+	 * @param  hostName host name to be retrieved
+	 * @return          a HostReader interface or null if host doesn't exist
+	 */
 	@Override
 	public HostReader getHost(String hostName) {
 		
 		if ( hostName == null )
 			return null; // wrong parameter
 		
-		InfrastructureNetwork in = nfvSystem.getIN();
-		
-		if ( in == null )
-			return null; // NFV system didn't have a infrastructure network
-		
-		InfrastructureNetwork.Hosts hosts = in.getHosts();
-		
-		if ( hosts == null )
-			return null; // the infrastructure network doesn't have any host
-		
-		List<Host> hosts_list = hosts.getHost();
-		
-		if ( hosts_list.size() == 0 )
-			return null; // the infrastructure network doesn't have any host
-		
-		for ( Host h : hosts_list ) {
-			
-			if ( hostName.equals( h.getName() ) ) {
-				
-				SizeInMB s_am = h.getInstalledMemory();
-				SizeInMB s_as = h.getInstalledStorage();
-				
-				if ( ( s_am == null ) || ( s_as == null ) )
-					return null; // host doesn't have installed Memory and installed Storage
-				
-				BigInteger am = s_am.getValue();
-				BigInteger as = s_as.getValue();
-				
-				if ( ( am.intValue() < 0 ) || ( as.intValue() < 0 ) )
-					return null; // wrong values for available memory or storage
-				
-				if ( h.getMaxVNFs() < 0 )
-					return null; // wrong value for maxVNFs
-				
-				
-				/* ----------------------------------------------------------
-				 * get nodes deployed in current host
-				 */
-				Set<NodeReader> setNodeReader = new HashSet<NodeReader>();
-				
-				Host.AllocatedNodes allocatedNodes = h.getAllocatedNodes();
-
-				if ( allocatedNodes != null ) {
-					
-					List<NodeRef> listNodeRef = allocatedNodes.getNode();
-					
-					if ( listNodeRef.size() >  0 ) {
-						
-						for ( NodeRef nr : listNodeRef ) {
-							
-							String nodeName = nr.getName();
-							String nffgName = nr.getAssociatedNFFG();
-							
-							if ( ( nodeName == null ) || ( nffgName == null ) )
-								continue; // node name or NFFG name are invalid
-								
-							NffgReader nffg = this.getNffg(nffgName);
-								
-							if ( nffg == null )
-								continue; // NFFG doesn't exist
-									
-							NodeReader node = nffg.getNode(nodeName);
-									
-							if ( node == null ) 			
-								continue; // node doesn't exist
-							
-							setNodeReader.add(node); // success: found node
-						}
-					}
-				}
-				
-				HostReaderImpl host = new HostReaderImpl();
-				
-				host.setName( h.getName() );
-				host.setMaxVNFs( h.getMaxVNFs() );
-				host.setAvailableMemory( am.intValue() );
-				host.setAvailableStorage( as.intValue() );
-				host.setNodes( setNodeReader );
-				return host;
-			}
-			
-		}
-		
-		return null; // no host exists with name hostName
+		return dbHosts.get( hostName );
 	}
 
+	
+	/**
+	 * Retrieves the set of all hosts present in the NFV System.
+	 * 
+	 * @return a set of interfaces to read all hosts in the NFV System
+	 */
 	@Override
 	public Set<HostReader> getHosts() {
 		
-		InfrastructureNetwork in = nfvSystem.getIN();
-		
-		if ( in == null )
-			return new HashSet<HostReader>(); // NFV system didn't have a infrastructure network
-		
-		InfrastructureNetwork.Hosts hosts = in.getHosts();
-		
-		if ( hosts == null )
-			return new HashSet<HostReader>(); // the infrastructure network doesn't have any host
-		
-		List<Host> hosts_list = hosts.getHost();
-		
-		if ( hosts_list.size() == 0 )
-			return new HashSet<HostReader>(); // the infrastructure network doesn't have any host
-		
-		
-		Set<HostReader> setHostReader = new HashSet<HostReader>();
-		
-		for ( Host h : hosts_list ) {
-			
-			SizeInMB s_am = h.getInstalledMemory();
-			SizeInMB s_as = h.getInstalledStorage();
-			
-			if ( ( s_am == null ) || ( s_as == null ) )
-				continue; // host doesn't have installed Memory and installed Storage
-			
-			BigInteger am = s_am.getValue();
-			BigInteger as = s_as.getValue();
-			
-			if ( ( am.intValue() < 0 ) || ( as.intValue() < 0 ) )
-				continue; // wrong values for available memory or storage
-			
-			if ( h.getMaxVNFs() < 0 )
-				continue; // wrong value for maxVNFs
-			
-			
-			/* ----------------------------------------------------------
-			 * get nodes deployed in current host
-			 */
-			Set<NodeReader> setNodeReader = new HashSet<NodeReader>();
-			
-			Host.AllocatedNodes allocatedNodes = h.getAllocatedNodes();
+		return new HashSet<HostReader>( dbHosts.values() );
+	}
 
-			if ( allocatedNodes != null ) {
-				
-				List<NodeRef> listNodeRef = allocatedNodes.getNode();
-				
-				if ( listNodeRef.size() > 0 ) {
-					
-					for ( NodeRef nr : listNodeRef ) {
-						
-						String nodeName = nr.getName();
-						String nffgName = nr.getAssociatedNFFG();
-						
-						if ( ( nodeName == null ) || ( nffgName == null ) )
-							continue; // node name or NFFG name are invalid
-							
-						NffgReader nffg = this.getNffg(nffgName);
-							
-						if ( nffg == null )
-							continue; // NFFG doesn't exist
-								
-						NodeReader node = nffg.getNode(nodeName);
-								
-						if ( node == null ) 			
-							continue; // node doesn't exist
-						
-						setNodeReader.add(node); // success: found node
-					}
-				}
-			}
+	
+	/**
+	 * gives access to a single NFFG given its name.
+	 * 
+	 * @param nffgName the NFFG name
+	 * @return         an interface for reading NFFG's data
+	 */
+	@Override
+	public NffgReader getNffg(String nffgName) {
+		
+		if ( nffgName == null )
+			return null;
+		
+		return dbNFFGs.get( nffgName );
+	}
+
+	
+	
+	/**
+	 * Retrieves a set of interfaces to read all NFFG deployed after the date
+	 * passed as argument. If date is null, all NFFGs interfaces are returned.
+	 * 
+	 * @param  date start of time
+	 * @return      
+	 */
+	@Override
+	public Set<NffgReader> getNffgs(Calendar date) {
+		
+		if ( date == null )
+			return new HashSet<NffgReader>( dbNFFGs.values() );
+		
+		
+		Set<NffgReader> setNFFGs = new HashSet<NffgReader>();
+		
+		for ( String key : dbNFFGs.keySet() ) {
+			NffgReader nffg = dbNFFGs.get(key);
 			
-			HostReaderImpl host = new HostReaderImpl();
-			
-			host.setName( h.getName() );
-			host.setMaxVNFs( h.getMaxVNFs() );
-			host.setAvailableMemory( am.intValue() );
-			host.setAvailableStorage( as.intValue() );
-			host.setNodes( setNodeReader );
-			
-			setHostReader.add(host);
-			
+			if ( nffg.getDeployTime().compareTo(date) >= 0 )
+				setNFFGs.add(nffg);
 		}
 		
-		return setHostReader;
+		return setNFFGs;
 	}
 
-	@Override
-	public NffgReader getNffg(String arg0) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Set<NffgReader> getNffgs(Calendar arg0) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
+	
+	
+	/**
+	 * Retrieves the VNF Catalogue.
+	 * 
+	 * @return the set of interfaces for all VNF functions
+	 */
 	@Override
 	public Set<VNFTypeReader> getVNFCatalog() {
-		// TODO Auto-generated method stub
-		return null;
+		return new HashSet<VNFTypeReader>( dbVNFs.values() );
 	}
 
+	
+	
+	/**
+	 * Retrieves the interface to access a specific VNF given its name.
+	 * 
+	 * @param vnfName VNF's name
+	 * @return        a interface to access the VNF
+	 */
+	protected VNFTypeReader getVNF(String vnfName) {
+		if ( vnfName == null )
+			return null;
+		
+		return dbVNFs.get(vnfName);
+	}
+	
+	
+	/**
+	 * Retrieves a set of interfaces to links given their names.
+	 * 
+	 * @param  nffgName the NFFG's name
+	 * @param  links    the links names to be retrieved
+	 * @return          a set of interfaces to links
+	 */
+	protected Set<LinkReader> getLinks( String nffgName, Set<String> links ) {
+		
+		if ( links == null )
+			return new HashSet<LinkReader>();
+		
+		Set<LinkReader> setLinks = new HashSet<LinkReader>();
+		
+		HashMap<String, LinkReader> hmLinks = dbLinks.get( nffgName );
+		
+		for ( String linkName : links )
+			setLinks.add( hmLinks.get( linkName ) );
+		
+		return setLinks;
+	}
+	
+	/**
+	 * Returns a interface to a node, given its name.
+	 * 
+	 * @param  nodeName the node's name
+	 * @return          an interface to the node requested
+	 */
+	protected NodeReader getNode( String nodeName ) {
+		
+		if ( nodeName == null )
+			return null;
+		
+		return dbNodes.get(nodeName);
+	}
+	
+	/**
+	 * Retrieves a set of interfaces to nodes given their names.
+	 * 
+	 * @param  nodes nodes name to retrieve interfaces to
+	 * @return       a set of interfaces to nodes
+	 */
+	protected Set<NodeReader> getNodes( Set<String> nodes ) {
+		
+		if ( nodes == null )
+			return new HashSet<NodeReader>();
+		
+		Set<NodeReader> setNodes = new HashSet<NodeReader>();
+		
+		for ( String nodeName : nodes )
+			setNodes.add( dbNodes.get( nodeName ) );
+		
+		return setNodes;
+
+	}
+	
 }

@@ -7,37 +7,57 @@ import it.polito.dp2.NFV.LinkReader;
 import it.polito.dp2.NFV.NffgReader;
 import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.VNFTypeReader;
+import it.polito.dp2.NFV.sol1.jaxb.Node;
 
 public class NodeReaderImpl implements NodeReader {
+	
+	private NfvReaderImpl nfvReader;
 
+	private Node node;
+	private Set<String> links;
+	
+	protected NodeReaderImpl() {}
+	
+	protected NodeReaderImpl( NfvReaderImpl nfvReader, Node n, Set<String> links ) {
+		this.nfvReader = nfvReader;
+		this.links     = links;
+		this.node      = n;
+	}
+	
+	protected NodeReaderImpl( NfvReaderImpl nfvReader ) {
+		this.nfvReader = nfvReader;
+	}
+	
+	protected void setLinks( Set<String> links ) {
+		this.links = links;
+	}
+	
+	protected void setNode( Node n ) {
+		this.node = n;
+	}
+	
 	@Override
 	public String getName() {
-		// TODO Auto-generated method stub
-		return null;
+		return node.getName();
 	}
 
 	@Override
 	public VNFTypeReader getFuncType() {
-		// TODO Auto-generated method stub
-		return null;
+		return nfvReader.getVNF( node.getFunctionalType() );
 	}
 
 	@Override
 	public HostReader getHost() {
-		// TODO Auto-generated method stub
-		return null;
+		return nfvReader.getHost( node.getHostingHost() );
 	}
 
 	@Override
 	public Set<LinkReader> getLinks() {
-		// TODO Auto-generated method stub
-		return null;
+		return nfvReader.getLinks( node.getAssociatedNFFG(), links );
 	}
 
 	@Override
 	public NffgReader getNffg() {
-		// TODO Auto-generated method stub
-		return null;
+		return nfvReader.getNffg( node.getAssociatedNFFG() );
 	}
-
 }

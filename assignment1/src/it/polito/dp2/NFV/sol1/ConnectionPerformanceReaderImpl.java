@@ -1,29 +1,31 @@
 package it.polito.dp2.NFV.sol1;
 
 import it.polito.dp2.NFV.ConnectionPerformanceReader;
+import it.polito.dp2.NFV.sol1.jaxb.Connection;
 
 public class ConnectionPerformanceReaderImpl implements ConnectionPerformanceReader {
 	
-	private int    latency;
-	private float  throughput;
+	private Connection connection;
+	
+	protected ConnectionPerformanceReaderImpl() {}
 
-
-	protected void setLatency(int latency) {
-		this.latency = latency;
+	protected ConnectionPerformanceReaderImpl( Connection c ) {
+		this.connection = c;		
 	}
 	
+	protected void setConnection( Connection c ) {
+		this.connection = c;
+	}
+
 	@Override
 	public int getLatency() {
-		return latency;
+		return connection.getLatency().getValue();
 	}
 	
-	protected void setThroughput(float throughput) {
-		this.throughput = throughput;
-	}
 
 	@Override
 	public float getThroughput() {
-		return throughput;
+		return connection.getAverageThroughput().getValue();
 	}
 
 }

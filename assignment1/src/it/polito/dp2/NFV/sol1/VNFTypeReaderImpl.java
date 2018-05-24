@@ -2,52 +2,39 @@ package it.polito.dp2.NFV.sol1;
 
 import it.polito.dp2.NFV.FunctionalType;
 import it.polito.dp2.NFV.VNFTypeReader;
+import it.polito.dp2.NFV.sol1.jaxb.VNF;
 
 public class VNFTypeReaderImpl implements VNFTypeReader {
 	
-	private String name;
-	private int requiredMemory;
-	private int requiredStorage;
-	private FunctionalType functionctionalType;
+	private VNF vnf;
+	
+	protected VNFTypeReaderImpl() {}
+	
+	protected VNFTypeReaderImpl( VNF v ) {
+		this.vnf = v;		
+	}
+	
+	protected void setVNF( VNF v ) {
+		this.vnf = v;
+	}
 	
 	@Override
 	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
+		return vnf.getName();
 	}
 
 	@Override
 	public FunctionalType getFunctionalType() {
-		return functionctionalType;
-	}
-
-	public FunctionalType getFunctionctionalType() {
-		return functionctionalType;
-	}
-
-	public void setFunctionctionalType(FunctionalType functionctionalType) {
-		this.functionctionalType = functionctionalType;
+		return FunctionalType.fromValue( vnf.getFunctionalType().value() );
 	}
 
 	@Override
 	public int getRequiredMemory() {
-		return requiredMemory;
-	}
-
-	public void setRequiredMemory(int requiredMemory) {
-		this.requiredMemory = requiredMemory;
+		return vnf.getRequiredMemory().getValue().intValue();
 	}
 
 	@Override
 	public int getRequiredStorage() {
-		return requiredStorage;
+		return vnf.getRequiredStorage().getValue().intValue();
 	}
-
-	public void setRequiredStorage(int requiredStorage) {
-		this.requiredStorage = requiredStorage;
-	}
-
 }

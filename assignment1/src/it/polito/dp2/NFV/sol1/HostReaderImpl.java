@@ -4,59 +4,57 @@ import java.util.Set;
 
 import it.polito.dp2.NFV.HostReader;
 import it.polito.dp2.NFV.NodeReader;
+import it.polito.dp2.NFV.sol1.jaxb.Host;
 
 public class HostReaderImpl implements HostReader {
 	
-	private String name;
-	private int    maxVNFs;
-	private int    availableMemory;
-	private int    availableStorage;
+	private NfvReaderImpl nfvReader;
 
-	private Set<NodeReader> nodes;
-
-	@Override
-	public String getName() {
-		return name;
+	private Host host;
+	private Set<String> nodes;
+	
+	protected HostReaderImpl() {}
+	
+	protected HostReaderImpl( NfvReaderImpl nSys, Host h, Set<String> nodes ) {
+		this.nfvReader = nSys;
+		this.nodes     = nodes;
+		this.host      = h;		
+	}
+	
+	protected HostReaderImpl(NfvReaderImpl nSys) {
+		this.nfvReader = nSys;
+	}
+	
+	protected void setHost( Host h ) {
+		this.host = h;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	protected void setNodes(Set<String> nodes) {
+		this.nodes = nodes;
+	}
+	
+	@Override
+	public String getName() {
+		return host.getName();
 	}
 
 	@Override
 	public int getAvailableMemory() {
-		return availableMemory;
-	}
-
-	public void setAvailableMemory(int availableMemory) {
-		this.availableMemory = availableMemory;
+		return host.getInstalledMemory().getValue().intValue();
 	}
 
 	@Override
 	public int getAvailableStorage() {
-		return availableStorage;
-	}
-
-	public void setAvailableStorage(int availableStorage) {
-		this.availableStorage = availableStorage;
+		return host.getInstalledStorage().getValue().intValue();
 	}
 
 	@Override
 	public int getMaxVNFs() {
-		return maxVNFs;
-	}
-
-	public void setMaxVNFs(int maxVNFs) {
-		this.maxVNFs = maxVNFs;
+		return host.getMaxVNFs();
 	}
 
 	@Override
 	public Set<NodeReader> getNodes() {
-		return nodes;
+		return nfvReader.getNodes( nodes );
 	}
-
-	public void setNodes(Set<NodeReader> nodes) {
-		this.nodes = nodes;
-	}
-
 }
