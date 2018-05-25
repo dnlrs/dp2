@@ -30,75 +30,91 @@ import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.VNFTypeReader;
 import it.polito.dp2.NFV.sol1.jaxb.*;
 
+/**
+ * This class implements the NvfReader interface.
+ * 
+ * NOTE: 
+ * This class maintains a set of databases with all possible interfaces in 
+ * order to improve memory use, i.e. if the library user asks several times 
+ * for the same interface the same object will be returned every time.
+ * Databases are built when class is created, after the unmarshalling.
+ * 
+ * 
+ * @author    Daniel C. Rusu
+ * @studentID 234428
+ */
 public class NfvReaderReal implements NfvReader {
+	
+	private static final String JAXB_CLASSES_PACKAGE = "it.polito.dp2.NFV.sol1.jaxb";
+	private static final String SCHEMA_LOCATION      = "/xsd/nfvInfo.xsd";
+
+	private static final String PROPERTY_XML_FILE    = "it.polito.dp2.NFV.sol1.NfvInfo.file";
+	private static final String PROPERTY_USER_DIR    = "user.dir";
 	
 	private final NFVSystemType nfvSystem;
 	
-	private HashMap<String, HostReader>    dbHosts; // map of host interfaces <host.name, HostReader>
-	private HashMap<String, NffgReader>    dbNFFGs; // map of NFFG interfaces <nffg.name, NffgReader>
-	private HashMap<String, NodeReader>    dbNodes; // map of node interfaces <node.name, NodeReader>
-	private HashMap<String, VNFTypeReader> dbVNFs;  // map of VNF  interfaces <vnf.name , VnfReader >
+	private HashMap<String, HostReader>    dbHosts; 			  // all host interfaces <host.name, HostReader>
+	private HashMap<String, NffgReader>    dbNFFGs; 			  // all NFFG interfaces <nffg.name, NffgReader>
+	private HashMap<String, NodeReader>    dbNodes; 			  // all node interfaces <node.name, NodeReader>
+	private HashMap<String, VNFTypeReader> dbVNFs;  			  // all VNF  interfaces <vnf.name , VnfReader >
 	private HashMap<String, ConnectionPerformanceReader> dbConns; // Connections interfaces <connection.name, ConnectionPerformanceReader>
 	private HashMap<String, HashMap<String, LinkReader>> dbLinks; // Links interfaces <nffg.name, <link.name, LinkReader>>
 	
 
 	protected NfvReaderReal() throws Exception {
-	
-		final String contxtPath     = new String( "it.polito.dp2.NFV.sol1.jaxb" );
-		final String fileSysPro     = new String( "it.polito.dp2.NFV.sol1.NfvInfo.file" );
-		final String schemaLocation = new String( "/xsd/nfvInfo.xsd" );
-		
-		String schemaFile;
-		String xmlFile;
-		
-		Properties sysProps = System.getProperties();
-		
-		/*
-		 * get Schema to use in the validation process
-		 */
-		schemaFile = new String( sysProps.getProperty("user.dir") + schemaLocation );
 		
 		/* ------------------------------------------------------------------
 		 * unmarshal xml file 
 		 */
-		JAXBContext jc  = JAXBContext.newInstance( contxtPath );
+		JAXBContext jc  = JAXBContext.newInstance( JAXB_CLASSES_PACKAGE );
 		Unmarshaller um = jc.createUnmarshaller();
 		
 		/* ------------------------------------------------------------------
 		 * Set up validation
 		 */
-		SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         try {
-     
+
+        	
+        	/*
+        	 * get Schema to use in the validation process
+        	 */
+        	
+        	String schemaFile = System.getProperty(PROPERTY_USER_DIR);
+        	if ( schemaFile == null )
+        		throw new NullPointerException("Could not get schema");
+        	
+        	schemaFile.concat(SCHEMA_LOCATION);
+        	
+        	SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
             Schema schema = sf.newSchema(new File( schemaFile ));
+
             um.setSchema(schema);
-            
             um.setEventHandler(
                 new ValidationEventHandler() {
-                    // allow unmarshalling to continue even if there are errors
+                    // if there are errors, stop unmashalling
                     public boolean handleEvent(ValidationEvent ve) {
-                        // ignore warnings
                         if (ve.getSeverity() != ValidationEvent.WARNING) {
                             ValidationEventLocator vel = ve.getLocator();
                             System.out.println("Line:Col[" + vel.getLineNumber() +
                                 ":" + vel.getColumnNumber() +
                                 "]:" + ve.getMessage());
+                            return false;
                         }
                         return true;
                     }
                 }
             );
-        } catch ( SAXException se ) {
-            throw new SAXException(se);
-        }
+        } catch ( Exception e ) {
+            System.err.println(e); // no validation
+        } 
         
 		
         /* ------------------------------------------------------------------ 
 		 * get XML file to load 
 		 */
-        sysProps.list(System.out);
-		System.out.println("property: " + sysProps.getProperty( fileSysPro ) );
-		xmlFile = new String( sysProps.getProperty( fileSysPro ) );
+		String xmlFile = System.getProperty( PROPERTY_XML_FILE );
+		if ( xmlFile == null )
+			throw new NullPointerException("Could not get XML file to read.");
         
         
         /* ------------------------------------------------------------------
@@ -111,8 +127,13 @@ public class NfvReaderReal implements NfvReader {
 		
 		nfvSystem = element.getValue();
 		
+		if ( nfvSystem == null )
+			throw new NullPointerException("Null Element.");
+		
+		// init data structures
 		dbHosts = new HashMap<String, HostReader>();
 		dbNodes = new HashMap<String, NodeReader>();
+		dbNFFGs = new HashMap<String, NffgReader>();
 		dbVNFs  = new HashMap<String, VNFTypeReader>();
 		dbConns = new HashMap<String, ConnectionPerformanceReader>();
 		dbLinks = new HashMap<String, HashMap<String, LinkReader>>();
@@ -121,13 +142,17 @@ public class NfvReaderReal implements NfvReader {
 		
 	}
 	
+	
 	private void init() throws Exception {
 		
 		Validator check = new Validator();
 		
+		if ( !( check.isValidNFVSystem(nfvSystem) ) )
+			throw new Exception("Invalid NFVSystem.");
+		
 		InfrastructureNetwork in = nfvSystem.getIN(); 
 		
-		if ( in == null ) // NFV system didn't have a infrastructure network
+		if ( !( check.isValidIN( in ) ) )
 			throw new Exception("Invalid Infrastructure Network.");
 			
 		
@@ -135,168 +160,189 @@ public class NfvReaderReal implements NfvReader {
 		// create hosts readers
 		// ------------------------------------------------------------------
 		InfrastructureNetwork.Hosts hosts = in.getHosts();
-		
-		if ( hosts == null ) // the infrastructure network doesn't have any host
-			throw new Exception("No hosts in Infrastructure Network.");
-		
-		List<Host> listHosts = hosts.getHost();
-		// TODO: list size?
-		if ( listHosts.size() <= 0 ) // the infrastructure network doesn't have any host
-			throw new Exception("No hosts in Infrastructure Network.");
-		
-		for ( Host h : listHosts ) {
-			
-			if ( !(check.isValidHost( h )) ) 
-				continue; // invalid host
-			
-			Host.AllocatedNodes allocatedNodes = h.getAllocatedNodes();
-			
-			List<NodeRef> listNodeRefs = allocatedNodes.getNode();
-			Set<String> nodes = new HashSet<String>();
-			
-			for ( NodeRef nr : listNodeRefs ) {
-				
-				if ( !(check.isValidNodeRef( nr )) )
-					continue; // invalid nodeRef
-				
-				nodes.add( nr.getName() );
-			}
-
-			HostReaderReal host = new HostReaderReal(this);
-			host.setHost(h);
-			host.setNodes(nodes);
-			
-			// Add HostReader to HostReader database
-			dbHosts.put(host.getName(), host);
-		}
-		
+		initHosts(hosts, check);
 		
 		// ------------------------------------------------------------------
 		// create connections performance readers
 		// ------------------------------------------------------------------
 		InfrastructureNetwork.Connections connections = in.getConnections();
-		
-		if ( connections == null ) // the infrastructure network doesn't have any connection
-			throw new Exception("No connections in Infrastructure Network.");
-		
-		List<Connection> listConnections = connections.getConnection();
-		// TODO: list size?
-		if ( listConnections.size() <= 0 ) // the infrastructure network doesn't have any connection
-			throw new Exception("No connections in Infrastructure Network.");
-		
-		for ( Connection c : listConnections ) {
-			
-			if ( !(check.isValidConnection( c )) )
-				continue; // invalid connection
-			
-			ConnectionPerformanceReaderReal connection = new ConnectionPerformanceReaderReal();
-			connection.setConnection(c);
-			
-			String cID = new String( c.getConnectionID().getSourceHost() + "-" +
-			                         c.getConnectionID().getDestinationHost() );
-			// add connection to connections database
-			dbConns.put( cID, connection );
-		}
+		initConnections(connections, check);
 		
 		// ------------------------------------------------------------------
 		// create VNF type readers
 		// ------------------------------------------------------------------
 		Catalogue catalogue = nfvSystem.getCatalogue();
-		
-		if ( catalogue == null )
-			throw new Exception("No catalogue found in nfv system.");
-		
-		List<VNF> listVNFs = catalogue.getVnf();
-		// TODO: list size zero?
-		if ( listVNFs.size() == 0 )
-			throw new Exception("No VNFs found in catalogue.");
-		
-		for ( VNF v : listVNFs ) {
-			
-			if ( !(check.isValidVNF( v )) )
-				continue; // invalid VNF
-			
-			VNFTypeReaderReal vnf = new VNFTypeReaderReal();
-			vnf.setVNF(v);
-			
-			// add VNF to VNFs database
-			dbVNFs.put(v.getName(), vnf);
-		}
-		
+		initVNFs( catalogue, check );
+
 		// ------------------------------------------------------------------
 		// create NFFG readers && nodes readers && links
 		// ------------------------------------------------------------------
 		NFVSystemType.DeployedNFFGs deployedNFFGs = nfvSystem.getDeployedNFFGs();
-		
-		if ( deployedNFFGs == null )
-			throw new Exception("No deployedNffgs found.");
-		
-		List<NFFG> listNFFGs = deployedNFFGs.getNffg();
-		// TODO: check list size?????
-		if ( listNFFGs.size() == 0 )
-			throw new Exception("No deployedNffgs found.");
-		
-		for ( NFFG n : listNFFGs ) {
-			
-			if ( !(check.isValidNFFG( n )) )
-				continue; // invalid NFFG
-			
-			List<Node> listNodes = n.getNodes().getNode();
-			Set<String> setNodes = new HashSet<String>();
-			
-			// create Links HashMap associated with current NFFG
-			HashMap<String, LinkReader> hmLinks = new HashMap<String, LinkReader>();
-			
-
-			for ( Node nd : listNodes ) {
-				
-				if ( !(check.isValidNode( nd )) )
-					continue; // invalid node
-				
-				// ----------------------------------------------------------
-				// manage node && links
-				// ----------------------------------------------------------
-				
-				List<Link> listLinks = nd.getLinks().getLink();
-				Set<String> setLinks = new HashSet<String>();
-				
-				for ( Link l : listLinks ) {
-					
-					if ( !(check.isValidLink( l )) )
-						continue; // invalid Link
-					
-					LinkReaderReal link = new LinkReaderReal(this);
-					link.setLink(l);
-					
-					setLinks.add( l.getName() );    // add link to node
-					hmLinks.put(l.getName(), link); // add link to links database for current NFFG
-				}
-				
-				
-				NodeReaderReal node = new NodeReaderReal(this);
-				node.setNode( nd );
-				node.setLinks( setLinks );
-				
-				setNodes.add( nd.getName() ); // add node to nffg's list of nodes
-				dbNodes.put(nd.getName(), node);
-				
-			}
-			
-			NffgReaderReal nffg = new NffgReaderReal(this);
-			nffg.setNffg( n );
-			nffg.setNodes( setNodes );
-			
-			// add links to links database under current NFFG
-			dbLinks.put(n.getName(), hmLinks);
-
-			// add NFFG reader to database
-			dbNFFGs.put(n.getName(), nffg);
-		}	
-		
+		initNFFGs(deployedNFFGs, check);
 	}
 	
 	
+	/**
+	 * Creates a set of hostReader interfaces useful to access data 
+	 * unmarshalled from the XML file.
+	 * 
+	 * @param hosts
+	 * @param check
+	 */
+	private void initHosts( InfrastructureNetwork.Hosts hosts, Validator check ) {
+
+		List<Host> liveListXMLHosts = hosts.getHost();
+
+		if ( liveListXMLHosts.size() > 0 ) {
+
+			for ( Host xmlHost : liveListXMLHosts ) {
+				
+				if ( !( check.isValidHost( xmlHost ) ) ) 
+					continue; // invalid host
+				
+				Host.AllocatedNodes allocatedNodes = xmlHost.getAllocatedNodes();
+
+				List<NodeRef> liveListXMLNodeRefs = allocatedNodes.getNode();
+				Set<String> nodes = new HashSet<String>();
+				
+				if ( liveListXMLNodeRefs.size() > 0 ) {
+					for ( NodeRef xmlNodeRef : liveListXMLNodeRefs ) {
+						
+						if ( !( check.isValidNodeRef( xmlNodeRef ) ) )
+							continue; // invalid nodeRef
+						
+						nodes.add( xmlNodeRef.getName() );
+					}
+				}
+				
+				HostReaderReal host = new HostReaderReal(this, xmlHost, nodes);
+				// Add HostReader to HostReader database
+				dbHosts.put( host.getName(), host );
+			}
+		}
+	}
 	
+	
+	/**
+	 * Creates a set of ConnectionPerformanceReader interfaces useful to access data
+	 * unmarshalled from the XML file.
+	 * 
+	 * @param connections
+	 * @param check
+	 */
+	private void initConnections( InfrastructureNetwork.Connections connections, Validator check ) {
+
+		List<Connection> liveListXMLConnections = connections.getConnection();
+		
+		if ( liveListXMLConnections.size() > 0 ) {
+			for ( Connection xmlConnection : liveListXMLConnections ) {
+				
+				if ( !( check.isValidConnection( xmlConnection ) ) )
+					continue; // invalid connection
+				
+				ConnectionPerformanceReaderReal connection = new ConnectionPerformanceReaderReal( xmlConnection );
+				
+				String cID = new String( xmlConnection.getConnectionID().getSourceHost() + "-" +
+				                         xmlConnection.getConnectionID().getDestinationHost() );
+				// add connection to connections database
+				dbConns.put( cID, connection );
+			}
+		}
+	}
+	
+	
+	/**
+	 * Creates a set of {@link VNFTypeReader} interfaces useful to access data
+	 * unmarshalled from the XML file.
+	 * 
+	 * @param catalogue
+	 * @param check
+	 */
+	private void initVNFs( Catalogue catalogue, Validator check ) {
+		
+		List<VNF> liveListXMLVNFs = catalogue.getVnf();
+
+		if ( liveListXMLVNFs.size() > 0 ) {
+			for ( VNF xmlVNF : liveListXMLVNFs ) {
+				
+				if ( !( check.isValidVNF( xmlVNF ) ) )
+					continue; // invalid VNF
+				
+				VNFTypeReaderReal vnf = new VNFTypeReaderReal( xmlVNF );
+				
+				// add VNF to VNFs database
+				dbVNFs.put( xmlVNF.getName(), vnf);
+			}
+		}
+	}
+	
+	
+	/**
+	 * Creates a set of {@link NffgReader} interfaces useful to access data
+	 * unmarshalled from the XML file.
+	 * 
+	 * @param deployedNFFGs
+	 * @param check
+	 */
+	private void initNFFGs( NFVSystemType.DeployedNFFGs deployedNFFGs, Validator check ) {
+
+		List<NFFG> liveListXMLNFFGs = deployedNFFGs.getNffg();
+
+		if ( liveListXMLNFFGs.size() > 0 ) {
+			for ( NFFG xmlNFFG : liveListXMLNFFGs ) {
+				
+				if ( !( check.isValidNFFG( xmlNFFG ) ) )
+					continue; // invalid NFFG
+				
+				List<Node> liveListXMLNodes = xmlNFFG.getNodes().getNode();
+				Set<String> nffgNodeNames = new HashSet<String>();
+				
+				// create Links HashMap associated with current NFFG
+				HashMap<String, LinkReader> hmLinkInterfaces = new HashMap<String, LinkReader>();
+				
+				// manage nodes if nffg has nodes
+				if ( liveListXMLNodes.size() > 0 ) {
+					for ( Node xmlNode : liveListXMLNodes ) {
+						
+						if ( !( check.isValidNode( xmlNode ) ) )
+							continue; // invalid node
+												
+						List<Link> liveListXMLLinks = xmlNode.getLinks().getLink();
+						Set<String> setLinks = new HashSet<String>();
+						
+						// manage links if node has links
+						if ( liveListXMLLinks.size() > 0 ) {
+							for ( Link xmlLink : liveListXMLLinks ) {
+								
+								if ( !( check.isValidLink( xmlLink ) ) )
+									continue; // invalid Link
+								
+								setLinks.add( xmlLink.getName() );    // add link to node
+								
+								LinkReaderReal link = new LinkReaderReal( this, xmlLink );
+								hmLinkInterfaces.put( xmlLink.getName(), link ); // add link to links database for current NFFG
+							}
+						}
+						
+						
+						nffgNodeNames.add( xmlNode.getName() ); // add node to nffg's list of nodes
+						
+						NodeReaderReal node = new NodeReaderReal(this, xmlNode, setLinks);
+						dbNodes.put( xmlNode.getName(), node );
+						
+					}
+				}
+				
+				NffgReaderReal nffg = new NffgReaderReal( this, xmlNFFG, nffgNodeNames );
+				
+				// add links to links database under current NFFG
+				dbLinks.put(xmlNFFG.getName(), hmLinkInterfaces);				
+	
+				// add NFFG reader to database
+				dbNFFGs.put(xmlNFFG.getName(), nffg);
+			}	
+		}
+	}
 	
 	
 	/**

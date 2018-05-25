@@ -4,8 +4,10 @@ import java.math.BigInteger;
 
 import it.polito.dp2.NFV.sol1.jaxb.Connection;
 import it.polito.dp2.NFV.sol1.jaxb.Host;
+import it.polito.dp2.NFV.sol1.jaxb.InfrastructureNetwork;
 import it.polito.dp2.NFV.sol1.jaxb.Link;
 import it.polito.dp2.NFV.sol1.jaxb.NFFG;
+import it.polito.dp2.NFV.sol1.jaxb.NFVSystemType;
 import it.polito.dp2.NFV.sol1.jaxb.Node;
 import it.polito.dp2.NFV.sol1.jaxb.NodeRef;
 import it.polito.dp2.NFV.sol1.jaxb.SizeInMB;
@@ -14,6 +16,37 @@ import it.polito.dp2.NFV.sol1.jaxb.VNF;
 public class Validator {
 	
 	protected Validator() {}
+	
+	protected Boolean isValidNFVSystem( NFVSystemType nfv ) {
+		
+		if ( nfv == null )
+			return Boolean.FALSE; // invalid argument
+		
+		if ( nfv.getIN() == null )
+			return Boolean.FALSE; // system doesn't have Infrastructure Network element
+		
+		if ( nfv.getCatalogue() == null )
+			return Boolean.FALSE; // system doesn't have Catalogue element
+		
+		if ( nfv.getDeployedNFFGs() == null )
+			return Boolean.FALSE; // system doesn't have deployed nffg element
+		
+		return Boolean.TRUE; 
+	}
+	
+	protected Boolean isValidIN( InfrastructureNetwork in ) {
+		
+		if ( in == null )
+			return Boolean.FALSE; // invalid argument
+		
+		if ( in.getHosts() == null )
+			return Boolean.FALSE; // in doesn't have hosts
+		
+		if ( in.getConnections() == null )
+			return Boolean.FALSE; // in doesn't have connections
+		
+		return Boolean.TRUE;
+	}
 	
 	protected Boolean isValidHost( Host h ) {
 		
@@ -160,11 +193,11 @@ public class Validator {
 		if ( l.getDestinationNode() == null )
 			return Boolean.FALSE; // invalid destination link end point
 		
-		if ( ( l.getMinThroughput() == null ) || ( l.getMaxLatency() == null ) )
-			return Boolean.FALSE; // missing throughput or latency
-		
-		if ( ( l.getMinThroughput().getValue() < 0.0 ) || ( l.getMaxLatency().getValue() < 0 ) )
-			return Boolean.FALSE; // invalid throughput or latency values
+//		if ( ( l.getMinThroughput() == null ) || ( l.getMaxLatency() == null ) )
+//			return Boolean.FALSE; // missing throughput or latency
+//		
+//		if ( ( l.getMinThroughput().getValue() < 0.0 ) || ( l.getMaxLatency().getValue() < 0 ) )
+//			return Boolean.FALSE; // invalid throughput or latency values
 		
 		return Boolean.TRUE; // Link is valid
 	}

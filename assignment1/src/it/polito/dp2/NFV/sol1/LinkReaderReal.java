@@ -42,12 +42,18 @@ public class LinkReaderReal implements LinkReader {
 
 	@Override
 	public int getLatency() {
+		if ( link.getMaxLatency() == null )
+			return 0;
+		
 		return link.getMaxLatency().getValue();
 	}
 
 
 	@Override
 	public float getThroughput() {
+		if ( link.getMinThroughput() == null )
+			return 0;
+		
 		return link.getMinThroughput().getValue();
 	}
 

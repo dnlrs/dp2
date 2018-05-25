@@ -9,3 +9,6 @@ build/
 
 # ignore xjc java classes auto-created
 gen/
+
+# ignore junit temp folders
+temp*/

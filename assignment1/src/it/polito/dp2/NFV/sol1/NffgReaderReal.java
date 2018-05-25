@@ -18,6 +18,7 @@ public class NffgReaderReal implements NffgReader {
 	
 	protected NffgReaderReal( NfvReaderReal nfvReader, NFFG n, Set<String> nodes ) {
 		this.nfvReader = nfvReader;
+		
 		this.nodes     = nodes;		
 		this.nffg      = n;
 	}
