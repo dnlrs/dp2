@@ -8,83 +8,88 @@
 ## Logical organization
 =======================
 
-NFVSystem
+notation: 
+   
+    "element name" : "element type" [allowed occurrences]
+
+
+NFVSystem : NFVSystemType [1]
     |
-    +---IN
+    +---IN : InfrastructureNetwork [1]
     |   |
-    |   +---hosts
+    |   +---hosts [1]
     |   |   |
-    |   |   \---host*
+    |   |   +---host : Host [0..*]
     |   |       |
-    |   |       +---name
-    |   |       +---maxVNFs
-    |   |       +---installedMemory
-    |   |       |   \---@unit
+    |   |       +---name             : string [1]
+    |   |       +---maxVNFs          : int [1]
+    |   |       +---installedMemory  : sizeInMB [1]
+    |   |       |   +---@unit : string (fixed)
     |   |       |
-    |   |       +---installedStorage
-    |   |       |   \---@unit
+    |   |       +---installedStorage : sizeInMB [1]
+    |   |       |   +---@unit : string (fixed)
     |   |       |
-    |   |       \---allocatedNodes
+    |   |       +---allocatedNodes [1]
     |   |           |
-    |   |           \---node*
-    |   |               |---@name
-    |   |               \---@associatedNFFG
+    |   |           +---node : NodeRef [0..*]
+    |   |               +---@name           : string (required)
+    |   |               +---@associatedNFFG : string (required)
     |   |
-    |   \---connections
+    |   +---connections [1]
     |       |
-    |       \---connection*
+    |       +---connection : Connection [0..*]
     |           |
-    |           +---connectionID
+    |           +---connectionID [1]
     |           |   |
-    |           |   +---sourceHost
-    |           |   \---destinationHost
+    |           |   +---sourceHost      : string [1]
+    |           |   +---destinationHost : string [1]
     |           |
-    |           +---averageThroughput
-    |           |   \---@unit
+    |           +---averageThroughput   : Throughput [1]
+    |           |   +---@unit : string (fixed)
     |           |
-    |           \---latency
-    |               \---@unit
+    |           +---latency             : Latency [1]
+    |               +---@unit : string (fixed)
     |
     |
-    +---catalogue
+    +---catalogue : Catalogue [1]
     |   |
-    |   \---vnf*
+    |   +---vnf : VNF [0..*]
     |       |
-    |       +---name
-    |       +---functionalType
-    |       +---requiredMemory
-    |       |   \---@unit
+    |       +---name            : string [1]
+    |       +---functionalType  : FunctionalTypeEnum [1]
+    |       +---requiredMemory  : sizeInMB [1]
+    |       |   +---@unit : string
     |       |
-    |       \---requiredStorage
-    |           \---@unit
+    |       +---requiredStorage : sizeInMB [1]
+    |           +---@unit : string
     |
     |
-    \---deployedNFFGs
+    +---deployedNFFGs [1]
         |
-        \---nffg*
+        +---nffg : NFFG [0..*]
             |
-            +---name
-            +---deployTime
-            \---nodes
+            +---name       : string [1]
+            +---deployTime : dateTime [1]
+            +---nodes [1]
                 |
-                \---node*
+                +---node : Node [0..*]
                     |
-                    +---name
-                    +---functionalType
-                    +---hostingHost
-                    +---associatedNFFG
-                    \---links
+                    +---name           : string [1]
+                    +---functionalType : string [1]
+                    +---hostingHost    : string [1]
+                    +---associatedNFFG : string [1]
+                    +---links [1]
                         |
-                        \---link*
+                        +---link : Link [0..*]
                             |
-                            +---name
-                            +---sourceNode
-                            +---destinationNode
-                            +---minThroughput?
-                            |   \---@unit
+                            +---name            : string [1]
+                            +---sourceNode      : string [1]
+                            +---destinationNode : string [1]
+                            +---minThroughput   : Throughput [0..1]
+                            |   +---@unit
                             |
-                            \---maxLatency?
-                                \---@unit
+                            +---maxLatency      : Latency [0..1]
+                                +---@unit
 
 
 NOTE:

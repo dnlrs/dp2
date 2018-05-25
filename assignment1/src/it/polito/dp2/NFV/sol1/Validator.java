@@ -71,7 +71,7 @@ public class Validator {
 		if ( c.getConnectionID().getSourceHost() == null )
 			return Boolean.FALSE; // invalid source end point
 		
-		if ( c.getConnectionID().getDestionationHost() == null )
+		if ( c.getConnectionID().getDestinationHost() == null )
 			return Boolean.FALSE; // invalid destination end point
 		
 		if ( ( c.getAverageThroughput() == null ) || ( c.getLatency() == null ))

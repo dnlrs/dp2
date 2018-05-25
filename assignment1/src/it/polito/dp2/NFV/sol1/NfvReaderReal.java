@@ -193,7 +193,7 @@ public class NfvReaderReal implements NfvReader {
 			connection.setConnection(c);
 			
 			String cID = new String( c.getConnectionID().getSourceHost() + "-" +
-			                         c.getConnectionID().getDestionationHost() );
+			                         c.getConnectionID().getDestinationHost() );
 			// add connection to connections database
 			dbConns.put( cID, connection );
 		}

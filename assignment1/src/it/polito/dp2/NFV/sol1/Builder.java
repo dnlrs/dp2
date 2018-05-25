@@ -41,7 +41,8 @@ import it.polito.dp2.NFV.sol1.jaxb.VNF;
  * This class reads data from it.polito.dp2.NFV System interfaces and builds
  * JAXB java objects that are marshallable into an XML file.
  * 
- * @author Daniel C. Rusu
+ * @author    Daniel C. Rusu
+ * @studentID 234428
  *
  */
 public class Builder  {
@@ -85,15 +86,14 @@ public class Builder  {
 	 */
 	protected NFVSystemType buildNFVSystemType() {
 		
-		NFVSystemType nfvSystem = of.createNFVSystemType();
-
-		InfrastructureNetwork in = buildIN(); // build Infrastructure Network
-		nfvSystem.setIN( in );                // add Infrastructure Network to NFVSystem
-		
-		Catalogue catalogue = buildCatalogue(); // build Catalogue
-		nfvSystem.setCatalogue( catalogue );    // add Catalogue to NFVSystem
-		
+		InfrastructureNetwork       in            = buildIN(); // build Infrastructure Network
+		Catalogue                   catalogue     = buildCatalogue(); // build Catalogue
 		NFVSystemType.DeployedNFFGs deployedNFFGs = buildDeployedNFFGs(); // deployed NFFGs
+		
+
+		NFVSystemType nfvSystem = of.createNFVSystemType();
+		nfvSystem.setIN( in );                       // add Infrastructure Network to NFVSystem
+		nfvSystem.setCatalogue( catalogue );         // add Catalogue to NFVSystem
 		nfvSystem.setDeployedNFFGs( deployedNFFGs ); // add deployedNFFGs to NFVSystem
 
 		return nfvSystem;
@@ -108,43 +108,53 @@ public class Builder  {
 	 */
 	private InfrastructureNetwork buildIN() {
 
-		// retrieve hosts ---------------------------------------------------
 		InfrastructureNetwork.Hosts hosts = 
 				of.createInfrastructureNetworkHosts();
 		
-		List<Host> hosts_list = hosts.getHost(); // live list
-		Host       host       = null;
-				
-		ArrayList<HostReader> allhosts = new ArrayList<HostReader>();
-
-		Set<HostReader> hosts_set = monitor.getHosts();
-		
-		for ( HostReader hr : hosts_set ) {
-			host = buildHost( hr );
-			hosts_list.add( host );
-			allhosts.add( hr );
-		}
-
-		// retrieve connections between hosts -------------------------------
 		InfrastructureNetwork.Connections connections = 
 				of.createInfrastructureNetworkConnections();
-		
-		List<Connection> connections_list = connections.getConnection(); // live list
-		Connection       connection       = null;
-		
-		for ( int i = 0; i < allhosts.size(); i++ )
-			for ( int j = 0; j < allhosts.size(); j++ ) {
-				connection = buildConnection( allhosts.get(i), 
-						                      allhosts.get(j) );
-				if ( connection != null )
-					connections_list.add( connection );
-			}
 
+		
+		// retrieve host interfaces -----------------------------------------
+		Set<HostReader>       setHostInterfaces = monitor.getHosts();
+		
+		/*
+		 * NOTE: if no hosts then no connections
+		 */
+		if ( !( setHostInterfaces.isEmpty() ) ) {
+			
+			// read hosts --------------------------------------------------- 
+			List<Host> liveListXMLHosts = hosts.getHost();
+			for ( HostReader hostInterface : setHostInterfaces ) {
+				Host host = buildHost( hostInterface );
+				
+				if ( host != null )
+					liveListXMLHosts.add( host );
+			}
+		
+			// read connections between hosts -------------------------------
+			List<Connection> liveListXMLConnections = connections.getConnection();
+			
+			/*
+			 * NOTE: there may be also connection between a host and itself
+			 */
+			for ( HostReader sourceHostInterface : setHostInterfaces )
+				for ( HostReader destHostInterface : setHostInterfaces ) {
+					
+					Connection connection = 
+							buildConnection( sourceHostInterface, destHostInterface );
+					
+					if ( connection != null )
+						liveListXMLConnections.add( connection );
+				}
+
+		}
+		
 		// prepare IN -------------------------------------------------------
 		InfrastructureNetwork in = of.createInfrastructureNetwork();
 
-		in.setHosts( hosts );             // add hosts to IN
-		in.setConnections( connections ); // add connections to IN
+		in.setHosts( hosts );             // add hosts to Infrastructure Network
+		in.setConnections( connections ); // add connections to Infrastructure Network
 		
 		return in;
 	}
@@ -160,17 +170,19 @@ public class Builder  {
 	 */
 	private Catalogue buildCatalogue() {
 
-		// retrieve VNFs ----------------------------------------------------
 		Catalogue catalogue = of.createCatalogue();
 		
-		List<VNF> vnfs = catalogue.getVnf(); // live list
-		VNF       vnf  = null;
+		Set<VNFTypeReader> setVNFsInterfaces = monitor.getVNFCatalog();
 		
-		Set<VNFTypeReader> vnfreads = monitor.getVNFCatalog();
-
-		for ( VNFTypeReader vnftr : vnfreads ) {
-			vnf = buildVNF( vnftr );
-			vnfs.add( vnf );
+		if ( !( setVNFsInterfaces.isEmpty() ) ) {
+			List<VNF> liveListVNFs = catalogue.getVnf(); 
+			
+			for ( VNFTypeReader vnfInterface : setVNFsInterfaces ) {
+				VNF vnf = buildVNF( vnfInterface );
+				
+				if ( vnf != null )
+					liveListVNFs.add( vnf );
+			}
 		}
 		
 		return catalogue;
@@ -187,18 +199,21 @@ public class Builder  {
 	 */
 	private NFVSystemType.DeployedNFFGs buildDeployedNFFGs() {
 		
-		// retrieve NFFGs ---------------------------------------------------
 		NFVSystemType.DeployedNFFGs deployedNFFGs = 
 				of.createNFVSystemTypeDeployedNFFGs();
 		
-		List<NFFG> nffg_list = deployedNFFGs.getNffg(); // live list
-		NFFG       nffg      = null;
+		Set<NffgReader> setNFFGsInterfaces = monitor.getNffgs(null);
 		
-		Set<NffgReader> nffgs_set = monitor.getNffgs(null);
-
-		for ( NffgReader nr : nffgs_set ) {
-			nffg = buildNFFG( nr );
-			nffg_list.add( nffg );
+		if ( !( setNFFGsInterfaces.isEmpty() ) ) {			
+			List<NFFG> liveListNFFGs = deployedNFFGs.getNffg(); // live list
+			
+	
+			for ( NffgReader nffgInterface : setNFFGsInterfaces ) {
+				NFFG nffg = buildNFFG( nffgInterface );
+				
+				if ( nffg != null )
+					liveListNFFGs.add( nffg );
+			}
 		}
 		
 		return deployedNFFGs;
@@ -210,37 +225,56 @@ public class Builder  {
 	 * Creates a new Host JAXB java object by reading required data from a
 	 * NFVSystem HostReader interface.
 	 * 
-	 * @param  hr HostReader interface
-	 * @return    a new Host JAXB java object
+	 * @param  hI HostReader interface
+	 * @return    a new Host JAXB java object, null if host is invalid
 	 */
-	private Host buildHost( HostReader hr ) {
+	private Host buildHost( HostReader hI ) {
+		
+		if ( hI == null )
+			return null; // invalid argument
+		
+		if ( ( hI.getName() == null ) || ( hI.getMaxVNFs() < 0 ) )
+			return null; // invalid host
 
-		// retrieve available memory  and storage ---------------------------
-		SizeInMB am = buildSizeInMB( BigInteger.valueOf( hr.getAvailableMemory()  ) );
-		SizeInMB as = buildSizeInMB( BigInteger.valueOf( hr.getAvailableStorage() ) );
+		// retrieve Available Memory and Storage ---------------------------
+		SizeInMB am = buildSizeInMB( BigInteger.valueOf( hI.getAvailableMemory()  ) );
+		SizeInMB as = buildSizeInMB( BigInteger.valueOf( hI.getAvailableStorage() ) );
+		
+		if ( ( am == null ) || ( as == null ) )
+			return null; // invalid values means invalid host
 		
 		// retrieve all nodes allocated in current host ---------------------
 		Host.AllocatedNodes allocatedNodes = of.createHostAllocatedNodes();
 
-		List<NodeRef> nodeRef_list   = allocatedNodes.getNode(); // live list
-		NodeRef       noderef        = null; // Node "Reference"
+		Set<NodeReader> setNodesInterfaces = hI.getNodes();
+		
+		if ( !( setNodesInterfaces.isEmpty() ) ) {
+			List<NodeRef> liveListXMLNodeRefs   = allocatedNodes.getNode();					
+	
+			for ( NodeReader nodeInterface : setNodesInterfaces ) {
+				NffgReader nffgInterface = nodeInterface.getNffg();
 				
-
-		Set<NodeReader> nodes_set = hr.getNodes();
-
-		for ( NodeReader nr : nodes_set ) {
-			noderef = of.createNodeRef();
-			
-			noderef.setName( nr.getName() );                     // node's name
-			noderef.setAssociatedNFFG( nr.getNffg().getName() ); // node's nffg
-
-			nodeRef_list.add( noderef );
+				if ( nffgInterface == null )
+					continue;
+				
+				String nodeName = nodeInterface.getName();
+				String nffgName = nffgInterface.getName();
+				
+				if ( ( nodeName == null ) || ( nffgName == null ) )
+					continue;
+				
+				NodeRef nodeRef = of.createNodeRef();
+				nodeRef.setName( nodeName );
+				nodeRef.setAssociatedNFFG( nffgName );
+	
+				liveListXMLNodeRefs.add( nodeRef );
+			}
 		}
 
 		// prepare host data structure --------------------------------------
 		Host host = of.createHost();
-		host.setName( hr.getName() );
-		host.setMaxVNFs( hr.getMaxVNFs() );
+		host.setName( hI.getName() );
+		host.setMaxVNFs( hI.getMaxVNFs() );
 		host.setInstalledMemory( am );
 		host.setInstalledStorage( as );
 		host.setAllocatedNodes( allocatedNodes );
@@ -254,9 +288,16 @@ public class Builder  {
 	 * Creates a new SizeInMB JAXB java object given a BigInteger value.
 	 * 
 	 * @param  value a BigInteger value
-	 * @return       a new SizeInMB JAXB java object
+	 * @return       a new SizeInMB JAXB java object, null if value is invalid
 	 */
 	private SizeInMB buildSizeInMB(BigInteger value) {
+		
+		if ( value == null )
+			return null; // invalid argument
+		
+		if ( value.intValue() < 0  )
+			return null; // invalid value
+		
 		SizeInMB sim = of.createSizeInMB();
 		sim.setValue( value );
 		sim.setUnit( sim.getUnit() );
@@ -270,40 +311,51 @@ public class Builder  {
 	/**
 	 * Creates a new Connection JAXB java object given two end point hosts.
 	 * 
-	 * @param  sourceHost the source Host
-	 * @param  destHost   the destination Host
-	 * @return            a new Connection JAXB java object
+	 * @param  sourceHostI the source Host
+	 * @param  destHostI   the destination Host
+	 * @return            a new Connection JAXB java object, null if errors
 	 */
-	private Connection buildConnection( HostReader sourceHost,
-			                              HostReader destHost    ) {
+	private Connection buildConnection( HostReader sourceHostI, 
+			                            HostReader destHostI    ) {
 
+		if ( ( sourceHostI == null ) || ( destHostI == null ) )
+			return null; // invalid arguments
 
-		ConnectionPerformanceReader cpr = 
-				monitor.getConnectionPerformance( sourceHost, destHost );
+		ConnectionPerformanceReader connectionInterface = 
+				monitor.getConnectionPerformance( sourceHostI, destHostI );
 		
-		if ( cpr == null )
+		if ( connectionInterface == null )
 			return null;
 		
 		// retrieve connection ID (source and destination host name) --------
-		Connection.ConnectionID cID = of.createConnectionConnectionID();
-		cID.setSourceHost( sourceHost.getName() );
-		cID.setDestionationHost( destHost.getName() );
+		if ( ( sourceHostI.getName() == null ) || ( destHostI.getName() == null ) )
+			return null; // connection must have valid endpoints
+		
+		Connection.ConnectionID connectionID = of.createConnectionConnectionID();
+		connectionID.setSourceHost( sourceHostI.getName() );
+		connectionID.setDestinationHost( destHostI.getName() );
 
 		// retrieve connection Throughput -----------------------------------
-		Throughput tp = of.createThroughput();
-		tp.setValue( cpr.getThroughput() );
-		tp.setUnit( tp.getUnit() );
+		if ( connectionInterface.getThroughput() < 0 )
+			return null; // connection must have valid throughput
+		
+		Throughput throughput = of.createThroughput();
+		throughput.setValue( connectionInterface.getThroughput() );
+		throughput.setUnit( throughput.getUnit() );
 
 		// retrieve connection Latency --------------------------------------
-		Latency lat = of.createLatency();
-		lat.setValue( cpr.getLatency() );
-		lat.setUnit( lat.getUnit() );
+		if ( connectionInterface.getLatency() < 0 )
+			return null; // connection must have valid latency
+		
+		Latency latency = of.createLatency();
+		latency.setValue( connectionInterface.getLatency() );
+		latency.setUnit( latency.getUnit() );
 
 		// prepare connection -----------------------------------------------
 		Connection connection = of.createConnection();
-		connection.setAverageThroughput( tp );
-		connection.setLatency( lat );
-		connection.setConnectionID( cID );
+		connection.setConnectionID( connectionID );
+		connection.setAverageThroughput( throughput );
+		connection.setLatency( latency );
 
 		return connection;
 	}
@@ -314,24 +366,33 @@ public class Builder  {
 	 * Creates a new VNF JAXB java object by reading required data from a
 	 * VNFTypeReader interface.
 	 * 
-	 * @param  vnftr a VNFTypeReader interface
+	 * @param  vnfInterface a VNFTypeReader interface
 	 * @return       a new VNF JAXB java object
 	 */
-	private VNF buildVNF( VNFTypeReader vnftr ) {
-
+	private VNF buildVNF( VNFTypeReader vnfInterface ) {
+		
+		if ( vnfInterface == null )
+			return null; // invalid argument
+		
+		if ( vnfInterface.getName() == null )
+			return null; // vnf must have a name
+		
 		// retrieve required memory and storage -----------------------------
-		SizeInMB rm = buildSizeInMB( BigInteger.valueOf( vnftr.getRequiredMemory()  ) );
-		SizeInMB rs = buildSizeInMB( BigInteger.valueOf( vnftr.getRequiredStorage() ) );
+		SizeInMB rm = buildSizeInMB( BigInteger.valueOf( vnfInterface.getRequiredMemory()  ) );
+		SizeInMB rs = buildSizeInMB( BigInteger.valueOf( vnfInterface.getRequiredStorage() ) );
 		
 		// retrieve functional type string ----------------------------------
-		String ftstr = vnftr.getFunctionalType().value();
+		if ( vnfInterface.getFunctionalType() == null )
+			return null; // vnf must have a functional type
+		
+		String functionalTypeName = vnfInterface.getFunctionalType().value();
 
 		// prepare VNF ------------------------------------------------------
 		VNF vnf = of.createVNF();
-		vnf.setName( vnftr.getName() );
+		vnf.setName( vnfInterface.getName() );
 		vnf.setRequiredMemory( rm );
 		vnf.setRequiredStorage( rs );
-		vnf.setFunctionalType( FunctionalTypeEnum.fromValue( ftstr ) );
+		vnf.setFunctionalType( FunctionalTypeEnum.fromValue( functionalTypeName ) );
 
 		return vnf;
 	}
@@ -342,26 +403,38 @@ public class Builder  {
 	 * Creates a new NFFG JAXB java object by reading required data from a
 	 * NffgReader interface.
 	 * 
-	 * @param  nr a NffgReader interface
-	 * @return    a new NFFG JAXB java object
+	 * @param  nffgInterface a NffgReader interface
+	 * @return    a new NFFG JAXB java object, null if errors
 	 */
-	private NFFG buildNFFG( NffgReader nr ) {
-
+	private NFFG buildNFFG( NffgReader nffgInterface ) {
+		
+		if ( nffgInterface == null )
+			return null; // invalid argument
+		
+		if ( nffgInterface.getName() == null )
+			return null; // NFFG must have a name
+		
+		if ( nffgInterface.getDeployTime() == null )
+			return null; // NFFG must have a deploy time
+		
 		// retrieve nffg's nodes --------------------------------------------
 		NFFG.Nodes nodes = of.createNFFGNodes();
 
-		List<Node> nodes_list = nodes.getNode(); // live list
-		Node       node       = null;
-		
-		Set<NodeReader> nodes_set = nr.getNodes();
-		
-		for ( NodeReader ndr : nodes_set ) {
-			node = buildNode ( ndr );
-			nodes_list.add( node );
+		Set<NodeReader> setNodeInterfaces = nffgInterface.getNodes();
+
+		if ( !( setNodeInterfaces.isEmpty() ) ) {
+			List<Node> liveListXMLNodes = nodes.getNode(); // live list
+			
+			for ( NodeReader nodeInterface : setNodeInterfaces ) {
+				Node node = buildNode ( nodeInterface );
+				
+				if ( node != null )
+					liveListXMLNodes.add( node );
+			}
 		}
 		
 		// retrieve nffg's deploy time --------------------------------------
-		Calendar c  = nr.getDeployTime();
+		Calendar c  = nffgInterface.getDeployTime();
 		
 		GregorianCalendar gc = new GregorianCalendar();
 		gc.setTimeInMillis( c.getTimeInMillis() );
@@ -374,16 +447,19 @@ public class Builder  {
 		} catch (DatatypeConfigurationException e) {
 			System.err.println(e.getMessage());
 			e.printStackTrace();
-			System.exit(-1);
+			return null;
 		} catch ( NullPointerException npe ) {
 			System.err.println( npe.getMessage() );
 			npe.printStackTrace();
-			System.exit(-1);
+			return null; 
 		}
+		
+		if ( time == null )
+			return null; // no time, no nffg
 
 		// prepare NFFG -----------------------------------------------------
 		NFFG nffg = of.createNFFG();
-		nffg.setName( nr.getName() );
+		nffg.setName( nffgInterface.getName() );
 		nffg.setDeployTime( time );
 		nffg.setNodes( nodes );
 
@@ -396,30 +472,48 @@ public class Builder  {
 	 * Creates a new Node JAXB java object by reading required data form a
 	 * NodeReader interface.
 	 * 
-	 * @param  nr a NodeReader interface
-	 * @return    a new Node JAXB java object
+	 * @param  nodeInterface a NodeReader interface
+	 * @return    a new Node JAXB java object, null if errors
 	 */
-	private Node buildNode ( NodeReader nr ) {
+	private Node buildNode ( NodeReader nodeInterface ) {
+		
+		if ( nodeInterface == null )
+			return null; // invalid argument
+		
+		if ( ( nodeInterface.getName() == null ) ||
+			 ( nodeInterface.getHost() == null ) ||
+			 ( nodeInterface.getNffg() == null ) ||
+			( nodeInterface.getFuncType() == null ) ) 
+			return null; // invalid node
+		
+		if ( ( nodeInterface.getHost().getName() == null ) ||
+			 ( nodeInterface.getNffg().getName() == null ) ||
+			 ( nodeInterface.getFuncType().getName() == null ) )
+			return null; // invalid node
 
 		// retrieve links ---------------------------------------------------
 		Node.Links links = of.createNodeLinks();
 
-		List<Link> links_list = links.getLink();
-		Link       link       = null;
-		
-		Set<LinkReader>  links_set = nr.getLinks();
-		for ( LinkReader lr : links_set ) {
-			link = buildLink( lr );
-			links_list.add( link );
+		Set<LinkReader>  setLinkInterfaces = nodeInterface.getLinks();
+
+		if ( !( setLinkInterfaces.isEmpty() ) ) {
+			List<Link> liveListXMLLinks = links.getLink();
+			
+			for ( LinkReader linkInterface : setLinkInterfaces ) {
+				Link link = buildLink( linkInterface );
+				
+				if ( link != null )
+					liveListXMLLinks.add( link );
+			}
 		}
 
-		// Prepare node
+		// Prepare node -----------------------------------------------------
 		Node node = of.createNode();
-		node.setName( nr.getName() );
-		node.setFunctionalType( nr.getFuncType().getName() );
-		node.setHostingHost( nr.getHost().getName() );
-		node.setAssociatedNFFG( nr.getNffg().getName() );
 		node.setLinks( links );
+		node.setName( nodeInterface.getName() );
+		node.setHostingHost( nodeInterface.getHost().getName() );
+		node.setAssociatedNFFG( nodeInterface.getNffg().getName() );
+		node.setFunctionalType( nodeInterface.getFuncType().getName() );
 
 		return node;
 	}
@@ -430,27 +524,47 @@ public class Builder  {
 	 * Creates a new Link JAXB java object by reading required data from a
 	 * LinkReader interface.
 	 * 
-	 * @param  lr a LinkReader interface
+	 * @param  linkInterface a LinkReader interface
 	 * @return    a new Link JAXB java object
 	 */
-	private Link buildLink ( LinkReader lr ) {
-
+	private Link buildLink ( LinkReader linkInterface ) {
+		
+		if ( linkInterface == null )
+			return null; // invalid argument
+		
+		if ( ( linkInterface.getName() == null ) ||
+			 ( linkInterface.getSourceNode() == null ) ||
+			 ( linkInterface.getDestinationNode() == null ) )
+			return null; // invalid link
+		
+		if ( ( linkInterface.getSourceNode().getName() == null ) || 
+			 ( linkInterface.getDestinationNode().getName() == null ) )
+			return null; // invalid link
+		
 		// retrieve link minThroughput --------------------------------------
-		Throughput tp = of.createThroughput();
-		tp.setValue( lr.getThroughput() );
-		tp.setUnit( tp.getUnit() );
+		Throughput throughput = null;
+		if ( linkInterface.getThroughput() != 0 ) {
+			throughput = of.createThroughput();
+			throughput.setValue( linkInterface.getThroughput() );
+			throughput.setUnit( throughput.getUnit() );
+		}
 
 		// retrieve link maxLatency -----------------------------------------
-		Latency lat = of.createLatency();
-		lat.setValue( lr.getLatency() );
-		lat.setUnit( lat.getUnit() );
+		Latency latency = null;
+		if ( linkInterface.getLatency() != 0 ) {
+			latency = of.createLatency();
+			latency.setValue( linkInterface.getLatency() );
+			latency.setUnit( latency.getUnit() );
+		}
 
         // prepare Link -----------------------------------------------------
 		Link link = of.createLink();
-		link.setName( lr.getName() );
-		link.setSourceNode( lr.getSourceNode().getName() );
-		link.setDestinationNode( lr.getDestinationNode().getName() );
-
+		link.setMaxLatency(latency);
+		link.setMinThroughput(throughput);
+		link.setName( linkInterface.getName() );
+		link.setSourceNode( linkInterface.getSourceNode().getName() );
+		link.setDestinationNode( linkInterface.getDestinationNode().getName() );
+		
 		return link;
 	}
 

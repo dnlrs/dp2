@@ -157,14 +157,14 @@
    <element name="hosts">
     <complexType>
      <sequence>
-      <element name="host" type="ns:Host" maxOccurs="unbounded" />
+      <element name="host" type="ns:Host" minOccurs="0"  maxOccurs="unbounded" />
      </sequence>
     </complexType>
    </element>
    <element name="connections">
     <complexType>
      <sequence>
-      <element name="connection" type="ns:Connection" maxOccurs="unbounded" />
+      <element name="connection" type="ns:Connection" minOccurs="0" maxOccurs="unbounded" />
      </sequence>
     </complexType>
    </element>
@@ -176,7 +176,7 @@
  <!-- Catalogue type declaration -->
  <complexType name="Catalogue">
   <sequence>
-   <element name="vnf" type="ns:VNF" maxOccurs="unbounded" />
+   <element name="vnf" type="ns:VNF" minOccurs="0" maxOccurs="unbounded" />
   </sequence>
  </complexType>
 
@@ -202,7 +202,7 @@
    <element name="nodes">
     <complexType>
      <sequence>
-      <element name="node" type="ns:Node" maxOccurs="unbounded">
+      <element name="node" type="ns:Node" minOccurs="0" maxOccurs="unbounded">
 
       <!-- (L2) within a Node each Link's sourceNode must correspond to the node -->
       <key name="keyNodeNodeName">
@@ -277,7 +277,7 @@
    <element name="allocatedNodes">
     <complexType>
      <sequence>
-      <element name="node" type="ns:NodeRef" maxOccurs="unbounded" />
+      <element name="node" type="ns:NodeRef" minOccurs="0" maxOccurs="unbounded" />
      </sequence>
     </complexType>
    </element>
@@ -308,7 +308,7 @@
     <complexType>
      <sequence>
       <element name="sourceHost" type="string" />
-      <element name="destionationHost" type="string" />
+      <element name="destinationHost" type="string" />
      </sequence>
     </complexType>
    </element>
