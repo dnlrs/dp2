@@ -3,13 +3,13 @@ package it.polito.dp2.NFV.sol1;
 import it.polito.dp2.NFV.ConnectionPerformanceReader;
 import it.polito.dp2.NFV.sol1.jaxb.Connection;
 
-public class ConnectionPerformanceReaderImpl implements ConnectionPerformanceReader {
+public class ConnectionPerformanceReaderReal implements ConnectionPerformanceReader {
 	
 	private Connection connection;
 	
-	protected ConnectionPerformanceReaderImpl() {}
+	protected ConnectionPerformanceReaderReal() {}
 
-	protected ConnectionPerformanceReaderImpl( Connection c ) {
+	protected ConnectionPerformanceReaderReal( Connection c ) {
 		this.connection = c;		
 	}
 	

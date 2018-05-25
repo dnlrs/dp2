@@ -4,20 +4,20 @@ import it.polito.dp2.NFV.LinkReader;
 import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.sol1.jaxb.Link;
 
-public class LinkReaderImpl implements LinkReader {
+public class LinkReaderReal implements LinkReader {
 
-	private NfvReaderImpl nfvReader;
+	private NfvReaderReal nfvReader;
 
 	private Link link;
 	
-	protected LinkReaderImpl() {}
+	protected LinkReaderReal() {}
 	
-	protected LinkReaderImpl( NfvReaderImpl nfvSystem, Link l ) {
+	protected LinkReaderReal( NfvReaderReal nfvSystem, Link l ) {
 		this.nfvReader = nfvSystem;
 		this.link      = l;	
 	}
 	
-	protected LinkReaderImpl( NfvReaderImpl nfvSystem ) {
+	protected LinkReaderReal( NfvReaderReal nfvSystem ) {
 		this.nfvReader = nfvSystem;
 	}
 	

@@ -7,22 +7,22 @@ import it.polito.dp2.NFV.NffgReader;
 import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.sol1.jaxb.NFFG;
 
-public class NffgReaderImpl implements NffgReader {
+public class NffgReaderReal implements NffgReader {
 	
-	private NfvReaderImpl nfvReader;
+	private NfvReaderReal nfvReader;
 
 	private NFFG nffg;
 	private Set<String> nodes;
 
-	protected NffgReaderImpl() {}
+	protected NffgReaderReal() {}
 	
-	protected NffgReaderImpl( NfvReaderImpl nfvReader, NFFG n, Set<String> nodes ) {
+	protected NffgReaderReal( NfvReaderReal nfvReader, NFFG n, Set<String> nodes ) {
 		this.nfvReader = nfvReader;
 		this.nodes     = nodes;		
 		this.nffg      = n;
 	}
 	
-	protected NffgReaderImpl( NfvReaderImpl nfvReader ) {
+	protected NffgReaderReal( NfvReaderReal nfvReader ) {
 		this.nfvReader = nfvReader;
 	}
 	

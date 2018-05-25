@@ -9,22 +9,22 @@ import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.VNFTypeReader;
 import it.polito.dp2.NFV.sol1.jaxb.Node;
 
-public class NodeReaderImpl implements NodeReader {
+public class NodeReaderReal implements NodeReader {
 	
-	private NfvReaderImpl nfvReader;
+	private NfvReaderReal nfvReader;
 
 	private Node node;
 	private Set<String> links;
 	
-	protected NodeReaderImpl() {}
+	protected NodeReaderReal() {}
 	
-	protected NodeReaderImpl( NfvReaderImpl nfvReader, Node n, Set<String> links ) {
+	protected NodeReaderReal( NfvReaderReal nfvReader, Node n, Set<String> links ) {
 		this.nfvReader = nfvReader;
 		this.links     = links;
 		this.node      = n;
 	}
 	
-	protected NodeReaderImpl( NfvReaderImpl nfvReader ) {
+	protected NodeReaderReal( NfvReaderReal nfvReader ) {
 		this.nfvReader = nfvReader;
 	}
 	

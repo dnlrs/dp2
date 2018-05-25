@@ -30,32 +30,28 @@ import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.VNFTypeReader;
 import it.polito.dp2.NFV.sol1.jaxb.*;
 
-public class NfvReaderImpl implements NfvReader {
+public class NfvReaderReal implements NfvReader {
 	
 	private final NFVSystemType nfvSystem;
-	private final String        xmlFile;
 	
-	private HashMap<String, HostReader> dbHosts;
-	private HashMap<String, NffgReader> dbNFFGs;
-	private HashMap<String, NodeReader> dbNodes;
-	private HashMap<String, VNFTypeReader> dbVNFs;
-	private HashMap<String, ConnectionPerformanceReader> dbConns;
-	private HashMap<String, HashMap<String, LinkReader>> dbLinks;
+	private HashMap<String, HostReader>    dbHosts; // map of host interfaces <host.name, HostReader>
+	private HashMap<String, NffgReader>    dbNFFGs; // map of NFFG interfaces <nffg.name, NffgReader>
+	private HashMap<String, NodeReader>    dbNodes; // map of node interfaces <node.name, NodeReader>
+	private HashMap<String, VNFTypeReader> dbVNFs;  // map of VNF  interfaces <vnf.name , VnfReader >
+	private HashMap<String, ConnectionPerformanceReader> dbConns; // Connections interfaces <connection.name, ConnectionPerformanceReader>
+	private HashMap<String, HashMap<String, LinkReader>> dbLinks; // Links interfaces <nffg.name, <link.name, LinkReader>>
 	
 
-	protected NfvReaderImpl() throws Exception {
+	protected NfvReaderReal() throws Exception {
 	
 		final String contxtPath     = new String( "it.polito.dp2.NFV.sol1.jaxb" );
 		final String fileSysPro     = new String( "it.polito.dp2.NFV.sol1.NfvInfo.file" );
 		final String schemaLocation = new String( "/xsd/nfvInfo.xsd" );
 		
 		String schemaFile;
+		String xmlFile;
 		
-		/* ------------------------------------------------------------------ 
-		 * get XML file to load 
-		 */
 		Properties sysProps = System.getProperties();
-		xmlFile = new String( sysProps.getProperty( fileSysPro ) );
 		
 		/*
 		 * get Schema to use in the validation process
@@ -92,11 +88,20 @@ public class NfvReaderImpl implements NfvReader {
                     }
                 }
             );
-        } catch (org.xml.sax.SAXException se) {
+        } catch ( SAXException se ) {
             throw new SAXException(se);
         }
         
-		/* ------------------------------------------------------------------
+		
+        /* ------------------------------------------------------------------ 
+		 * get XML file to load 
+		 */
+        sysProps.list(System.out);
+		System.out.println("property: " + sysProps.getProperty( fileSysPro ) );
+		xmlFile = new String( sysProps.getProperty( fileSysPro ) );
+        
+        
+        /* ------------------------------------------------------------------
 		 * unmarshal
 		 */
 		Object obj = um.unmarshal( new FileInputStream( xmlFile ) );
@@ -157,7 +162,7 @@ public class NfvReaderImpl implements NfvReader {
 				nodes.add( nr.getName() );
 			}
 
-			HostReaderImpl host = new HostReaderImpl(this);
+			HostReaderReal host = new HostReaderReal(this);
 			host.setHost(h);
 			host.setNodes(nodes);
 			
@@ -184,7 +189,7 @@ public class NfvReaderImpl implements NfvReader {
 			if ( !(check.isValidConnection( c )) )
 				continue; // invalid connection
 			
-			ConnectionPerformanceReaderImpl connection = new ConnectionPerformanceReaderImpl();
+			ConnectionPerformanceReaderReal connection = new ConnectionPerformanceReaderReal();
 			connection.setConnection(c);
 			
 			String cID = new String( c.getConnectionID().getSourceHost() + "-" +
@@ -211,7 +216,7 @@ public class NfvReaderImpl implements NfvReader {
 			if ( !(check.isValidVNF( v )) )
 				continue; // invalid VNF
 			
-			VNFTypeReaderImpl vnf = new VNFTypeReaderImpl();
+			VNFTypeReaderReal vnf = new VNFTypeReaderReal();
 			vnf.setVNF(v);
 			
 			// add VNF to VNFs database
@@ -260,7 +265,7 @@ public class NfvReaderImpl implements NfvReader {
 					if ( !(check.isValidLink( l )) )
 						continue; // invalid Link
 					
-					LinkReaderImpl link = new LinkReaderImpl(this);
+					LinkReaderReal link = new LinkReaderReal(this);
 					link.setLink(l);
 					
 					setLinks.add( l.getName() );    // add link to node
@@ -268,7 +273,7 @@ public class NfvReaderImpl implements NfvReader {
 				}
 				
 				
-				NodeReaderImpl node = new NodeReaderImpl(this);
+				NodeReaderReal node = new NodeReaderReal(this);
 				node.setNode( nd );
 				node.setLinks( setLinks );
 				
@@ -277,7 +282,7 @@ public class NfvReaderImpl implements NfvReader {
 				
 			}
 			
-			NffgReaderImpl nffg = new NffgReaderImpl(this);
+			NffgReaderReal nffg = new NffgReaderReal(this);
 			nffg.setNffg( n );
 			nffg.setNodes( setNodes );
 			

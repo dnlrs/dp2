@@ -6,22 +6,22 @@ import it.polito.dp2.NFV.HostReader;
 import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.sol1.jaxb.Host;
 
-public class HostReaderImpl implements HostReader {
+public class HostReaderReal implements HostReader {
 	
-	private NfvReaderImpl nfvReader;
+	private NfvReaderReal nfvReader;
 
 	private Host host;
 	private Set<String> nodes;
 	
-	protected HostReaderImpl() {}
+	protected HostReaderReal() {}
 	
-	protected HostReaderImpl( NfvReaderImpl nSys, Host h, Set<String> nodes ) {
+	protected HostReaderReal( NfvReaderReal nSys, Host h, Set<String> nodes ) {
 		this.nfvReader = nSys;
 		this.nodes     = nodes;
 		this.host      = h;		
 	}
 	
-	protected HostReaderImpl(NfvReaderImpl nSys) {
+	protected HostReaderReal(NfvReaderReal nSys) {
 		this.nfvReader = nSys;
 	}
 	

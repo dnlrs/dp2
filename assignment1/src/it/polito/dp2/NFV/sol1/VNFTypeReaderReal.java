@@ -4,13 +4,13 @@ import it.polito.dp2.NFV.FunctionalType;
 import it.polito.dp2.NFV.VNFTypeReader;
 import it.polito.dp2.NFV.sol1.jaxb.VNF;
 
-public class VNFTypeReaderImpl implements VNFTypeReader {
+public class VNFTypeReaderReal implements VNFTypeReader {
 	
 	private VNF vnf;
 	
-	protected VNFTypeReaderImpl() {}
+	protected VNFTypeReaderReal() {}
 	
-	protected VNFTypeReaderImpl( VNF v ) {
+	protected VNFTypeReaderReal( VNF v ) {
 		this.vnf = v;		
 	}
 	
