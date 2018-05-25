@@ -24,15 +24,18 @@ import it.polito.dp2.NFV.sol1.jaxb.NFVSystemType;
  * Serializes into an XML file passed as first argument all the data accessible
  * through the NVFSystem interfaces.
  * 
- * @author Daniel C. Rusu
- *
+ * @author    Daniel C. Rusu
+ * @studentID 234428
  */
 public class NfvInfoSerializer {
 	
 	private static final String HOW_TO_USE           = "use: java <program name> <output XML file name>";
+	
 	private static final String JAXB_CLASSES_PACKAGE = "it.polito.dp2.NFV.sol1.jaxb";
+	
 	private static final String TARGET_NAMESPACE     = "http://www.example.org/nfvInfo";
 	private static final String SCHEMA_LOCATION      = "/xsd/nfvInfo.xsd";
+	
 	private static final String PROPERTY_USER_DIR    = "user.dir";
 	
 	private Builder builder;
