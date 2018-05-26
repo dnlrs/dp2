@@ -1,28 +1,16 @@
 package it.polito.dp2.NFV.sol1;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 
-import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.ValidationEvent;
-import javax.xml.bind.ValidationEventHandler;
-import javax.xml.bind.ValidationEventLocator;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.SchemaFactoryConfigurationError;
-
-import org.xml.sax.SAXException;
 
 import it.polito.dp2.NFV.ConnectionPerformanceReader;
 import it.polito.dp2.NFV.HostReader;
@@ -73,7 +61,7 @@ public class NfvReaderReal implements NfvReader {
         			                     new String("") : System.getProperty(PROPERTY_USER_DIR) );
         	schemaFile = schemaFile.concat(SCHEMA_LOCATION);
         	
-        	myJAXBWrapper.unmarshallerSetSchema(um, schemaFile);
+        	MyJAXBWrapper.unmarshallerSetSchema(um, schemaFile);
         
         } catch ( Exception e ) {
         	System.err.println(e); 

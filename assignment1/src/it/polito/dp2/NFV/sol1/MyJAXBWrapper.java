@@ -1,6 +1,5 @@
 package it.polito.dp2.NFV.sol1;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
@@ -18,7 +17,7 @@ import javax.xml.validation.SchemaFactoryConfigurationError;
 
 import org.xml.sax.SAXException;
 
-public class myJAXBWrapper {
+public class MyJAXBWrapper {
 	
 	protected static void marshallerSetSchema( Marshaller m, String schemaFileName ) 
 			throws SAXException, JAXBException, IllegalArgumentException, 

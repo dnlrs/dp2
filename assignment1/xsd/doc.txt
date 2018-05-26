@@ -1,0 +1,253 @@
+<!-- ====================================================================== -->
+<!-- Assignment 1                                                           -->
+<!--                                                                        -->
+<!-- @author    Daniel C. Rusu                                              -->
+<!-- @studentID 234428                                                      -->
+<!-- ======================================== documentation =============== -->
+
+## Logical organization
+=======================
+
+notation: 
+   
+    "element name" : "element type" [allowed occurrences]
+
+
+NFVSystem : NFVSystemType [1]
+    |
+    +---IN : InfrastructureNetwork [1]
+    |   |
+    |   +---hosts [1]
+    |   |   |
+    |   |   +---host : Host [0..*]
+    |   |       |
+    |   |       +---name             : string [1]
+    |   |       +---maxVNFs          : int [1]
+    |   |       +---installedMemory  : sizeInMB [1]
+    |   |       |   +---@unit : string (fixed)
+    |   |       |
+    |   |       +---installedStorage : sizeInMB [1]
+    |   |       |   +---@unit : string (fixed)
+    |   |       |
+    |   |       +---allocatedNodes [1]
+    |   |           |
+    |   |           +---node : NodeRef [0..*]
+    |   |               +---@name           : string (required)
+    |   |               +---@associatedNFFG : string (required)
+    |   |
+    |   +---connections [1]
+    |       |
+    |       +---connection : Connection [0..*]
+    |           |
+    |           +---connectionID [1]
+    |           |   |
+    |           |   +---sourceHost      : string [1]
+    |           |   +---destinationHost : string [1]
+    |           |
+    |           +---averageThroughput   : Throughput [1]
+    |           |   +---@unit : string (fixed)
+    |           |
+    |           +---latency             : Latency [1]
+    |               +---@unit : string (fixed)
+    |
+    |
+    +---catalogue : Catalogue [1]
+    |   |
+    |   +---vnf : VNF [0..*]
+    |       |
+    |       +---name            : string [1]
+    |       +---functionalType  : FunctionalTypeEnum [1]
+    |       +---requiredMemory  : sizeInMB [1]
+    |       |   +---@unit : string
+    |       |
+    |       +---requiredStorage : sizeInMB [1]
+    |           +---@unit : string
+    |
+    |
+    +---deployedNFFGs [1]
+        |
+        +---nffg : NFFG [0..*]
+            |
+            +---name       : string [1]
+            +---deployTime : dateTime [1]
+            +---nodes [1]
+                |
+                +---node : Node [0..*]
+                    |
+                    +---name           : string [1]
+                    +---functionalType : string [1]
+                    +---hostingHost    : string [1]
+                    +---associatedNFFG : string [1]
+                    +---links [1]
+                        |
+                        +---link : Link [0..*]
+                            |
+                            +---name            : string [1]
+                            +---sourceNode      : string [1]
+                            +---destinationNode : string [1]
+                            +---minThroughput   : Throughput [0..1]
+                            |   +---@unit
+                            |
+                            +---maxLatency      : Latency [0..1]
+                                +---@unit
+
+
+NOTE:
+  - The IN is a well connected graph so I list all the nodes and all the 
+    vertices (adjacency matrix)
+  - The NFFV is often not a well connected graph so I use adjacency list
+  - In order to provide fast access to all info available through the 
+    interfaces without introducing redundancy, for each host the name and
+    the associated nffg of allocated nodes are stored, while full node
+    data is stored only in the nffg part of the xml
+
+
+## DTD
+======
+
+The DTD doesn't precisely follow the above logical organization because 
+in order to enforce constraints (such as unique identifiers and references)
+some elements had to be modelled as attributes.
+
+Constraints enforced:
+  [1] Each IN host name is unique within the system
+  [2] Each NFFG name is unique within the system
+  [3] Each NFFG node name is unique within the system
+  [4] Each VNF name is unique within the system
+  [5] For each connection, source and destination host must exist in the system
+  [6] For each link source and destination node must exist in the system
+  [7] For each node the hosting host must exist in the system
+  [8] For each node the VNF functional type must exist in the system
+  [9] For each node the belonging nffg must exist in the system
+
+
+## XML Schema
+=============
+
+The XML Schema follows accurately the logical organization and enforces
+several constraints listed below.
+
+
+Constraints
+    NFFG
+        [N1] the name uniquely identify the nffg in the system
+
+    NODE
+        [D1] the name uniquely identify the node in the system
+        [D2] the associatedNffg must correspond to the parent nffg
+        [D3] the hostingHost must exist in the system
+        [D4] the functionalType must exist in the catalogue (as VNF)
+
+    VNF
+        [V1] the name uniquely identify the VNF in the system
+
+    LINK
+        [L1] the name uniquely identify the link within the nffg
+        [L2] the sourceNode must correspond to belonging Node
+        [L3] the destinationNode must exist within the NFFG
+        [L4] the (sourceNode,destinationNode) pair must not be repeated
+             within the node even if the link has a different name
+
+    HOST
+        [H1] the name uniquely identify the host in the system
+        [H2] the nodes in allocatedNodes must not repeat and
+             the same node cannot be hosted on 2 hosts
+        [H3] the nodes must exist within the deployedNFFGs
+              a) node name must exist
+              b) associated nffg must exist
+
+    CONNECTION
+        [C1] the sourceHost must exist within the system
+        [C1] the destinationHost must exist within the system
+        [C2] the pair (sourceHost,desinationHost) must not be repeated
+             within the system
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<NFVSystem>
+ <InfrastructureNetwork>
+
+  <node>
+   <name>1</name>
+   <hostedNodes>
+    <nodeRef>x</nodeRef>
+   </hostedNodes>
+   </node> 				//host
+
+
+  <node>2</node>
+  <node>3</node>
+  <node>4</node>
+  <node>5</node>
+  <edge>12</edge> //connection
+  <edge>13</edge>
+  <edge>14</edge>
+  <edge>15</edge>
+  <edge>21</edge>
+ </InfrastructureNetwork>
+
+ <catalog>
+  <virtualFunction>client</virtualFunction>
+  <virtualFunction>server</virtualFunction>
+  <virtualFunction>wow</virtualFunction>
+  <virtualFunction>COD</virtualFunction>
+ </catalog>
+
+
+ <nffg>
+  <node>
+   <name>x</name>
+   ...
+   <links>
+    <link>12</link>
+    <link>13</link>
+   </links>
+  </node>
+  <node>
+   <name>2</name>
+   ...
+   <links>
+    <link>21</link>
+   </links>
+  </node>
+ </nffg>
+
+<NFVSystem>

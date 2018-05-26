@@ -3,7 +3,6 @@ package it.polito.dp2.NFV.sol1;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 
-import javax.xml.XMLConstants;
 import javax.xml.bind.DataBindingException;
 import javax.xml.bind.JAXB;
 import javax.xml.bind.JAXBContext;
@@ -11,12 +10,6 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.PropertyException;
-import javax.xml.bind.ValidationEvent;
-import javax.xml.bind.ValidationEventHandler;
-import javax.xml.bind.ValidationEventLocator;
-
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.SchemaFactoryConfigurationError;
 
 
@@ -116,7 +109,7 @@ public class NfvInfoSerializer {
                     				new String("") : System.getProperty(PROPERTY_USER_DIR) );
 			schemaFile = schemaFile.concat( SCHEMA_LOCATION );
 			
-			myJAXBWrapper.marshallerSetSchema(marshaller, schemaFile);
+			MyJAXBWrapper.marshallerSetSchema(marshaller, schemaFile);
 			
 		} catch ( Exception e ) { 
 			System.err.println( e.getMessage() );
