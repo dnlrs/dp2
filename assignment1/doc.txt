@@ -107,7 +107,7 @@ NOTE:
 
 The DTD doesn't precisely follow the above logical organization because 
 in order to enforce constraints (such as unique identifiers and references)
-some elements have to be modelled as attributes.
+some elements had to be modelled as attributes.
 
 Constraints enforced:
   [1] Each IN host name is unique within the system
