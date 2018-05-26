@@ -42,7 +42,7 @@
    <connection>
     <connectionID>
      <sourceHost>host1</sourceHost>
-     <destionationHost>host2</destionationHost>
+     <destinationHost>host2</destinationHost>
     </connectionID>
     <averageThroughput unit="Mbps">40.0</averageThroughput>
     <latency unit="ms">50</latency>
@@ -50,7 +50,7 @@
    <connection>
     <connectionID>
      <sourceHost>host2</sourceHost>
-     <destionationHost>host1</destionationHost>
+     <destinationHost>host1</destinationHost>
     </connectionID>
     <averageThroughput unit="Mbps">40.0</averageThroughput>
     <latency unit="ms">50</latency>
