@@ -1,5 +1,6 @@
 # ignore output xml file
 file.xml
+\$\{output\}
 
 # ignore prof's library
 lib/

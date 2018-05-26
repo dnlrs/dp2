@@ -6,31 +6,29 @@ import it.polito.dp2.NFV.HostReader;
 import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.sol1.jaxb.Host;
 
+
+/**
+ * An implementation of the {@link HostReader} interface.
+ * 
+ * @author    Daniel C. Rusu
+ * @studentID 234428
+ */
 public class HostReaderReal implements HostReader {
 	
-	private NfvReaderReal nfvReader;
-
-	private Host host;
+	private Adapter     adapter;
+	private Host        host;
 	private Set<String> nodes;
 	
-	protected HostReaderReal() {}
-	
-	protected HostReaderReal( NfvReaderReal nSys, Host h, Set<String> nodes ) {
-		this.nfvReader = nSys;
-		this.nodes     = nodes;
-		this.host      = h;		
-	}
-	
-	protected HostReaderReal(NfvReaderReal nSys) {
-		this.nfvReader = nSys;
-	}
-	
-	protected void setHost( Host h ) {
-		this.host = h;
-	}
 
-	protected void setNodes(Set<String> nodes) {
-		this.nodes = nodes;
+	protected HostReaderReal( Adapter adapter, Host h, Set<String> nodes ) 
+			throws NullPointerException {
+		
+		if ( ( adapter == null ) || ( h == null ) || ( nodes == null ) )
+			throw new NullPointerException("Null argument.");
+		
+		this.adapter = adapter;
+		this.nodes   = nodes;
+		this.host    = h;		
 	}
 	
 	@Override
@@ -55,6 +53,6 @@ public class HostReaderReal implements HostReader {
 
 	@Override
 	public Set<NodeReader> getNodes() {
-		return nfvReader.getNodes( nodes );
+		return adapter.getNodes( nodes ); // NOTE: set may be empty
 	}
 }

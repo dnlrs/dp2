@@ -31,14 +31,14 @@ import it.polito.dp2.NFV.VNFTypeReader;
 import it.polito.dp2.NFV.sol1.jaxb.*;
 
 /**
- * This class implements the NvfReader interface.
- * 
- * NOTE: 
+ * This class implements the {@link NvfReader} interface.
+ * <p>
+ * <b>Note</b>: 
  * This class maintains a set of databases with all possible interfaces in 
  * order to improve memory use, i.e. if the library user asks several times 
  * for the same interface the same object will be returned every time.
  * Databases are built when class is created, after the unmarshalling.
- * 
+ * </p>
  * 
  * @author    Daniel C. Rusu
  * @studentID 234428
@@ -52,15 +52,9 @@ public class NfvReaderReal implements NfvReader {
 	private static final String PROPERTY_USER_DIR    = "user.dir";
 	
 	private final NFVSystemType nfvSystem;
+	private final Adapter       adapter;
 	
-	private HashMap<String, HostReader>    dbHosts; 			  // all host interfaces <host.name, HostReader>
-	private HashMap<String, NffgReader>    dbNFFGs; 			  // all NFFG interfaces <nffg.name, NffgReader>
-	private HashMap<String, NodeReader>    dbNodes; 			  // all node interfaces <node.name, NodeReader>
-	private HashMap<String, VNFTypeReader> dbVNFs;  			  // all VNF  interfaces <vnf.name , VnfReader >
-	private HashMap<String, ConnectionPerformanceReader> dbConns; // Connections interfaces <connection.name, ConnectionPerformanceReader>
-	private HashMap<String, HashMap<String, LinkReader>> dbLinks; // Links interfaces <nffg.name, <link.name, LinkReader>>
 	
-
 	protected NfvReaderReal() throws Exception {
 		
 		/* ------------------------------------------------------------------
@@ -130,219 +124,12 @@ public class NfvReaderReal implements NfvReader {
 		if ( nfvSystem == null )
 			throw new NullPointerException("Null Element.");
 		
-		// init data structures
-		dbHosts = new HashMap<String, HostReader>();
-		dbNodes = new HashMap<String, NodeReader>();
-		dbNFFGs = new HashMap<String, NffgReader>();
-		dbVNFs  = new HashMap<String, VNFTypeReader>();
-		dbConns = new HashMap<String, ConnectionPerformanceReader>();
-		dbLinks = new HashMap<String, HashMap<String, LinkReader>>();
 		
-		init();
-		
+		adapter = new Adapter( nfvSystem );
+		adapter.init();
 	}
 	
 	
-	private void init() throws Exception {
-		
-		Validator check = new Validator();
-		
-		if ( !( check.isValidNFVSystem(nfvSystem) ) )
-			throw new Exception("Invalid NFVSystem.");
-		
-		InfrastructureNetwork in = nfvSystem.getIN(); 
-		
-		if ( !( check.isValidIN( in ) ) )
-			throw new Exception("Invalid Infrastructure Network.");
-			
-		
-		// ------------------------------------------------------------------
-		// create hosts readers
-		// ------------------------------------------------------------------
-		InfrastructureNetwork.Hosts hosts = in.getHosts();
-		initHosts(hosts, check);
-		
-		// ------------------------------------------------------------------
-		// create connections performance readers
-		// ------------------------------------------------------------------
-		InfrastructureNetwork.Connections connections = in.getConnections();
-		initConnections(connections, check);
-		
-		// ------------------------------------------------------------------
-		// create VNF type readers
-		// ------------------------------------------------------------------
-		Catalogue catalogue = nfvSystem.getCatalogue();
-		initVNFs( catalogue, check );
-
-		// ------------------------------------------------------------------
-		// create NFFG readers && nodes readers && links
-		// ------------------------------------------------------------------
-		NFVSystemType.DeployedNFFGs deployedNFFGs = nfvSystem.getDeployedNFFGs();
-		initNFFGs(deployedNFFGs, check);
-	}
-	
-	
-	/**
-	 * Creates a set of hostReader interfaces useful to access data 
-	 * unmarshalled from the XML file.
-	 * 
-	 * @param hosts
-	 * @param check
-	 */
-	private void initHosts( InfrastructureNetwork.Hosts hosts, Validator check ) {
-
-		List<Host> liveListXMLHosts = hosts.getHost();
-
-		if ( liveListXMLHosts.size() > 0 ) {
-
-			for ( Host xmlHost : liveListXMLHosts ) {
-				
-				if ( !( check.isValidHost( xmlHost ) ) ) 
-					continue; // invalid host
-				
-				Host.AllocatedNodes allocatedNodes = xmlHost.getAllocatedNodes();
-
-				List<NodeRef> liveListXMLNodeRefs = allocatedNodes.getNode();
-				Set<String> nodes = new HashSet<String>();
-				
-				if ( liveListXMLNodeRefs.size() > 0 ) {
-					for ( NodeRef xmlNodeRef : liveListXMLNodeRefs ) {
-						
-						if ( !( check.isValidNodeRef( xmlNodeRef ) ) )
-							continue; // invalid nodeRef
-						
-						nodes.add( xmlNodeRef.getName() );
-					}
-				}
-				
-				HostReaderReal host = new HostReaderReal(this, xmlHost, nodes);
-				// Add HostReader to HostReader database
-				dbHosts.put( host.getName(), host );
-			}
-		}
-	}
-	
-	
-	/**
-	 * Creates a set of ConnectionPerformanceReader interfaces useful to access data
-	 * unmarshalled from the XML file.
-	 * 
-	 * @param connections
-	 * @param check
-	 */
-	private void initConnections( InfrastructureNetwork.Connections connections, Validator check ) {
-
-		List<Connection> liveListXMLConnections = connections.getConnection();
-		
-		if ( liveListXMLConnections.size() > 0 ) {
-			for ( Connection xmlConnection : liveListXMLConnections ) {
-				
-				if ( !( check.isValidConnection( xmlConnection ) ) )
-					continue; // invalid connection
-				
-				ConnectionPerformanceReaderReal connection = new ConnectionPerformanceReaderReal( xmlConnection );
-				
-				String cID = new String( xmlConnection.getConnectionID().getSourceHost() + "-" +
-				                         xmlConnection.getConnectionID().getDestinationHost() );
-				// add connection to connections database
-				dbConns.put( cID, connection );
-			}
-		}
-	}
-	
-	
-	/**
-	 * Creates a set of {@link VNFTypeReader} interfaces useful to access data
-	 * unmarshalled from the XML file.
-	 * 
-	 * @param catalogue
-	 * @param check
-	 */
-	private void initVNFs( Catalogue catalogue, Validator check ) {
-		
-		List<VNF> liveListXMLVNFs = catalogue.getVnf();
-
-		if ( liveListXMLVNFs.size() > 0 ) {
-			for ( VNF xmlVNF : liveListXMLVNFs ) {
-				
-				if ( !( check.isValidVNF( xmlVNF ) ) )
-					continue; // invalid VNF
-				
-				VNFTypeReaderReal vnf = new VNFTypeReaderReal( xmlVNF );
-				
-				// add VNF to VNFs database
-				dbVNFs.put( xmlVNF.getName(), vnf);
-			}
-		}
-	}
-	
-	
-	/**
-	 * Creates a set of {@link NffgReader} interfaces useful to access data
-	 * unmarshalled from the XML file.
-	 * 
-	 * @param deployedNFFGs
-	 * @param check
-	 */
-	private void initNFFGs( NFVSystemType.DeployedNFFGs deployedNFFGs, Validator check ) {
-
-		List<NFFG> liveListXMLNFFGs = deployedNFFGs.getNffg();
-
-		if ( liveListXMLNFFGs.size() > 0 ) {
-			for ( NFFG xmlNFFG : liveListXMLNFFGs ) {
-				
-				if ( !( check.isValidNFFG( xmlNFFG ) ) )
-					continue; // invalid NFFG
-				
-				List<Node> liveListXMLNodes = xmlNFFG.getNodes().getNode();
-				Set<String> nffgNodeNames = new HashSet<String>();
-				
-				// create Links HashMap associated with current NFFG
-				HashMap<String, LinkReader> hmLinkInterfaces = new HashMap<String, LinkReader>();
-				
-				// manage nodes if nffg has nodes
-				if ( liveListXMLNodes.size() > 0 ) {
-					for ( Node xmlNode : liveListXMLNodes ) {
-						
-						if ( !( check.isValidNode( xmlNode ) ) )
-							continue; // invalid node
-												
-						List<Link> liveListXMLLinks = xmlNode.getLinks().getLink();
-						Set<String> setLinks = new HashSet<String>();
-						
-						// manage links if node has links
-						if ( liveListXMLLinks.size() > 0 ) {
-							for ( Link xmlLink : liveListXMLLinks ) {
-								
-								if ( !( check.isValidLink( xmlLink ) ) )
-									continue; // invalid Link
-								
-								setLinks.add( xmlLink.getName() );    // add link to node
-								
-								LinkReaderReal link = new LinkReaderReal( this, xmlLink );
-								hmLinkInterfaces.put( xmlLink.getName(), link ); // add link to links database for current NFFG
-							}
-						}
-						
-						
-						nffgNodeNames.add( xmlNode.getName() ); // add node to nffg's list of nodes
-						
-						NodeReaderReal node = new NodeReaderReal(this, xmlNode, setLinks);
-						dbNodes.put( xmlNode.getName(), node );
-						
-					}
-				}
-				
-				NffgReaderReal nffg = new NffgReaderReal( this, xmlNFFG, nffgNodeNames );
-				
-				// add links to links database under current NFFG
-				dbLinks.put(xmlNFFG.getName(), hmLinkInterfaces);				
-	
-				// add NFFG reader to database
-				dbNFFGs.put(xmlNFFG.getName(), nffg);
-			}	
-		}
-	}
 	
 	
 	/**
@@ -356,7 +143,7 @@ public class NfvReaderReal implements NfvReader {
 	 */
 	@Override
 	public ConnectionPerformanceReader 
-	getConnectionPerformance(HostReader sourceHost, HostReader destHost ) {
+        getConnectionPerformance(HostReader sourceHost, HostReader destHost ) {
 		
 		if ( sourceHost == null || destHost == null )
 			return null; // wrong arguments
@@ -364,13 +151,10 @@ public class NfvReaderReal implements NfvReader {
 		String sHost = sourceHost.getName();
 		String dHost = destHost.getName();
 		
-		if ( sHost == null || dHost == null )
-			return null; // source or destination hosts didn't have a name
+		if ( ( sHost == null ) || ( dHost == null ) )
+			return null; // source or destination hosts don't have a name
 		
-		String key = new String( sHost+"-"+dHost );
-		ConnectionPerformanceReader cpri = dbConns.get(key);
-		
-		return cpri; // a connection between sourceHost and destHost doesn't exist
+		return adapter.getConnectionPerformance( sHost + "-" + dHost );
 	}
 
 	
@@ -379,15 +163,14 @@ public class NfvReaderReal implements NfvReader {
 	 * Retrieves a HostReader if one exists with the name passed as argument.
 	 * 
 	 * @param  hostName host name to be retrieved
-	 * @return          a HostReader interface or null if host doesn't exist
+	 * @return          a HostReader interface, null if host doesn't exist
 	 */
 	@Override
 	public HostReader getHost(String hostName) {
-		
 		if ( hostName == null )
 			return null; // wrong parameter
 		
-		return dbHosts.get( hostName );
+		return adapter.getHost( hostName );
 	}
 
 	
@@ -398,8 +181,7 @@ public class NfvReaderReal implements NfvReader {
 	 */
 	@Override
 	public Set<HostReader> getHosts() {
-		
-		return new HashSet<HostReader>( dbHosts.values() );
+		return adapter.getHosts();
 	}
 
 	
@@ -410,12 +192,12 @@ public class NfvReaderReal implements NfvReader {
 	 * @return         an interface for reading NFFG's data
 	 */
 	@Override
-	public NffgReader getNffg(String nffgName) {
+	public NffgReader getNffg( String nffgName ) {
 		
 		if ( nffgName == null )
 			return null;
 		
-		return dbNFFGs.get( nffgName );
+		return adapter.getNFFG( nffgName );
 	}
 
 	
@@ -429,21 +211,7 @@ public class NfvReaderReal implements NfvReader {
 	 */
 	@Override
 	public Set<NffgReader> getNffgs(Calendar date) {
-		
-		if ( date == null )
-			return new HashSet<NffgReader>( dbNFFGs.values() );
-		
-		
-		Set<NffgReader> setNFFGs = new HashSet<NffgReader>();
-		
-		for ( String key : dbNFFGs.keySet() ) {
-			NffgReader nffg = dbNFFGs.get(key);
-			
-			if ( nffg.getDeployTime().compareTo(date) >= 0 )
-				setNFFGs.add(nffg);
-		}
-		
-		return setNFFGs;
+		return adapter.getNFFGs( date );
 	}
 
 	
@@ -455,7 +223,7 @@ public class NfvReaderReal implements NfvReader {
 	 */
 	@Override
 	public Set<VNFTypeReader> getVNFCatalog() {
-		return new HashSet<VNFTypeReader>( dbVNFs.values() );
+		return adapter.getVNFCatalog();
 	}
 
 	
@@ -470,7 +238,7 @@ public class NfvReaderReal implements NfvReader {
 		if ( vnfName == null )
 			return null;
 		
-		return dbVNFs.get(vnfName);
+		return adapter.getVNF( vnfName ); 
 	}
 	
 	
@@ -482,18 +250,10 @@ public class NfvReaderReal implements NfvReader {
 	 * @return          a set of interfaces to links
 	 */
 	protected Set<LinkReader> getLinks( String nffgName, Set<String> links ) {
-		
-		if ( links == null )
+		if ( ( nffgName == null ) || ( links == null ) )
 			return new HashSet<LinkReader>();
 		
-		Set<LinkReader> setLinks = new HashSet<LinkReader>();
-		
-		HashMap<String, LinkReader> hmLinks = dbLinks.get( nffgName );
-		
-		for ( String linkName : links )
-			setLinks.add( hmLinks.get( linkName ) );
-		
-		return setLinks;
+		return adapter.getLinks( nffgName, links );
 	}
 	
 	/**
@@ -503,11 +263,10 @@ public class NfvReaderReal implements NfvReader {
 	 * @return          an interface to the node requested
 	 */
 	protected NodeReader getNode( String nodeName ) {
-		
 		if ( nodeName == null )
 			return null;
 		
-		return dbNodes.get(nodeName);
+		return adapter.getNode( nodeName ); 
 	}
 	
 	/**
@@ -517,17 +276,10 @@ public class NfvReaderReal implements NfvReader {
 	 * @return       a set of interfaces to nodes
 	 */
 	protected Set<NodeReader> getNodes( Set<String> nodes ) {
-		
 		if ( nodes == null )
 			return new HashSet<NodeReader>();
 		
-		Set<NodeReader> setNodes = new HashSet<NodeReader>();
-		
-		for ( String nodeName : nodes )
-			setNodes.add( dbNodes.get( nodeName ) );
-		
-		return setNodes;
-
+		return  adapter.getNodes( nodes );
 	}
 	
 }

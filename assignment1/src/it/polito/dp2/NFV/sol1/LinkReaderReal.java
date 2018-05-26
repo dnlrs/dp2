@@ -4,25 +4,26 @@ import it.polito.dp2.NFV.LinkReader;
 import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.sol1.jaxb.Link;
 
+/**
+ * An implementation of the {@link LinkReader} interface.
+ * 
+ * @author    Daniel C. Rusu
+ * @studentID 234428
+ */
 public class LinkReaderReal implements LinkReader {
 
-	private NfvReaderReal nfvReader;
-
-	private Link link;
+	private Adapter adapter;
+	private Link    link;
 	
-	protected LinkReaderReal() {}
 	
-	protected LinkReaderReal( NfvReaderReal nfvSystem, Link l ) {
-		this.nfvReader = nfvSystem;
-		this.link      = l;	
-	}
-	
-	protected LinkReaderReal( NfvReaderReal nfvSystem ) {
-		this.nfvReader = nfvSystem;
-	}
-	
-	protected void setLink( Link l ) {
-		this.link = l;
+	protected LinkReaderReal( Adapter adapter, Link l )
+			throws NullPointerException {
+		
+		if ( ( adapter == null ) || ( l == null ) )
+			throw new NullPointerException("Null argument.");
+		
+		this.adapter = adapter;
+		this.link    = l;
 	}
 	
 	@Override
@@ -32,18 +33,18 @@ public class LinkReaderReal implements LinkReader {
 
 	@Override
 	public NodeReader getSourceNode() {
-		return nfvReader.getNode( link.getSourceNode() );
+		return adapter.getNode( link.getSourceNode() );
 	}
 
 	@Override
 	public NodeReader getDestinationNode() {
-		return nfvReader.getNode( link.getDestinationNode() );
+		return adapter.getNode( link.getDestinationNode() );
 	}
 
 	@Override
 	public int getLatency() {
-		if ( link.getMaxLatency() == null )
-			return 0;
+		if ( link.getMaxLatency() == null ) 
+			return 0; // NOTE: link latency may be missing
 		
 		return link.getMaxLatency().getValue();
 	}
@@ -52,7 +53,7 @@ public class LinkReaderReal implements LinkReader {
 	@Override
 	public float getThroughput() {
 		if ( link.getMinThroughput() == null )
-			return 0;
+			return 0; // NOTE: link throughput may be missing
 		
 		return link.getMinThroughput().getValue();
 	}

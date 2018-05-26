@@ -9,32 +9,30 @@ import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.VNFTypeReader;
 import it.polito.dp2.NFV.sol1.jaxb.Node;
 
+/**
+ * An implementation of the {@link NodeReader} interface.
+ * 
+ * @author    Daniel C. Rusu
+ * @studentID 234428
+ */
 public class NodeReaderReal implements NodeReader {
 	
-	private NfvReaderReal nfvReader;
-
-	private Node node;
+	private Adapter     adapter;
+	private Node        node;
 	private Set<String> links;
 	
-	protected NodeReaderReal() {}
 	
-	protected NodeReaderReal( NfvReaderReal nfvReader, Node n, Set<String> links ) {
-		this.nfvReader = nfvReader;
-		this.links     = links;
+	protected NodeReaderReal( Adapter adapter, Node n, Set<String> links ) 
+			throws NullPointerException {
+		
+		if ( ( adapter == null ) || ( n == null ) || ( links == null ) )
+			throw new NullPointerException("Null argument.");
+		
+		this.adapter = adapter;
 		this.node      = n;
+		this.links     = links;
 	}
 	
-	protected NodeReaderReal( NfvReaderReal nfvReader ) {
-		this.nfvReader = nfvReader;
-	}
-	
-	protected void setLinks( Set<String> links ) {
-		this.links = links;
-	}
-	
-	protected void setNode( Node n ) {
-		this.node = n;
-	}
 	
 	@Override
 	public String getName() {
@@ -43,21 +41,21 @@ public class NodeReaderReal implements NodeReader {
 
 	@Override
 	public VNFTypeReader getFuncType() {
-		return nfvReader.getVNF( node.getFunctionalType() );
+		return adapter.getVNF( node.getFunctionalType() );
 	}
 
 	@Override
 	public HostReader getHost() {
-		return nfvReader.getHost( node.getHostingHost() );
+		return adapter.getHost( node.getHostingHost() );
 	}
-
+	
 	@Override
 	public Set<LinkReader> getLinks() {
-		return nfvReader.getLinks( node.getAssociatedNFFG(), links );
+		return adapter.getLinks( node.getAssociatedNFFG(), links ); // NOTE: set may be empty
 	}
 
 	@Override
 	public NffgReader getNffg() {
-		return nfvReader.getNffg( node.getAssociatedNFFG() );
+		return adapter.getNFFG( node.getAssociatedNFFG() );
 	}
 }

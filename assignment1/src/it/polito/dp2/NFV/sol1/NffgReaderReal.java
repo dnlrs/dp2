@@ -7,40 +7,37 @@ import it.polito.dp2.NFV.NffgReader;
 import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.sol1.jaxb.NFFG;
 
+/**
+ * An implementation of the {@link NffgReader} interface.
+ * 
+ * @author    Daniel C. Rusu
+ * @studentID 234428
+ */
 public class NffgReaderReal implements NffgReader {
 	
-	private NfvReaderReal nfvReader;
-
-	private NFFG nffg;
+	private Adapter     adapter;
+	private NFFG        nffg;
 	private Set<String> nodes;
 
-	protected NffgReaderReal() {}
 	
-	protected NffgReaderReal( NfvReaderReal nfvReader, NFFG n, Set<String> nodes ) {
-		this.nfvReader = nfvReader;
+	protected NffgReaderReal( Adapter adapter, NFFG n, Set<String> nodes ) 
+			throws NullPointerException {
 		
-		this.nodes     = nodes;		
-		this.nffg      = n;
+		if ( ( adapter == null ) || ( n == null ) || ( nodes == null ) )
+			throw new NullPointerException("Null argument.");
+
+		this.adapter = adapter;
+		this.nffg    = n;
+		this.nodes   = nodes;		
 	}
 	
-	protected NffgReaderReal( NfvReaderReal nfvReader ) {
-		this.nfvReader = nfvReader;
-	}
-	
-	
-	protected void setNffg( NFFG n ) {
-		this.nffg = n;
-	}
-	
-	protected void setNodes( Set<String> nodes ) {
-		this.nodes = nodes;
-	}	
 	
 	@Override
 	public String getName() {
 		return nffg.getName();
 	}
 
+	
 	@Override
 	public Calendar getDeployTime() {
 		return nffg.getDeployTime().toGregorianCalendar();
@@ -48,16 +45,16 @@ public class NffgReaderReal implements NffgReader {
 
 
 	@Override
-	public NodeReader getNode(String nodeName) {
-		if ( !( nodes.contains(nodeName) ) )
-			return null;
+	public NodeReader getNode( String nodeName ) {
+		if ( ( nodeName == null ) || !( nodes.contains( nodeName ) ) )
+			return null; // NOTE: null argument or node doesn't belong to this NFFG
 		
-		return nfvReader.getNode( nodeName );
+		return adapter.getNode( nodeName );
 	}
 
 	@Override
 	public Set<NodeReader> getNodes() {
-		return nfvReader.getNodes( nodes );
+		return adapter.getNodes( nodes ); // NOTE: set may be empty
 	}
 
 }

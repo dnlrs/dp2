@@ -37,12 +37,11 @@ import it.polito.dp2.NFV.sol1.jaxb.Throughput;
 import it.polito.dp2.NFV.sol1.jaxb.VNF;
 
 /**
- * This class reads data from it.polito.dp2.NFV System interfaces and builds
+ * This class reads data from {@link it.polito.dp2.NFV} System interfaces and builds
  * JAXB java objects that are marshallable into an XML file.
  * 
  * @author    Daniel C. Rusu
  * @studentID 234428
- *
  */
 public class Builder  {
 	
@@ -51,25 +50,22 @@ public class Builder  {
 	
 	
 	protected Builder() throws NfvReaderException {
-		
 		NfvReaderFactory factory = NfvReaderFactory.newInstance();
 		
 		monitor   = factory.newNfvReader();
 		of        = new ObjectFactory();
-		
 	}
 	
 	
 	
 	/**
-	 * Creates a root marshallable JAXBElement (document root) from an 
-	 * existing NFVSystemType object.
+	 * Creates a root marshallable {@link JAXBElement} (document root) from an 
+	 * existing {@link NFVSystemType} object.
 	 * 
-	 * @param  nfvSystem a NFVSystemType Object
-	 * @return           a JAXBElement (document root)
+	 * @param  nfvSystem a {@link NFVSystemType} Object
+	 * @return           a {@link JAXBElement} object (document root), null on errors
 	 */
 	protected JAXBElement<NFVSystemType> getRootElement( NFVSystemType nfvSystem ) {
-		
 		if ( nfvSystem == null )
 			return null;
 		
@@ -79,17 +75,15 @@ public class Builder  {
 	
 	
 	/**
-	 * Builds a NFVSystemType object.
+	 * Builds a {@link NFVSystemType} object.
 	 * 
-	 * @return a NFVSystemType object
+	 * @return a {@link NFVSystemType} object
 	 */
 	protected NFVSystemType buildNFVSystemType() {
-		
-		InfrastructureNetwork       in            = buildIN(); // build Infrastructure Network
-		Catalogue                   catalogue     = buildCatalogue(); // build Catalogue
+		InfrastructureNetwork       in            = buildIN();            // build Infrastructure Network
+		Catalogue                   catalogue     = buildCatalogue();     // build Catalogue
 		NFVSystemType.DeployedNFFGs deployedNFFGs = buildDeployedNFFGs(); // deployed NFFGs
 		
-
 		NFVSystemType nfvSystem = of.createNFVSystemType();
 		nfvSystem.setIN( in );                       // add Infrastructure Network to NFVSystem
 		nfvSystem.setCatalogue( catalogue );         // add Catalogue to NFVSystem
@@ -101,25 +95,21 @@ public class Builder  {
 	
 	
 	/**
-	 * Builds an Infrastructure Network object from NFVSystem interfaces.
+	 * Builds an {@link InfrastructureNetwork} object from NFVSystem interfaces.
 	 * 
-	 * @param nfvs NFVSystem to be updated with Infrastructure Network
+	 * @return a {@link InfrastructureNetwork} JAXB java object
 	 */
 	private InfrastructureNetwork buildIN() {
-
+		
 		InfrastructureNetwork.Hosts hosts = 
 				of.createInfrastructureNetworkHosts();
 		
 		InfrastructureNetwork.Connections connections = 
 				of.createInfrastructureNetworkConnections();
 
+		Set<HostReader> setHostInterfaces = monitor.getHosts();
 		
-		// retrieve host interfaces -----------------------------------------
-		Set<HostReader>       setHostInterfaces = monitor.getHosts();
-		
-		/*
-		 * NOTE: if no hosts then no connections
-		 */
+		/* NOTE: if no hosts then no connections */
 		if ( !( setHostInterfaces.isEmpty() ) ) {
 			
 			// read hosts --------------------------------------------------- 
@@ -134,26 +124,21 @@ public class Builder  {
 			// read connections between hosts -------------------------------
 			List<Connection> liveListXMLConnections = connections.getConnection();
 			
-			/*
-			 * NOTE: there may be also connection between a host and itself
-			 */
+			/* NOTE: there may be also connection between a host and itself */
 			for ( HostReader sourceHostInterface : setHostInterfaces )
 				for ( HostReader destHostInterface : setHostInterfaces ) {
-					
 					Connection connection = 
 							buildConnection( sourceHostInterface, destHostInterface );
 					
 					if ( connection != null )
 						liveListXMLConnections.add( connection );
 				}
-
 		}
 		
 		// prepare IN -------------------------------------------------------
 		InfrastructureNetwork in = of.createInfrastructureNetwork();
-
-		in.setHosts( hosts );             // add hosts to Infrastructure Network
-		in.setConnections( connections ); // add connections to Infrastructure Network
+		in.setHosts( hosts );           
+		in.setConnections( connections );
 		
 		return in;
 	}
@@ -165,7 +150,7 @@ public class Builder  {
 	 * interfaces and creates corresponding JAXB java objects to be
 	 * marshalled into the XML file
 	 * 
-	 * @param nfvs NFVSystem to be updated with Catalogue
+	 * @return a {@link Catalogue} JAXB java object
 	 */
 	private Catalogue buildCatalogue() {
 
@@ -194,7 +179,7 @@ public class Builder  {
 	 * creates corresponding java JAXB java objects to be marshalled into
 	 * the XML file.
 	 * 
-	 * @param nfvs NFVSystem to be updated with deployed NFFGs
+	 * @return a {@link NFVSystemType.DeployedNFFGs} JAXB java object
 	 */
 	private NFVSystemType.DeployedNFFGs buildDeployedNFFGs() {
 		
@@ -204,8 +189,7 @@ public class Builder  {
 		Set<NffgReader> setNFFGsInterfaces = monitor.getNffgs(null);
 		
 		if ( !( setNFFGsInterfaces.isEmpty() ) ) {			
-			List<NFFG> liveListNFFGs = deployedNFFGs.getNffg(); // live list
-			
+			List<NFFG> liveListNFFGs = deployedNFFGs.getNffg();
 	
 			for ( NffgReader nffgInterface : setNFFGsInterfaces ) {
 				NFFG nffg = buildNFFG( nffgInterface );
@@ -222,10 +206,10 @@ public class Builder  {
 
 	/**
 	 * Creates a new Host JAXB java object by reading required data from a
-	 * NFVSystem HostReader interface.
+	 * NFVSystem {@link HostReader} interface.
 	 * 
-	 * @param  hI HostReader interface
-	 * @return    a new Host JAXB java object, null if host is invalid
+	 * @param  hI a {@link HostReader} interface
+	 * @return    a {@link Host} JAXB java object, null if host is invalid
 	 */
 	private Host buildHost( HostReader hI ) {
 		
@@ -284,10 +268,10 @@ public class Builder  {
 	
 	
 	/**
-	 * Creates a new SizeInMB JAXB java object given a BigInteger value.
+	 * Creates a new {@link SizeInMB} JAXB java object given a BigInteger value.
 	 * 
-	 * @param  value a BigInteger value
-	 * @return       a new SizeInMB JAXB java object, null if value is invalid
+	 * @param  value a {@link BigInteger} value
+	 * @return       a new {@link SizeInMB} JAXB java object, null if value is invalid
 	 */
 	private SizeInMB buildSizeInMB(BigInteger value) {
 		
@@ -310,9 +294,9 @@ public class Builder  {
 	/**
 	 * Creates a new Connection JAXB java object given two end point hosts.
 	 * 
-	 * @param  sourceHostI the source Host
-	 * @param  destHostI   the destination Host
-	 * @return            a new Connection JAXB java object, null if errors
+	 * @param  sourceHostI the source Host ({@link HostReader} interface)
+	 * @param  destHostI   the destination Host ({@link HostReader} interface)
+	 * @return             a new Connection JAXB java object, null if errors
 	 */
 	private Connection buildConnection( HostReader sourceHostI, 
 			                            HostReader destHostI    ) {
@@ -363,10 +347,10 @@ public class Builder  {
 
 	/**
 	 * Creates a new VNF JAXB java object by reading required data from a
-	 * VNFTypeReader interface.
+	 * {@link VNFTypeReader} interface.
 	 * 
-	 * @param  vnfInterface a VNFTypeReader interface
-	 * @return       a new VNF JAXB java object
+	 * @param  vnfInterface a {@link VNFTypeReader} interface
+	 * @return              a new VNF JAXB java object
 	 */
 	private VNF buildVNF( VNFTypeReader vnfInterface ) {
 		
@@ -400,10 +384,10 @@ public class Builder  {
 
 	/**
 	 * Creates a new NFFG JAXB java object by reading required data from a
-	 * NffgReader interface.
+	 * {@link NffgReader} interface.
 	 * 
-	 * @param  nffgInterface a NffgReader interface
-	 * @return    a new NFFG JAXB java object, null if errors
+	 * @param  nffgInterface a {@link NffgReader} interface
+	 * @return               a new NFFG JAXB java object, null if errors
 	 */
 	private NFFG buildNFFG( NffgReader nffgInterface ) {
 		
@@ -469,10 +453,10 @@ public class Builder  {
 	
 	/**
 	 * Creates a new Node JAXB java object by reading required data form a
-	 * NodeReader interface.
+	 * {@link NodeReader} interface.
 	 * 
-	 * @param  nodeInterface a NodeReader interface
-	 * @return    a new Node JAXB java object, null if errors
+	 * @param  nodeInterface a {@link NodeReader} interface
+	 * @return               a new Node JAXB java object, null on errors
 	 */
 	private Node buildNode ( NodeReader nodeInterface ) {
 		
@@ -521,27 +505,27 @@ public class Builder  {
 
 	/**
 	 * Creates a new Link JAXB java object by reading required data from a
-	 * LinkReader interface.
+	 * {@link LinkReader} interface.
 	 * 
-	 * @param  linkInterface a LinkReader interface
-	 * @return    a new Link JAXB java object
+	 * @param  linkInterface a {@link LinkReader} interface
+	 * @return               a new Link JAXB java object, null on errors
 	 */
 	private Link buildLink ( LinkReader linkInterface ) {
 		
 		if ( linkInterface == null )
 			return null; // invalid argument
 		
-		if ( ( linkInterface.getName() == null ) ||
-			 ( linkInterface.getSourceNode() == null ) ||
+		if ( ( linkInterface.getName()            == null ) ||
+			 ( linkInterface.getSourceNode()      == null ) ||
 			 ( linkInterface.getDestinationNode() == null ) )
 			return null; // invalid link
 		
-		if ( ( linkInterface.getSourceNode().getName() == null ) || 
+		if ( ( linkInterface.getSourceNode().getName()      == null ) || 
 			 ( linkInterface.getDestinationNode().getName() == null ) )
 			return null; // invalid link
 		
 		// retrieve link minThroughput --------------------------------------
-		Throughput throughput = null;
+		Throughput throughput = null; // NOTE: link throughput may be missing
 		if ( linkInterface.getThroughput() != 0 ) {
 			throughput = of.createThroughput();
 			throughput.setValue( linkInterface.getThroughput() );
@@ -549,7 +533,7 @@ public class Builder  {
 		}
 
 		// retrieve link maxLatency -----------------------------------------
-		Latency latency = null;
+		Latency latency = null; // NOTE: link latency may be missing
 		if ( linkInterface.getLatency() != 0 ) {
 			latency = of.createLatency();
 			latency.setValue( linkInterface.getLatency() );
