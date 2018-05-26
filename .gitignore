@@ -1,3 +1,11 @@
 # ignore all tmp files
 **/*~
-assignment1/lab1.zip
+
+# ignore eclipse configuration files
+.classpath
+.externalToolBuilders/
+.project
+.settings/
+
+# ignore backup folder
+backup/
