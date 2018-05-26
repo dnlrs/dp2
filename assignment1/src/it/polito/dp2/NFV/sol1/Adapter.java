@@ -1,7 +1,6 @@
 package it.polito.dp2.NFV.sol1;
 
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -82,19 +81,19 @@ public class Adapter {
 		// create ConnectionPerformanceReader interfaces 
 		// ------------------------------------------------------------------
 		InfrastructureNetwork.Connections connections = in.getConnections();
-		initConnections(connections);
+		initConnections( connections );
 		
 		// ------------------------------------------------------------------
 		// create VNFTypeReader interfaces
 		// ------------------------------------------------------------------
 		Catalogue catalogue = nfvSystem.getCatalogue();
-		initVNFs( catalogue);
+		initVNFs( catalogue );
 
 		// ------------------------------------------------------------------
 		// create NffgReader && NodeReader && LinkReader interfaces
 		// ------------------------------------------------------------------
 		NFVSystemType.DeployedNFFGs deployedNFFGs = nfvSystem.getDeployedNFFGs();
-		initNFFGs(deployedNFFGs);
+		initNFFGs( deployedNFFGs );
 	}
 	
 	

@@ -2,6 +2,7 @@ package it.polito.dp2.NFV.sol1;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,12 +13,14 @@ import java.util.Set;
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.ValidationEvent;
 import javax.xml.bind.ValidationEventHandler;
 import javax.xml.bind.ValidationEventLocator;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.SchemaFactoryConfigurationError;
 
 import org.xml.sax.SAXException;
 
@@ -26,6 +29,7 @@ import it.polito.dp2.NFV.HostReader;
 import it.polito.dp2.NFV.LinkReader;
 import it.polito.dp2.NFV.NffgReader;
 import it.polito.dp2.NFV.NfvReader;
+import it.polito.dp2.NFV.NfvReaderException;
 import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.VNFTypeReader;
 import it.polito.dp2.NFV.sol1.jaxb.*;
@@ -49,71 +53,44 @@ public class NfvReaderReal implements NfvReader {
 	private static final String SCHEMA_LOCATION      = "/xsd/nfvInfo.xsd";
 
 	private static final String PROPERTY_XML_FILE    = "it.polito.dp2.NFV.sol1.NfvInfo.file";
-	private static final String PROPERTY_USER_DIR    = "user.dir";
+	private static final String PROPERTY_USER_DIR    = "user.dir"; // working directory
 	
 	private final NFVSystemType nfvSystem;
 	private final Adapter       adapter;
 	
 	
-	protected NfvReaderReal() throws Exception {
+	protected NfvReaderReal() 
+			throws JAXBException, NullPointerException, FileNotFoundException, 
+			       IllegalArgumentException, NfvReaderException {
 		
-		/* ------------------------------------------------------------------
-		 * unmarshal xml file 
-		 */
 		JAXBContext jc  = JAXBContext.newInstance( JAXB_CLASSES_PACKAGE );
 		Unmarshaller um = jc.createUnmarshaller();
 		
-		/* ------------------------------------------------------------------
-		 * Set up validation
-		 */
+		// Set up validation
         try {
 
+        	String schemaFile = ( System.getProperty( PROPERTY_USER_DIR ) == null ? 
+        			                     new String("") : System.getProperty(PROPERTY_USER_DIR) );
+        	schemaFile = schemaFile.concat(SCHEMA_LOCATION);
         	
-        	/*
-        	 * get Schema to use in the validation process
-        	 */
-        	
-        	String schemaFile = System.getProperty(PROPERTY_USER_DIR);
-        	if ( schemaFile == null )
-        		throw new NullPointerException("Could not get schema");
-        	
-        	schemaFile.concat(SCHEMA_LOCATION);
-        	
-        	SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            Schema schema = sf.newSchema(new File( schemaFile ));
-
-            um.setSchema(schema);
-            um.setEventHandler(
-                new ValidationEventHandler() {
-                    // if there are errors, stop unmashalling
-                    public boolean handleEvent(ValidationEvent ve) {
-                        if (ve.getSeverity() != ValidationEvent.WARNING) {
-                            ValidationEventLocator vel = ve.getLocator();
-                            System.out.println("Line:Col[" + vel.getLineNumber() +
-                                ":" + vel.getColumnNumber() +
-                                "]:" + ve.getMessage());
-                            return false;
-                        }
-                        return true;
-                    }
-                }
-            );
+        	myJAXBWrapper.unmarshallerSetSchema(um, schemaFile);
+        
         } catch ( Exception e ) {
-            System.err.println(e); // no validation
-        } 
+        	System.err.println(e); 
+            System.err.println("Could not set unmarshaller validation schema."); // no validation
+        } catch ( SchemaFactoryConfigurationError sfce ) {
+        	System.err.println(sfce); 
+        	System.err.println("Could not set unmarshaller validation schema."); // no validation
+        }
         
 		
-        /* ------------------------------------------------------------------ 
-		 * get XML file to load 
-		 */
+        // get XML file to load 
 		String xmlFile = System.getProperty( PROPERTY_XML_FILE );
 		if ( xmlFile == null )
 			throw new NullPointerException("Could not get XML file to read.");
         
         
-        /* ------------------------------------------------------------------
-		 * unmarshal
-		 */
+        //unmarshal
 		Object obj = um.unmarshal( new FileInputStream( xmlFile ) );
 
 		@SuppressWarnings("unchecked")
@@ -148,13 +125,13 @@ public class NfvReaderReal implements NfvReader {
 		if ( sourceHost == null || destHost == null )
 			return null; // wrong arguments
 		
-		String sHost = sourceHost.getName();
-		String dHost = destHost.getName();
+		String ssourceHostName = sourceHost.getName();
+		String destHostName    = destHost.getName();
 		
-		if ( ( sHost == null ) || ( dHost == null ) )
+		if ( ( ssourceHostName == null ) || ( destHostName == null ) )
 			return null; // source or destination hosts don't have a name
 		
-		return adapter.getConnectionPerformance( sHost + "-" + dHost );
+		return adapter.getConnectionPerformance( ssourceHostName + "-" + destHostName );
 	}
 
 	

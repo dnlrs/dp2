@@ -2,21 +2,32 @@ package it.polito.dp2.NFV.sol1;
 
 import java.math.BigInteger;
 
+import it.polito.dp2.NFV.sol1.jaxb.Catalogue;
 import it.polito.dp2.NFV.sol1.jaxb.Connection;
 import it.polito.dp2.NFV.sol1.jaxb.Host;
 import it.polito.dp2.NFV.sol1.jaxb.InfrastructureNetwork;
 import it.polito.dp2.NFV.sol1.jaxb.Link;
 import it.polito.dp2.NFV.sol1.jaxb.NFFG;
 import it.polito.dp2.NFV.sol1.jaxb.NFVSystemType;
+import it.polito.dp2.NFV.sol1.jaxb.NFVSystemType.DeployedNFFGs;
 import it.polito.dp2.NFV.sol1.jaxb.Node;
 import it.polito.dp2.NFV.sol1.jaxb.NodeRef;
 import it.polito.dp2.NFV.sol1.jaxb.SizeInMB;
 import it.polito.dp2.NFV.sol1.jaxb.VNF;
+import it.polito.dp2.NFV.sol1.jaxb.Host.AllocatedNodes;
 
 public class Validator {
 	
 	protected Validator() {}
 	
+	/**
+	 * Checks if the {@link NFVSystemType} is not <code>null</code> and has 
+	 * the elements {@link InfrastructureNetwork}, {@link Catalogue} and 
+	 * {@link DeployedNFFGs}.
+	 * 
+	 * @param  nfv the {@link NFVSystemType} object
+	 * @return     <code>true</code> if valid, <code>false</code> otherwise
+	 */
 	protected Boolean isValidNFVSystem( NFVSystemType nfv ) {
 		
 		if ( nfv == null )
@@ -34,6 +45,15 @@ public class Validator {
 		return Boolean.TRUE; 
 	}
 	
+	
+	/**
+	 * Checks if {@link InfrastructureNetwork} is not <code>null</code> and
+	 * has the elements {@link InfrastructureNetwork.Hosts} and
+	 * {@link InfrastructureNetwork.Connections}.
+	 * 
+	 * @param  in the {@link InfrastructureNetwork} object
+	 * @return    <code>true</code> if valid, <code>false</code> otherwise
+	 */
 	protected Boolean isValidIN( InfrastructureNetwork in ) {
 		
 		if ( in == null )
@@ -48,6 +68,15 @@ public class Validator {
 		return Boolean.TRUE;
 	}
 	
+	
+	/**
+	 * Checks if a {@link Host} is not <code>null</code>, if its properties
+	 * are present and valid and if the {@link AllocatedNodes} element is 
+	 * present.
+	 * 
+	 * @param  h the {@link Host} object
+	 * @return <code>true</code> if valid, <code>false</code> otherwise
+	 */
 	protected Boolean isValidHost( Host h ) {
 		
 		if ( h == null )
