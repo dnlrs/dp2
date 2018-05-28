@@ -128,30 +128,4 @@ public class NfvInfoSerializer {
 		
 		JAXB.marshal(nfvRootElement, new FileOutputStream(outputFileName) );
 	}
-	
-	
-	/**
-	 * Sets validation schema for the marshaller assuming it's:
-	 * {working_directory}/xsd/nfvInfo.xsd
-	 * 
-	 * @param  m the marshaller
-	 *  
-	 * @throws PropertyException
-	 */
-	private void setMarshallerSchema( Marshaller m ) throws PropertyException {
-		
-		// retrieve validation schema to be used ----------------------------
-		try {
-			
-			// validation schema can be found under "${user.dir}/xsd/" ------
-			
-			
-			
-		
-		} catch ( Exception e ) {
-			throw new PropertyException("Could not set marshaller schema property");
-		} catch ( SchemaFactoryConfigurationError sfce ) {
-			throw new PropertyException("Could not set marshaller schema property");
-		} 
-	}
 }
