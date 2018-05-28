@@ -64,7 +64,7 @@ public class NfvInfoSerializer {
 		try {
 
 			NfvInfoSerializer nis = new NfvInfoSerializer();
-			nis.do_work( args[0] );
+			nis.doWork( args[0] );
 
 		} catch (NfvReaderException e) {
 			e.printStackTrace();
@@ -83,7 +83,7 @@ public class NfvInfoSerializer {
 	 * Retrieves data from NFVSystem interfaces and marshalls it to the output
 	 * XML file.
 	 */
-	private void do_work( String outputFileName ) 
+	private void doWork( String outputFileName ) 
 			throws JAXBException, NullPointerException, IllegalArgumentException,
                    FileNotFoundException, DataBindingException {
 		
