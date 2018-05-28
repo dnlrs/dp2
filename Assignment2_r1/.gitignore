@@ -1,6 +1,3 @@
-# ignore output xml file
-file.xml
-\$\{output\}
 
 # ignore eclipse project files
 .classpath
@@ -10,12 +7,9 @@ file.xml
 
 # ignore prof's library
 lib/
+lib-src/
 
 # ignore builds
+bin/
 build/
 
-# ignore xjc java classes auto-created
-gen/
-
-# ignore junit temp folders
-temp*/

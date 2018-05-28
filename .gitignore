@@ -1,11 +1,6 @@
 # ignore all tmp files
 **/*~
 
-# ignore eclipse configuration files
-.classpath
-.externalToolBuilders/
-.project
-.settings/
-
-# ignore backup folder
+# ignore backup and zips folder
 backup/
+zips/
