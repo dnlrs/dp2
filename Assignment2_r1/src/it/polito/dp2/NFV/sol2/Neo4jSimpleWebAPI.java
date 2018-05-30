@@ -21,40 +21,38 @@ import javax.ws.rs.core.UriBuilder;
  */
 public class Neo4jSimpleWebAPI {
 	
-	// TODO: what happens if adding a slash???
-	private final static String URI_NODE                        = "/data/node";
-	private final static String URI_NODE_id                     = "/data/node/{node_id}";
-	private final static String URI_NODE_id_LABELS              = "/data/node/{node_id}/labels";
-	private final static String URI_NODE_id_LABELS_label        = "/data/node/{node_id}/labels/{label}";
-	private final static String URI_NODE_id_PROPERTIES          = "/data/node/{node_id}/properties";
-	private final static String URI_NODE_id_PROPERTIES_property = "/data/node/{node_id}/properties/{property_name}";
-	private final static String URI_NODE_id_RELATIONSHIPS       = "/data/node/{node_id}/relationships";
-	private final static String URI_NODE_id_RELATIONSHIPS_ALL   = "/data/node/{node_id}/relationships/all";
-	private final static String URI_NODE_id_RELATIONSHIPS_IN    = "/data/node/{node_id}/relationships/in";
-	private final static String URI_NODE_id_RELATIONSHIPS_OUT   = "/data/node/{node_id}/relationships/out";
-//	private final static String URI_RELATIONSHIP                = "/data/relationship";
-	private final static String URI_RELATIONSHIP_id             = "/data/relationship/{relationship_id}";
-	private final static String URI_NODE_id_REACHABLENODES      = "/data/node/{node_id}/reachableNodes";
+	private final static String URI_NODE                        = "data/node";
+	private final static String URI_NODE_id                     = "data/node/{node_id}";
+	private final static String URI_NODE_id_LABELS              = "data/node/{node_id}/labels";
+	private final static String URI_NODE_id_LABELS_label        = "data/node/{node_id}/labels/{label}";
+	private final static String URI_NODE_id_PROPERTIES          = "data/node/{node_id}/properties";
+	private final static String URI_NODE_id_PROPERTIES_property = "data/node/{node_id}/properties/{property_name}";
+	private final static String URI_NODE_id_RELATIONSHIPS       = "data/node/{node_id}/relationships";
+	private final static String URI_NODE_id_RELATIONSHIPS_ALL   = "data/node/{node_id}/relationships/all";
+	private final static String URI_NODE_id_RELATIONSHIPS_IN    = "data/node/{node_id}/relationships/in";
+	private final static String URI_NODE_id_RELATIONSHIPS_OUT   = "data/node/{node_id}/relationships/out";
+//	private final static String URI_RELATIONSHIP                = "data/relationship";
+	private final static String URI_RELATIONSHIP_id             = "data/relationship/{relationship_id}";
+	private final static String URI_NODE_id_REACHABLENODES      = "data/node/{node_id}/reachableNodes";
 	
 	private final static String URI_QP_RELATIONSHIPTYPES        = "relationshipTypes";
 	private final static String URI_QP_NODELABELS               = "nodeLabel";
 	
-	private final static String PROPERTY_URL = "it.polito.dp2.NFV.lab2.URL";
+	private final static String PROPERTY_URL                    = "it.polito.dp2.NFV.lab2.URL";
 	
 	private final UriBuilder _uriBuilder;
 	private final URI        BASE_URI;
 	
-	private static Neo4jSimpleWebAPI instance;
+	private static Neo4jSimpleWebAPI instance = null;
 	
 	
 	/**
 	 * Creates a {@link Neo4jSimpleWebAPI} singleton instance.
 	 * 
 	 * @return a {@link Neo4jSimpleWebAPI} object
-	 * @throws InstantiationException
+	 * @throws Exception
 	 */
-	protected static Neo4jSimpleWebAPI newInstance() 
-			throws InstantiationException {
+	protected static Neo4jSimpleWebAPI newInstance() throws Exception {
 		
 		if ( Neo4jSimpleWebAPI.instance != null )
 			return Neo4jSimpleWebAPI.instance;
@@ -68,24 +66,22 @@ public class Neo4jSimpleWebAPI {
 	/**
 	 * Private constructor.
 	 * 
-	 * @throws InstantiationException
+	 * @throws Exception
 	 */
-	private Neo4jSimpleWebAPI() 
-			throws InstantiationException {
+	private Neo4jSimpleWebAPI() throws Exception {
 		
 		try {
-			String url = System.getProperty(PROPERTY_URL);
+			String url = System.getProperty( PROPERTY_URL );
 			
 			if ( url == null )
-				throw new NullPointerException("URL System variable not found");
+				throw new NullPointerException( "URL System variable not found" );
 			
-			BASE_URI = URI.create(url);
-			_uriBuilder = UriBuilder.fromUri(BASE_URI);
+			BASE_URI = URI.create( url );
+			_uriBuilder = UriBuilder.fromUri( BASE_URI );
 			
 			
 		} catch ( Exception e ) {
-			e.printStackTrace();
-			throw new InstantiationException(e.getMessage());
+			throw new Exception( e.getMessage() );
 		}
 		
 	}
@@ -100,27 +96,27 @@ public class Neo4jSimpleWebAPI {
 	
 	/**
 	 * Creates a new GraphNode (note: with properties only) resource.
-	 * 
-	 * <p> POST ...{@value #URI_NODE} </p>
+	 * <p>
+	 * POST ...{@value #URI_NODE}
 	 * 
 	 * @param  node the {@link Node} with the GraphNode data
 	 * @return      the GraphNode ID of the resource
 	 * 
 	 * @throws Exception
 	 */
-	protected String createGraphNode(Node node) 
+	protected String createGraphNode( Node node ) 
 			throws Exception {
 		
 		if ( node == null )
-			throw new NullPointerException("Null argument.");
+			throw new NullPointerException( "createGraphNode: null argument" );
 		
-		URI localURI = _uriBuilder.clone().path(URI_NODE).build();
+		URI localURI = _uriBuilder.clone().path( URI_NODE ).build();
 		
 		Client _client = ClientBuilder.newClient();
-		Node n = _client.target(localURI)
-				        .request(MediaType.APPLICATION_XML)
-				        .post(Entity.entity(node, MediaType.APPLICATION_XML),
-				        		Node.class);
+		Node n = _client.target( localURI )
+				        .request( MediaType.APPLICATION_XML )
+				        .post( Entity.entity( node, MediaType.APPLICATION_XML ),
+				        	   Node.class );
 		_client.close();
 		
 		return n.getId();
@@ -136,19 +132,20 @@ public class Neo4jSimpleWebAPI {
 	 * @return             a {@link Node} object with the GraphNode data
 	 * @throws Exception
 	 */
-	protected Node getNode(String graphNodeID) 
+	protected Node getNode( String graphNodeID ) 
 			throws Exception {
 		
 		if ( graphNodeID == null )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "getNode: null argument" );
 		
-		URI localURI = _uriBuilder.clone().path(URI_NODE_id).build(graphNodeID);
+		URI localURI = _uriBuilder.clone().path( URI_NODE_id ).build( graphNodeID );
 		
 		Client _client = ClientBuilder.newClient();
-		Node n = _client.target(localURI)
-				        .request(MediaType.APPLICATION_XML)
-				        .get(Node.class);
+		Node n = _client.target( localURI )
+				        .request( MediaType.APPLICATION_XML )
+				        .get( Node.class );
 		_client.close();
+		
 		return n;
 	}
 	
@@ -161,22 +158,22 @@ public class Neo4jSimpleWebAPI {
 	 * @param  graphNodeID the GraphNode ID
 	 * @throws Exception
 	 */
-	protected void deleteNode(String graphNodeID) 
+	protected void deleteNode( String graphNodeID ) 
 			throws Exception {
 		
 		if ( graphNodeID == null )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "deleteNode: null argument" );
 		
-		URI localURI = _uriBuilder.clone().path(URI_NODE_id).build(graphNodeID);
+		URI localURI = _uriBuilder.clone().path( URI_NODE_id ).build( graphNodeID );
 		
 		Client _client = ClientBuilder.newClient();
-		Response response = _client.target(localURI)
-	                               .request(MediaType.APPLICATION_XML)
+		Response response = _client.target( localURI )
+	                               .request( MediaType.APPLICATION_XML )
 	                               .delete();
 		_client.close();
 		
 		if ( response.getStatus() >= 400 )
-			throw new WebApplicationException("Node delete error.");
+			throw new WebApplicationException( "deleteNode: node delete error" );
 	}
 	
 	
@@ -196,22 +193,22 @@ public class Neo4jSimpleWebAPI {
 	 * @param  properties  {@link Properties} object with updated data
 	 * @throws Exception
 	 */
-	protected void updateNodeProperties(String graphNodeID, Properties properties) 
+	protected void updateNodeProperties( String graphNodeID, Properties properties) 
 			throws Exception {
 		
 		if ( ( graphNodeID == null ) || ( properties == null ) )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "updateNodeProperties: null argument" );
 
-		URI localURI = _uriBuilder.clone().path(URI_NODE_id_PROPERTIES).build(graphNodeID);
+		URI localURI = _uriBuilder.clone().path( URI_NODE_id_PROPERTIES ).build( graphNodeID );
 		
 		Client _client = ClientBuilder.newClient();
-		Response response = _client.target(localURI)
-		                           .request(MediaType.APPLICATION_XML)
-                                   .put(Entity.entity(properties, MediaType.APPLICATION_XML));
+		Response response = _client.target( localURI )
+		                           .request( MediaType.APPLICATION_XML )
+                                   .put( Entity.entity( properties, MediaType.APPLICATION_XML ) );
 		_client.close();
 		
 		if ( response.getStatus() >= 400 )
-			throw new WebApplicationException("Put error.");
+			throw new WebApplicationException( "updateNodeProperties: PUT error" );
 	}
 
 	
@@ -224,18 +221,18 @@ public class Neo4jSimpleWebAPI {
 	 * @return             a {@link Properties} object with GraphNode properties
 	 * @throws Exception
 	 */
-	protected Properties getNodeProperties(String graphNodeID) 
+	protected Properties getNodeProperties( String graphNodeID ) 
 			throws Exception {
 		
 		if ( graphNodeID == null )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "getNodeProperties: null argument" );
 		
-		URI localURI = _uriBuilder.clone().path(URI_NODE_id_PROPERTIES).build(graphNodeID);
+		URI localURI = _uriBuilder.clone().path( URI_NODE_id_PROPERTIES ).build( graphNodeID );
 		
 		Client _client = ClientBuilder.newClient();
-		Properties properties = _client.target(localURI)
-                                       .request(MediaType.APPLICATION_XML)
-                                       .get(Properties.class);
+		Properties properties = _client.target( localURI )
+                                       .request( MediaType.APPLICATION_XML )
+                                       .get( Properties.class );
 		_client.close();
 		
 		return properties;
@@ -250,22 +247,22 @@ public class Neo4jSimpleWebAPI {
 	 * @param  graphNodeID the GraphNode ID
 	 * @throws Exception
 	 */
-	protected void deleteNodeProperties(String graphNodeID) 
+	protected void deleteNodeProperties( String graphNodeID ) 
 			throws Exception {
 		
 		if ( graphNodeID == null )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "deleteNodeProperties: null argument" );
 		
-		URI localURI = _uriBuilder.clone().path(URI_NODE_id_PROPERTIES).build(graphNodeID);
+		URI localURI = _uriBuilder.clone().path( URI_NODE_id_PROPERTIES ).build( graphNodeID );
 		
 		Client _client = ClientBuilder.newClient();
-		Response response = _client.target(localURI)
-                                   .request(MediaType.APPLICATION_XML)
+		Response response = _client.target( localURI )
+                                   .request( MediaType.APPLICATION_XML )
                                    .delete();
 		_client.close();
 		
 		if ( response.getStatus() >= 400 )
-			throw new WebApplicationException("Properties delete error.");
+			throw new WebApplicationException( "deleteNodeProperties: DELETE error" );
 	}
 	
 	
@@ -282,20 +279,20 @@ public class Neo4jSimpleWebAPI {
 			throws Exception {
 		
 		if ( ( graphNodeID == null ) || ( property == null ) )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "updateNodeProperty: null argument" );
 
 		URI localURI = _uriBuilder.clone()
-				                  .path(URI_NODE_id_PROPERTIES_property)
-				                  .build(graphNodeID, property.getName());
+				                  .path( URI_NODE_id_PROPERTIES_property )
+				                  .build( graphNodeID, property.getName() );
 		
 		Client _client = ClientBuilder.newClient();
-		Response response = _client.target(localURI)
-				                   .request(MediaType.APPLICATION_XML)
-				                   .put(Entity.entity(property, MediaType.APPLICATION_XML));
+		Response response = _client.target( localURI )
+				                   .request( MediaType.APPLICATION_XML )
+				                   .put( Entity.entity( property, MediaType.APPLICATION_XML ) );
 		_client.close();
 		
 		if ( response.getStatus() >= 400 )
-			throw new WebApplicationException("Put error.");
+			throw new WebApplicationException( "updateNodeProperty: PUT error" );
 	}
 	
 	
@@ -313,16 +310,16 @@ public class Neo4jSimpleWebAPI {
 			throws Exception {
 		
 		if ( ( graphNodeID == null ) || ( property_name == null ) )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "getNodeProperty: null argument" );
 		
 		URI localURI = _uriBuilder.clone()
-                                  .path(URI_NODE_id_PROPERTIES_property)
-                                  .build(graphNodeID, property_name);
+                                  .path( URI_NODE_id_PROPERTIES_property )
+                                  .build( graphNodeID, property_name );
 		
 		Client _client = ClientBuilder.newClient();
-		Property property =  _client.target(localURI)
-                                    .request(MediaType.APPLICATION_XML)
-                                    .get(Property.class);
+		Property property =  _client.target( localURI )
+                                    .request( MediaType.APPLICATION_XML )
+                                    .get( Property.class );
 		_client.close();
 		
 		return property;
@@ -342,20 +339,20 @@ public class Neo4jSimpleWebAPI {
 			throws Exception {
 		
 		if ( ( graphNodeID == null ) || ( property_name == null ) )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "deleteNodeProperty: null argument" );
 
 		URI localURI = _uriBuilder.clone()
-				                  .path(URI_NODE_id_PROPERTIES_property)
-				                  .build(graphNodeID, property_name);
+				                  .path( URI_NODE_id_PROPERTIES_property )
+				                  .build( graphNodeID, property_name );
 		
 		Client _client = ClientBuilder.newClient();
-		Response response = _client.target(localURI)
-                                   .request(MediaType.APPLICATION_XML)
+		Response response = _client.target( localURI )
+                                   .request( MediaType.APPLICATION_XML )
                                    .delete();
 		_client.close();
 		
 		if ( response.getStatus() >= 400 )
-			throw new WebApplicationException("Property delete error.");
+			throw new WebApplicationException( "deleteNodeProperty: DELETE error" );
 	}
 	
 
@@ -379,20 +376,20 @@ public class Neo4jSimpleWebAPI {
 			throws Exception {
 		
 		if ( ( graphNodeID == null ) || ( label == null ) )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "createNodeLabel: null argument" );
 		
 		URI localURI = _uriBuilder.clone()
-                                  .path(URI_NODE_id_LABELS)
-                                  .build(graphNodeID);
+                                  .path( URI_NODE_id_LABELS )
+                                  .build( graphNodeID );
 		
 		Client _client = ClientBuilder.newClient();
-		Response r = _client.target(localURI)
-							.request(MediaType.APPLICATION_XML)
-	                        .post(Entity.entity(label, MediaType.APPLICATION_XML));
+		Response r = _client.target( localURI )
+							.request( MediaType.APPLICATION_XML )
+	                        .post( Entity.entity( label, MediaType.APPLICATION_XML ) );
 		_client.close();
 		
 		if ( r.getStatus() >= 400 )
-			throw new WebApplicationException("Labels post error.");
+			throw new WebApplicationException( "createNodeLabel: POST error" );
 	}
 	
 	
@@ -409,16 +406,16 @@ public class Neo4jSimpleWebAPI {
 			throws Exception {
 		
 		if ( graphNodeID == null )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "getNodeLabels: null argument" );
 		
 		URI localURI = _uriBuilder.clone()
-                                  .path(URI_NODE_id_LABELS)
-                                  .build(graphNodeID);
+                                  .path( URI_NODE_id_LABELS )
+                                  .build( graphNodeID );
 		
 		Client _client = ClientBuilder.newClient();
-		Labels labels = _client.target(localURI)
-                               .request(MediaType.APPLICATION_XML)
-                               .get(Labels.class);
+		Labels labels = _client.target( localURI )
+                               .request( MediaType.APPLICATION_XML )
+                               .get( Labels.class );
 		_client.close();
 		
 		return labels;
@@ -438,20 +435,20 @@ public class Neo4jSimpleWebAPI {
 			throws Exception {
 		
 		if ( ( graphNodeID == null ) || ( label == null ) )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "updateNodeLabels: null argument" );
 		
 		URI localURI = _uriBuilder.clone()
-                                  .path(URI_NODE_id_LABELS)
-                                  .build(graphNodeID);
+                                  .path( URI_NODE_id_LABELS )
+                                  .build( graphNodeID );
 		
 		Client _client = ClientBuilder.newClient();
-		Response r =  _client.target(localURI)
-                             .request(MediaType.APPLICATION_XML)
-                             .put(Entity.entity(label, MediaType.APPLICATION_XML));
+		Response r =  _client.target( localURI )
+                             .request( MediaType.APPLICATION_XML )
+                             .put( Entity.entity( label, MediaType.APPLICATION_XML ) );
 		_client.close();
 		
 		if ( r.getStatus() >= 400 )
-			throw new WebApplicationException("Labels post error.");
+			throw new WebApplicationException( "updateNodeLabels: POST error" );
 	}
 	
 	
@@ -468,20 +465,20 @@ public class Neo4jSimpleWebAPI {
 			throws Exception {
 	
 		if ( ( graphNodeID == null ) || ( label_name == null ) )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "deleteNodeLabel: null argument" );
 		
 		URI localURI = _uriBuilder.clone()
-                                  .path(URI_NODE_id_LABELS_label)
-                                  .build(graphNodeID, label_name);
+                                  .path( URI_NODE_id_LABELS_label )
+                                  .build( graphNodeID, label_name );
 		
 		Client _client = ClientBuilder.newClient();
-		Response response = _client.target(localURI)
-                                   .request(MediaType.APPLICATION_XML)
+		Response response = _client.target( localURI )
+                                   .request( MediaType.APPLICATION_XML )
                                    .delete();
 		_client.close();
 		
 		if ( response.getStatus() >= 400 )
-			throw new WebApplicationException("Property delete error.");
+			throw new WebApplicationException( "deleteNodeLabel: DELETE error" );
 	}
 	
 	
@@ -502,21 +499,21 @@ public class Neo4jSimpleWebAPI {
 	 * @return              the ID of the new GraphNode relationship
 	 * @throws Exception
 	 */
-	protected String createNodeRelationship( String graphNodeID, Relationship relationship) 
+	protected String createNodeRelationship( String graphNodeID, Relationship relationship ) 
 			throws Exception {
 		
 		if ( ( graphNodeID == null ) || ( relationship == null ) )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "createNodeRelationship: null argument" );
 		
 		URI localURI = _uriBuilder.clone()
-                                  .path(URI_NODE_id_RELATIONSHIPS)
-                                  .build(graphNodeID);
+                                  .path( URI_NODE_id_RELATIONSHIPS )
+                                  .build( graphNodeID );
 		
 		Client _client = ClientBuilder.newClient();
-		Relationship r = _client.target(localURI)
-	                            .request(MediaType.APPLICATION_XML)
-	                            .post(Entity.entity(relationship, MediaType.APPLICATION_XML), 
-	                            		Relationship.class);
+		Relationship r = _client.target( localURI )
+	                            .request( MediaType.APPLICATION_XML )
+	                            .post( Entity.entity( relationship, MediaType.APPLICATION_XML ), 
+	                            		Relationship.class );
 		_client.close();
 		
 		return r.getId();
@@ -537,16 +534,16 @@ public class Neo4jSimpleWebAPI {
 			throws Exception {
 		
 		if ( relationshipID == null )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "getRelationship: null argument" );
 		
 		URI localURI = _uriBuilder.clone()
-                                  .path(URI_RELATIONSHIP_id)
-                                  .build(relationshipID);
+                                  .path( URI_RELATIONSHIP_id )
+                                  .build( relationshipID );
 		
 		Client _client = ClientBuilder.newClient();
-		Relationship r = _client.target(localURI)
-                                .request(MediaType.APPLICATION_XML)
-                                .get(Relationship.class);
+		Relationship r = _client.target( localURI )
+                                .request( MediaType.APPLICATION_XML )
+                                .get( Relationship.class );
 		_client.close();
 		
 		return r;
@@ -565,20 +562,20 @@ public class Neo4jSimpleWebAPI {
 			throws Exception {
 		
 		if ( relationshipID == null )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "deleteRelationship: null argument" );
 		
 		URI localURI = _uriBuilder.clone()
-                                  .path(URI_RELATIONSHIP_id)
-                                  .build(relationshipID);
+                                  .path( URI_RELATIONSHIP_id )
+                                  .build( relationshipID );
 		
 		Client _client = ClientBuilder.newClient();
-		Response response = _client.target(localURI)
-                                   .request(MediaType.APPLICATION_XML)
+		Response response = _client.target( localURI )
+                                   .request( MediaType.APPLICATION_XML )
                                    .delete();
 		_client.close();
 		
 		if ( response.getStatus() >= 400 )
-			throw new WebApplicationException("Property delete error.");
+			throw new WebApplicationException( "deleteRelationship: DELETE error" );
 	}
 	
 	
@@ -596,16 +593,16 @@ public class Neo4jSimpleWebAPI {
 			throws Exception {
 		
 		if ( graphNodeID == null )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "getNodeRelationships: null argument" );
 		
 		URI localURI = _uriBuilder.clone()
-                                  .path(URI_NODE_id_RELATIONSHIPS_ALL)
-                                  .build(graphNodeID);
+                                  .path( URI_NODE_id_RELATIONSHIPS_ALL )
+                                  .build( graphNodeID );
 		
 		Client _client = ClientBuilder.newClient();
-		Relationships r = _client.target(localURI)
-                                 .request(MediaType.APPLICATION_XML)
-                                 .get(Relationships.class);
+		Relationships r = _client.target( localURI )
+                                 .request( MediaType.APPLICATION_XML )
+                                 .get( Relationships.class );
 		_client.close();
 		
 		return r;
@@ -627,16 +624,16 @@ public class Neo4jSimpleWebAPI {
 			throws Exception {
 		
 		if ( graphNodeID == null )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "getNodeInRelationships: null argument" );
 		
 		URI localURI = _uriBuilder.clone()
-                                  .path(URI_NODE_id_RELATIONSHIPS_IN)
-                                  .build(graphNodeID);
+                                  .path( URI_NODE_id_RELATIONSHIPS_IN )
+                                  .build( graphNodeID );
 		
 		Client _client = ClientBuilder.newClient();
-		Relationships r = _client.target(localURI)
-                                 .request(MediaType.APPLICATION_XML)
-                                 .get(Relationships.class);
+		Relationships r = _client.target( localURI )
+                                 .request( MediaType.APPLICATION_XML )
+                                 .get( Relationships.class );
 		_client.close();
 		
 		return r;
@@ -658,16 +655,16 @@ public class Neo4jSimpleWebAPI {
 			throws Exception {
 		
 		if ( graphNodeID == null )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "getNodeOutRelationships: null argument" );
 		
 		URI localURI = _uriBuilder.clone()
-                                  .path(URI_NODE_id_RELATIONSHIPS_OUT)
-                                  .build(graphNodeID);
+                                  .path( URI_NODE_id_RELATIONSHIPS_OUT )
+                                  .build( graphNodeID );
 		
 		Client _client = ClientBuilder.newClient();
-		Relationships r = _client.target(localURI)
-                                 .request(MediaType.APPLICATION_XML)
-                                 .get(Relationships.class);
+		Relationships r = _client.target( localURI )
+                                 .request( MediaType.APPLICATION_XML )
+                                 .get( Relationships.class );
 		_client.close();
 		
 		return r;
@@ -689,7 +686,7 @@ public class Neo4jSimpleWebAPI {
 	 * <p> 
 	 * <b>note</b>: <br> 
 	 * {@code graphNodeType} cannot be null, if no graph node types are to be
-	 * specified and empty set must be passedas parameter. <br>
+	 * specified and empty set must be passed as parameter. <br>
 	 * {@code label} must be null if no label has to be specified.
 	 * 
 	 * 
@@ -705,32 +702,32 @@ public class Neo4jSimpleWebAPI {
 			throws Exception {
 		
 		if ( ( graphNodeID == null ) || ( graphNodeTypes == null ) )
-			throw new NullPointerException("Null Argument.");
+			throw new NullPointerException( "getReacheableNodesFromNode: null argument" );
 		
-		UriBuilder localBuilder = _uriBuilder.clone().path(URI_NODE_id_REACHABLENODES);
+		UriBuilder localBuilder = _uriBuilder.clone().path( URI_NODE_id_REACHABLENODES );
 		
 		if ( !( graphNodeTypes.isEmpty() ) ) {
-			String relationshipTypes = new String("");
+			String relationshipTypes = new String( "" );
 			
 			for ( String type : graphNodeTypes )
-				relationshipTypes = relationshipTypes.concat(type).concat("%7C");
+				relationshipTypes = relationshipTypes.concat( type ).concat( "%7C" );
 			
-			relationshipTypes = relationshipTypes.substring( 0, (relationshipTypes.length()-3) );
+			relationshipTypes = relationshipTypes.substring( 0, ( relationshipTypes.length() - 3 ) );
 			
-			localBuilder = localBuilder.queryParam(URI_QP_RELATIONSHIPTYPES, relationshipTypes);
+			localBuilder = localBuilder.queryParam( URI_QP_RELATIONSHIPTYPES, relationshipTypes );
 		}
 		
 		if ( label != null )
-			localBuilder = localBuilder.queryParam(URI_QP_NODELABELS, label);
+			localBuilder = localBuilder.queryParam( URI_QP_NODELABELS, label );
 		
-		URI localURI = localBuilder.build(graphNodeID);
+		URI localURI = localBuilder.build( graphNodeID );
 		
 //		System.err.println(localURI.toString());
 		
 		Client _client = ClientBuilder.newClient();
-		Nodes nodes = _client.target(localURI)
-                             .request(MediaType.APPLICATION_XML)
-                             .get(Nodes.class);
+		Nodes nodes = _client.target( localURI )
+                             .request( MediaType.APPLICATION_XML )
+                             .get( Nodes.class );
 		_client.close();
 		
 		return nodes;
