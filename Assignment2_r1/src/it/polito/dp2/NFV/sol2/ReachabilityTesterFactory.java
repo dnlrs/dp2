@@ -7,8 +7,15 @@ public class ReachabilityTesterFactory extends it.polito.dp2.NFV.lab2.Reachabili
 
 	@Override
 	public ReachabilityTester newReachabilityTester() throws ReachabilityTesterException {
-		// TODO Auto-generated method stub
-		return null;
+		
+		ReachabilityTester r = null;
+		try {
+			r = new ReachabilityTesterReal();
+		} catch ( Exception e) {
+			e.printStackTrace();
+			throw new ReachabilityTesterException();
+		}
+		return r;
 	}
 
 }

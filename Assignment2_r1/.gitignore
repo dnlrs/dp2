@@ -12,4 +12,5 @@ lib-src/
 # ignore builds
 bin/
 build/
+gen-src/
 
