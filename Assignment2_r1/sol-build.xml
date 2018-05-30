@@ -23,6 +23,7 @@
 	    	<depends dir="${lab2.location}" includes="build.xml"/>
 	    	<customClassName uri="${URL}" classname="Neo4JSCS"/>
 	    </wjc>
+		<echo message="Done." />
 	</target>
 
 </project>

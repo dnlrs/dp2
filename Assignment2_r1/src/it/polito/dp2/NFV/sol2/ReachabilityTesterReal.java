@@ -1,7 +1,6 @@
 package it.polito.dp2.NFV.sol2;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.ProcessingException;
@@ -21,6 +20,12 @@ import it.polito.dp2.NFV.lab2.ReachabilityTester;
 import it.polito.dp2.NFV.lab2.ServiceException;
 import it.polito.dp2.NFV.lab2.UnknownNameException;
 
+/**
+ * An implementation of the {@link ReachabilityTester} interface.
+ * 
+ * @author    Daniel C. Rusu
+ * @studentID 234428
+ */
 public class ReachabilityTesterReal implements ReachabilityTester {
 	
 	private final static String PROPERTY_NAME_NAME            = "name";
@@ -32,11 +37,11 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 	private final static String HOST_LABEL = "Host";
 	
 	private final NfvReader         monitor; // Access to NFV System interfaces
-	private final ObjectFactory     of;      // WADL/JAXB object factory
 	private final Neo4jSimpleWebAPI neo4jWS; // (my) Neo4j WebService API			
+	private final IDsMappingService map;     // keeps mapping with graph nodes IDs
+	private final ObjectFactory     of;      // WADL/JAXB object factory
 	
-	private final Set<String> loadedNFFGs;
-	private final IDsMappingService map;
+	private final Set<String> loadedNFFGs;   // keeps trace of loaded NFFGs
 	
 	
 	protected ReachabilityTesterReal() 
@@ -51,13 +56,12 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 			neo4jWS = Neo4jSimpleWebAPI.newInstance();
 		
 		} catch ( FactoryConfigurationError fce ) {
-			throw new Exception(fce.getMessage());
+			throw new Exception( fce.getMessage() );
 		} 
 		
-		map           = new IDsMappingService();		
-		loadedNFFGs   = new HashSet<String>();
+		map         = new IDsMappingService();		
+		loadedNFFGs = new HashSet<String>();
 	}
-	
 	
 	
 	
@@ -67,23 +71,20 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 		
 		
 		if ( nffgName == null )
-			throw new UnknownNameException("Null argument");
+			throw new UnknownNameException( "loadGraph: null argument" );
 
-		if ( monitor.getNffg(nffgName) == null )
-			throw new UnknownNameException();
+		if ( monitor.getNffg( nffgName ) == null )
+			throw new UnknownNameException( "loadGraph: inexistent NFFG" );
 
 		if ( isLoaded( nffgName ) )
-			throw new AlreadyLoadedException();
+			throw new AlreadyLoadedException( "loadGraph: NFFG already loaded" );
 		
 		map.newNffgLinkToRelMapping( nffgName ); // init relationsihpID mappings for this NFFG
 
 		Set<LinkReader> setOFLinkInterfaces = new HashSet<LinkReader>();
 		
 		try { 
-			
-			/* for each node in the NFFG:
-			 * 
-			 * 1. new graph node from this NFFG node 
+			/* 1. for each node in the NFFG:
 			 * 1.a. Prepare an XML Node with data taken from the node interface
 			 * 1.b. Ask the web service to create a new graph node according to
 			 *      the XML Node
@@ -105,65 +106,47 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 			 * 3.c. Save the returned relationship id
 			 * 3.d. Save all links found in the NFFG
 			 */
-			
-			// create GraphNodes from NFFG's nodes and hosting hosts
 			for ( NodeReader nodeI : monitor.getNffg( nffgName ).getNodes() ) {
 				
 				// 1.a.
-				Node nodeXMLNode = createXMLNodeFromNodeReader( nodeI );				
-				
+				Node nodeXMLNode = createXMLNodeFromNodeReader( nodeI ); // 1.a	
 				// 1.b.
 				String nodeGraphNodeID = neo4jWS.createGraphNode( nodeXMLNode );
 				neo4jWS.createNodeLabel( nodeGraphNodeID, nodeXMLNode.getLabels() );
-				
 				// 1.c.
 				map.addNode( nodeGraphNodeID, nodeI.getName() );
 				
-				
 				// 2
-				HostReader hostI           = nodeI.getHost();
-				String     hostGraphNodeID = null; 
-				
+				HostReader hostI       = nodeI.getHost();
+				String hostGraphNodeID = null; 
 				if ( map.hostNameIsPresent( hostI.getName() ) ) {
-					
 					// 2.d.
 					hostGraphNodeID = map.getGraphNodeIDFromHostName( hostI.getName() );
-
 				} else {
-					
 					// 2.a.
 					Node hostXMLNode = createXMLNodeFromHostReader( hostI );
-					
 					// 2.b.
 					hostGraphNodeID  = neo4jWS.createGraphNode( hostXMLNode );
 					neo4jWS.createNodeLabel( hostGraphNodeID, hostXMLNode.getLabels() );
-					
 					// 2.c.
 					map.addHost( hostGraphNodeID, hostI.getName() );
-				
 				}
 				
-				// 3.a.
+				// 3. / 3.a.
 				Relationship allocatedOnRelationship = 
 						createXMLAllocatedOnRel( nodeGraphNodeID, hostGraphNodeID );
-				
 				// 3.b.
 				String allocatedOnRelationshipID = 
 						neo4jWS.createNodeRelationship( nodeGraphNodeID, allocatedOnRelationship );
-			
 				// 3.c.
 				map.addLink(nffgName, 
-						    new String( nodeI.getName() + "-" + hostI.getName() ), 
+						    new String( nodeI.getName() + "-" + hostI.getName() ), /* relationship local name "nodeName-hostName" */
 						    allocatedOnRelationshipID);
-
-				
-				// 3.d. 
+				// 3.d.
 				setOFLinkInterfaces.addAll( nodeI.getLinks() );
 			}
-			
-			
-			 /* 
-			 * 4. for each link in the NFFG create a relationship on the web
+
+			/* 4. for each link in the NFFG create a relationship on the web
 			 *    service
 			 * 4.a. Retrieve the source graph node and the destination graph
 			 *      node of each link according to its source NFFG node and
@@ -174,31 +157,25 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 			 * 4.d. Save the relationship id
 			 */    
 			for ( LinkReader linkI : setOFLinkInterfaces ) {
-				
 				// 4.a.
-				String srcNodeName = linkI.getSourceNode().getName();
-				String dstNodeName = linkI.getDestinationNode().getName();
-				
+				String srcNodeName    = linkI.getSourceNode().getName();
+				String dstNodeName    = linkI.getDestinationNode().getName();
 				String srcGraphNodeID = map.getGraphNodeIDFromNodeName( srcNodeName );
 				String dstGraphNodeID = map.getGraphNodeIDFromNodeName( dstNodeName );
-				
 				// 4.b.
 				Relationship forwardsToRelationship = 
 						createXMLForwardToRel( srcGraphNodeID, dstGraphNodeID );
-				
 				// 4.c.
 				String forwardsToRelationshipID = 
 						neo4jWS.createNodeRelationship( srcGraphNodeID, forwardsToRelationship);
-				
 				// 4.d.
 				map.addLink( nffgName, linkI.getName(), forwardsToRelationshipID );
-				
 			}
 			
 		} catch ( WebApplicationException | ProcessingException e ) {
-			throw new ServiceException();
+			throw new ServiceException( e.getMessage() );
 		} catch ( Exception e ) {
-			throw new ServiceException();
+			throw new ServiceException( e.getMessage() );
 		}
 		
 		// remember loaded NFFGs
@@ -212,54 +189,54 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 			throws UnknownNameException, NoGraphException, ServiceException {
 		
 		if ( nffgName == null )
-			throw new UnknownNameException();
+			throw new UnknownNameException( "getExtendedNodes: null argument" );
 		
 		if ( monitor.getNffg( nffgName ) == null )
-			throw new UnknownNameException();
+			throw new UnknownNameException( "getExtendedNodes: inexistent NFFG" );
 		
 		if ( !( isLoaded( nffgName ) ) )
-			throw new NoGraphException();
-		
+			throw new NoGraphException( "getExtendedNodes: NFFG is not loaded" );
 		
 		Set<ExtendedNodeReader> result = new HashSet<ExtendedNodeReader>();
-		
+
 		for ( NodeReader nodeI : monitor.getNffg( nffgName ).getNodes() ) {
 			
-			Nodes xmlNodes = null;
 			try {
 				
 				String nodeGraphNodeID = map.getGraphNodeIDFromNodeName( nodeI.getName() );
 	
-				Set<String> types = new HashSet<String>();
-				
-				xmlNodes = neo4jWS.getReacheableNodesFromNode( nodeGraphNodeID, types, HOST_LABEL );
-				
-			} catch ( WebApplicationException | ProcessingException e ) {
-				throw new ServiceException();
-			} catch ( Exception e ) {
-				throw new ServiceException();
-			}
+				Nodes xmlNodes = neo4jWS.getReacheableNodesFromNode( nodeGraphNodeID, 
+								                                     new HashSet<String>(), /* types */
+								                                     HOST_LABEL );
 			
-			
-			Set<HostReader> setOfHostReaders = new HashSet<HostReader>();
-			
-			for ( Nodes.Node xmlNode : xmlNodes.getNode() ) {
-				
-				String nodeName = null;
-				for ( Property property : xmlNode.getProperties().getProperty() )
-					if ( property.getName().compareTo( PROPERTY_NAME_NAME ) == 0 ) {
-						nodeName = property.getValue();
-						break;
+				Set<HostReader> setOfHostReaders = new HashSet<HostReader>();
+				for ( Nodes.Node xmlNode : xmlNodes.getNode() ) {
+					
+					String nodeName = null;
+					for ( Property property : xmlNode.getProperties().getProperty() )
+						if ( property.getName().compareTo( PROPERTY_NAME_NAME ) == 0 ) {
+							nodeName = property.getValue();
+							break;
+						}
+					
+					if ( nodeName != null ) {
+						HostReader reachableHostI = monitor.getHost( nodeName );
+						setOfHostReaders.add( reachableHostI );
+					} else {
+						throw new ServiceException( "getExtendedNodes: \"name\" property not found" );
 					}
-				
-				if ( nodeName != null ) {
-					HostReader reachableHostI = monitor.getHost(nodeName);
-					setOfHostReaders.add( reachableHostI );
 				}
+				
+				ExtendedNodeReaderReal extendedNode = 
+						new ExtendedNodeReaderReal( nodeI, setOfHostReaders );
+				result.add( extendedNode );
+
+			} catch ( WebApplicationException | ProcessingException e ) {
+				throw new ServiceException( e.getMessage() );
+			} catch ( Exception e ) {
+				throw new ServiceException( e.getMessage() );
 			}
 			
-			ExtendedNodeReaderReal extendedNode = new ExtendedNodeReaderReal( nodeI, setOfHostReaders );
-			result.add( extendedNode );
 		}
 		
 		return result;
@@ -268,14 +245,14 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 	
 	
 	@Override
-	public boolean isLoaded(String nffgName) 
+	public boolean isLoaded( String nffgName ) 
 			throws UnknownNameException {
 		
 		if ( nffgName == null )
-			throw new UnknownNameException();
+			throw new UnknownNameException( "isLoaded: null argument" );
 		
 		if ( monitor.getNffg( nffgName ) == null )
-			throw new UnknownNameException();
+			throw new UnknownNameException( "isLoaded: inexistent NFFG" );
 		
 		if ( loadedNFFGs.contains( nffgName ) )
 			return true;
@@ -285,10 +262,11 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 	
 	
 	
-	private Node createXMLNodeFromNodeReader( NodeReader nodeInterface ) {
+	private Node createXMLNodeFromNodeReader( NodeReader nodeInterface ) 
+			throws NullPointerException, Exception {
 		
 		if ( nodeInterface == null )
-			throw new NullPointerException();
+			throw new NullPointerException( "createXMLNodeFromNodeReader: null argument" );
 		
 		Property nodeProperty = of.createProperty();
 		nodeProperty.setName( PROPERTY_NAME_NAME );
@@ -308,10 +286,11 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 	}
 	
 	
-	private Node createXMLNodeFromHostReader( HostReader hostInterface ) {
+	private Node createXMLNodeFromHostReader( HostReader hostInterface ) 
+			throws NullPointerException, Exception {
 		
 		if ( hostInterface == null )
-			throw new NullPointerException("hostInterface");
+			throw new NullPointerException( "createXMLNodeFromHostReader: null argument" );
 		
 		Property hostProperty = of.createProperty();
 		hostProperty.setName( PROPERTY_NAME_NAME );
@@ -330,10 +309,11 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 		return xmlNode;
 	}
 	
-	private Relationship createXMLAllocatedOnRel( String nodeGraphNodeID, String hostGraphNodeID ) {
+	private Relationship createXMLAllocatedOnRel( String nodeGraphNodeID, String hostGraphNodeID ) 
+			throws NullPointerException {
 		
 		if ( ( nodeGraphNodeID == null ) || ( hostGraphNodeID == null ) )
-			throw new NullPointerException();
+			throw new NullPointerException( "createXMLAllocatedOnRel: null argument" );
 		
 		Relationship relationship = of.createRelationship();
 		relationship.setSrcNode( nodeGraphNodeID );
@@ -343,10 +323,11 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 		return relationship;
 	}
 	
-	private Relationship createXMLForwardToRel( String srcGraphNodeID, String dstGraphNodeID ) {
+	private Relationship createXMLForwardToRel( String srcGraphNodeID, String dstGraphNodeID ) 
+			throws NullPointerException {
 		
 		if ( ( srcGraphNodeID == null ) || ( dstGraphNodeID == null ) )
-			throw new NullPointerException();
+			throw new NullPointerException( "createXMLForwardToRel: null argument" );
 		
 		Relationship relationship = of.createRelationship();
 		relationship.setSrcNode( srcGraphNodeID );
@@ -354,7 +335,6 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 		relationship.setType( RELATIONSHIP_FORWARDSTO_TYPE );
 		
 		return relationship;
-		
 	}
 
 }
