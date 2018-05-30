@@ -685,7 +685,7 @@ public class Neo4jSimpleWebAPI {
 	 * 
 	 * <p> 
 	 * <b>note</b>: <br> 
-	 * {@code graphNodeType} cannot be null, if no graph node types are to be
+	 * {@code graphNodeTypes} cannot be null, if no graph node types are to be
 	 * specified and empty set must be passed as parameter. <br>
 	 * {@code label} must be null if no label has to be specified.
 	 * 
