@@ -608,6 +608,10 @@ public class Builder  {
 			 ( monitor.getNffg( linkInterface.getDestinationNode().getNffg().getName() ) == null ) )
 			throw new NfvReaderException( "buildLink: invalid endpoints" );
 		
+		if ( monitor.getConnectionPerformance( linkInterface.getSourceNode().getHost(), 
+				                               linkInterface.getDestinationNode().getHost() ) == null )
+			throw new NfvReaderException( "buildLink: invalid link, no connection between hosts hosting node enpoints" );
+			
 		
 		// retrieve link minThroughput --------------------------------------
 		Throughput throughput = null; // NOTE: link throughput may be missing

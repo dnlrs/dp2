@@ -155,6 +155,7 @@
 			<sysproperty key="it.polito.dp2.NFV.NfvReaderFactory" value="${NfvInfo.NfvReaderFactory}" />
 			<sysproperty key="it.polito.dp2.NFV.Random.seed" value="${seed}"/>
 			<sysproperty key="it.polito.dp2.NFV.Random.testcase" value="${testcase}"/>
+			<sysproperty key="it.polito.dp2.NFV.sol1.NfvInfo.file " value="file.xml"/>
 			<arg value="${outfile}" />
 			<classpath>
 				<path refid="NFV.classpath" />

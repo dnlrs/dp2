@@ -1,5 +1,6 @@
 # ignore output xml file
 file.xml
+file_read.xml
 \$\{output\}
 
 # ignore eclipse project files
@@ -19,3 +20,6 @@ gen/
 
 # ignore junit temp folders
 temp*/
+
+# ingnore runner
+run.sh

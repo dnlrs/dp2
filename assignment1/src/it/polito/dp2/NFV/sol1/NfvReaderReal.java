@@ -1,14 +1,12 @@
 package it.polito.dp2.NFV.sol1;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.SchemaFactoryConfigurationError;
 
@@ -20,17 +18,21 @@ import it.polito.dp2.NFV.NfvReader;
 import it.polito.dp2.NFV.NfvReaderException;
 import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.VNFTypeReader;
-import it.polito.dp2.NFV.sol1.jaxb.*;
+import it.polito.dp2.NFV.sol1.jaxb.NFVSystemType;
 
 /**
  * This class implements the {@link NvfReader} interface.
  * <p>
- * <b>Note</b>: 
- * This class maintains a set of databases with all possible interfaces in 
- * order to improve memory use, i.e. if the library user asks several times 
- * for the same interface the same object will be returned every time.
- * Databases are built when class is created, after the unmarshalling.
- * </p>
+ * It performs the unmarshalling (with validation if a schema is found) and
+ * initializes the necessary data structures accessible via the NFV System
+ * interfaces by using the {@link Adapter} class.
+ * <p>
+ * <b> If any validation or data error arises, the library will return an 
+ * empty NFV System through the NFV System interfaces. </b>
+ * <p>
+ * Exceptions are never throws, but if a errors occur, the methods
+ * returning objects will return null and the methods returning sets will
+ * returned empty sets as specified by the NFV System interfaces.
  * 
  * @author    Daniel C. Rusu
  * @studentID 234428
@@ -43,55 +45,59 @@ public class NfvReaderReal implements NfvReader {
 	private static final String PROPERTY_XML_FILE    = "it.polito.dp2.NFV.sol1.NfvInfo.file";
 	private static final String PROPERTY_USER_DIR    = "user.dir"; // working directory
 	
-	private final NFVSystemType nfvSystem;
-	private final Adapter       adapter;
-	
-	
-	protected NfvReaderReal() 
-			throws JAXBException, NullPointerException, FileNotFoundException, 
-			       IllegalArgumentException, NfvReaderException {
-		
-		JAXBContext jc  = JAXBContext.newInstance( JAXB_CLASSES_PACKAGE );
-		Unmarshaller um = jc.createUnmarshaller();
-		
-		// Set up validation
-        try {
+	private NFVSystemType nfvSystem;
+	private Adapter       adapter;
 
-        	String schemaFile = ( System.getProperty( PROPERTY_USER_DIR ) == null ? 
-        			                     new String("") : System.getProperty(PROPERTY_USER_DIR) );
-        	schemaFile = schemaFile.concat(SCHEMA_LOCATION);
-        	
-        	MyJAXBWrapper.unmarshallerSetSchema(um, schemaFile);
-        
-        } catch ( Exception e ) {
-        	System.err.println(e); 
-            System.err.println("Could not set unmarshaller validation schema."); // no validation
-        } catch ( SchemaFactoryConfigurationError sfce ) {
-        	System.err.println(sfce); 
-        	System.err.println("Could not set unmarshaller validation schema."); // no validation
-        }
-        
+	
+	protected NfvReaderReal() {
 		
-        // get XML file to load 
-		String xmlFile = System.getProperty( PROPERTY_XML_FILE );
-		if ( xmlFile == null )
-			throw new NullPointerException("Could not get XML file to read.");
-        
-        
-        //unmarshal
-		Object obj = um.unmarshal( new FileInputStream( xmlFile ) );
+		try {
 
-		@SuppressWarnings("unchecked")
-		JAXBElement<NFVSystemType> element = (JAXBElement<NFVSystemType>) obj;
-		
-		nfvSystem = element.getValue();
-		
-		if ( nfvSystem == null )
-			throw new NullPointerException("Null Element.");
-		
-		
-		adapter = new Adapter( nfvSystem );
-		adapter.init();
+			JAXBContext jc  = JAXBContext.newInstance( JAXB_CLASSES_PACKAGE );
+			Unmarshaller um = jc.createUnmarshaller();
+			
+			
+			// Set up validation against a schema
+	        try {
+	
+	        	String schemaFile = ( System.getProperty( PROPERTY_USER_DIR ) == null 
+	        							? new String( "" ) : System.getProperty( PROPERTY_USER_DIR ) );
+	        	schemaFile = schemaFile.concat( SCHEMA_LOCATION );
+	        	
+	        	MyJAXBWrapper.unmarshallerSetSchema( um, schemaFile );
+	        
+	        } catch ( SchemaFactoryConfigurationError sfce ) {
+	        	System.err.println( sfce.getMessage() ); 
+	        	System.err.println( "NfvReaderReal: Could not set unmarshaller validation schema." ); // no validation
+	        } catch ( Exception e ) {
+	        	System.err.println( e.getMessage() ); 
+	            System.err.println( "NfvReaderReal: Could not set unmarshaller validation schema." ); // no validation
+	        }
+	        
+	        
+	        // get XML file name
+			String xmlFileName = System.getProperty( PROPERTY_XML_FILE );
+			if ( xmlFileName == null )
+				throw new NfvReaderException( "NfvReaderReal: Could not get XML file to read." );
+	        
+	        // unmarshal
+			Object obj = um.unmarshal( new FileInputStream( xmlFileName ) );
+	
+			@SuppressWarnings( "unchecked" )
+			JAXBElement<NFVSystemType> element = (JAXBElement<NFVSystemType>) obj;
+			nfvSystem = element.getValue();
+			
+			adapter = new Adapter( nfvSystem );
+			
+		} catch ( Exception e ) {
+			System.err.println();
+			System.err.println( e.getMessage() );
+			nfvSystem = null;
+			adapter   = new Adapter();
+		} 
+//		catch ( JAXBException e ) {} 
+//		catch ( NfvReaderException e ) {} 
+//		catch ( NullPointerException e ) {} 
 	}
 	
 	
@@ -108,18 +114,18 @@ public class NfvReaderReal implements NfvReader {
 	 */
 	@Override
 	public ConnectionPerformanceReader 
-        getConnectionPerformance(HostReader sourceHost, HostReader destHost ) {
+        getConnectionPerformance( HostReader sourceHost, HostReader destHost ) {
 		
 		if ( sourceHost == null || destHost == null )
 			return null; // wrong arguments
 		
-		String ssourceHostName = sourceHost.getName();
-		String destHostName    = destHost.getName();
+		String sourceHostName = sourceHost.getName();
+		String destHostName   = destHost.getName();
 		
-		if ( ( ssourceHostName == null ) || ( destHostName == null ) )
+		if ( ( sourceHostName == null ) || ( destHostName == null ) )
 			return null; // source or destination hosts don't have a name
 		
-		return adapter.getConnectionPerformance( ssourceHostName + "-" + destHostName );
+		return adapter.getConnectionPerformance( sourceHostName + "-" + destHostName );
 	}
 
 	
@@ -131,7 +137,7 @@ public class NfvReaderReal implements NfvReader {
 	 * @return          a HostReader interface, null if host doesn't exist
 	 */
 	@Override
-	public HostReader getHost(String hostName) {
+	public HostReader getHost( String hostName ) {
 		if ( hostName == null )
 			return null; // wrong parameter
 		
@@ -175,7 +181,7 @@ public class NfvReaderReal implements NfvReader {
 	 * @return      
 	 */
 	@Override
-	public Set<NffgReader> getNffgs(Calendar date) {
+	public Set<NffgReader> getNffgs( Calendar date ) {
 		return adapter.getNFFGs( date );
 	}
 
@@ -199,7 +205,7 @@ public class NfvReaderReal implements NfvReader {
 	 * @param vnfName VNF's name
 	 * @return        a interface to access the VNF
 	 */
-	protected VNFTypeReader getVNF(String vnfName) {
+	protected VNFTypeReader getVNF( String vnfName ) {
 		if ( vnfName == null )
 			return null;
 		

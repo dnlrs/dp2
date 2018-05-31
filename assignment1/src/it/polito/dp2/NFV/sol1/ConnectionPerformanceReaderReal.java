@@ -11,14 +11,14 @@ import it.polito.dp2.NFV.sol1.jaxb.Connection;
  */
 public class ConnectionPerformanceReaderReal implements ConnectionPerformanceReader {
 	
-	private Connection connection;
+	private final Connection connection;
 	
 
 	protected ConnectionPerformanceReaderReal( Connection c ) 
 			throws NullPointerException {
 		
 		if ( c == null )
-			throw new NullPointerException("Null argument.");
+			throw new NullPointerException( "ConnectionPerformanceReaderReal: null argument" );
 		
 		this.connection = c;		
 	}

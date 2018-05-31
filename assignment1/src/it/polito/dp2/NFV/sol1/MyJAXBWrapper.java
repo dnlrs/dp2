@@ -17,6 +17,13 @@ import javax.xml.validation.SchemaFactoryConfigurationError;
 
 import org.xml.sax.SAXException;
 
+/**
+ * A simple wrapper for methods useful to set schemas in the JAXB marshaller
+ * and JAXB unmarshaller.
+ * 
+ * @author    Daniel C. Rusu
+ * @studentID 234428
+ */
 public class MyJAXBWrapper {
 	
 	protected static void marshallerSetSchema( Marshaller m, String schemaFileName ) 

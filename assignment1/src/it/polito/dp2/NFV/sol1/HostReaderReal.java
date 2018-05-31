@@ -15,16 +15,17 @@ import it.polito.dp2.NFV.sol1.jaxb.Host;
  */
 public class HostReaderReal implements HostReader {
 	
-	private Adapter     adapter;
-	private Host        host;
-	private Set<String> nodes;
+	private final Adapter adapter;
+	private final Host    host;
+	
+	private final Set<String> nodes;
 	
 
 	protected HostReaderReal( Adapter adapter, Host h, Set<String> nodes ) 
 			throws NullPointerException {
 		
 		if ( ( adapter == null ) || ( h == null ) || ( nodes == null ) )
-			throw new NullPointerException("Null argument.");
+			throw new NullPointerException( "HostReaderReal: null argument" );
 		
 		this.adapter = adapter;
 		this.nodes   = nodes;
