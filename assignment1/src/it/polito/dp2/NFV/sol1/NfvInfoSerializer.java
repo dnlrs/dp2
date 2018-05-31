@@ -108,10 +108,10 @@ public class NfvInfoSerializer {
 			marshaller.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 			
 			String schemaLocationString = new String( TARGET_NAMESPACE + " " + SCHEMA_LOCATION );
-			marshaller.setProperty( Marshaller.JAXB_SCHEMA_LOCATION , schemaLocationString );
+			marshaller.setProperty( Marshaller.JAXB_SCHEMA_LOCATION, schemaLocationString );
 			
-			String schemaFile = ( System.getProperty( PROPERTY_USER_DIR ) == null ? 
-                    				new String("") : System.getProperty(PROPERTY_USER_DIR) );
+			String schemaFile = ( System.getProperty( PROPERTY_USER_DIR ) == null 
+									? new String("") : System.getProperty(PROPERTY_USER_DIR) );
 			schemaFile = schemaFile.concat( SCHEMA_LOCATION );
 			
 			MyJAXBWrapper.marshallerSetSchema(marshaller, schemaFile);
