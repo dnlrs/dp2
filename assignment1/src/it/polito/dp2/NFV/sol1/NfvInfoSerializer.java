@@ -9,9 +9,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import javax.xml.bind.PropertyException;
 import javax.xml.validation.SchemaFactoryConfigurationError;
-
 
 import it.polito.dp2.NFV.NfvReaderException;
 import it.polito.dp2.NFV.sol1.jaxb.NFVSystemType;
@@ -81,6 +79,14 @@ public class NfvInfoSerializer {
 	/**
 	 * Retrieves data from NFVSystem interfaces and marshalls it to the output
 	 * XML file.
+	 * 
+	 * @param outputFileName the output XML file name
+	 * @throws JAXBException
+	 * @throws NullPointerException
+	 * @throws IllegalArgumentException
+	 * @throws FileNotFoundException
+	 * @throws DataBindingException
+	 * @throws NfvReaderException
 	 */
 	private void doWork( String outputFileName ) 
 			throws JAXBException, NullPointerException, IllegalArgumentException,
@@ -101,7 +107,7 @@ public class NfvInfoSerializer {
 			
 			marshaller.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 			
-			String schemaLocationString = new String(TARGET_NAMESPACE + " " + SCHEMA_LOCATION);
+			String schemaLocationString = new String( TARGET_NAMESPACE + " " + SCHEMA_LOCATION );
 			marshaller.setProperty( Marshaller.JAXB_SCHEMA_LOCATION , schemaLocationString );
 			
 			String schemaFile = ( System.getProperty( PROPERTY_USER_DIR ) == null ? 
@@ -110,21 +116,21 @@ public class NfvInfoSerializer {
 			
 			MyJAXBWrapper.marshallerSetSchema(marshaller, schemaFile);
 			
+		} catch ( SchemaFactoryConfigurationError sfce ) {
+			System.err.println(sfce); 
+			System.err.println("Could not set unmarshaller validation schema."); // no validation
 		} catch ( Exception e ) { 
 			System.err.println( e.getMessage() );
 			System.err.println("could not set marshaller properties.");
-		} catch ( SchemaFactoryConfigurationError sfce ) {
-        	System.err.println(sfce); 
-        	System.err.println("Could not set unmarshaller validation schema."); // no validation
-        }
+		}
 		
 		
 		// marshal ------------------------------------------------------
-		JAXBElement<NFVSystemType> nfvRootElement = builder.getRootElement(nfvSystem);
+		JAXBElement<NFVSystemType> nfvRootElement = builder.getRootElement( nfvSystem );
 		
 		if ( nfvRootElement == null )
 			throw new NullPointerException("nfvRootElement is null.");
 		
-		JAXB.marshal(nfvRootElement, new FileOutputStream(outputFileName) );
+		JAXB.marshal( nfvRootElement, new FileOutputStream( outputFileName ) );
 	}
 }
