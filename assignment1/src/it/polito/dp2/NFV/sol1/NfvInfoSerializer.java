@@ -39,11 +39,10 @@ public class NfvInfoSerializer {
 	/**
 	 * Class constructor.
 	 * 
-	 * @param oxml
 	 * @throws NfvReaderException
 	 */
 	public NfvInfoSerializer() throws NfvReaderException {
-		builder = new Builder();
+		builder = new Builder(); // note: the builder class instantiates the NfvReaderFactory
 	}
 
 	
@@ -56,7 +55,7 @@ public class NfvInfoSerializer {
 		
 		// Check arguments --------------------------------------------------
 		if ( ( args.length == 0 ) || ( args.length > 1 ) ) {
-			System.err.println("ERROR:" + HOW_TO_USE );
+			System.err.println( "ERROR: " + HOW_TO_USE );
 			System.exit(-1);
 		}
 
@@ -68,7 +67,7 @@ public class NfvInfoSerializer {
 
 		} catch (NfvReaderException e) {
 			e.printStackTrace();
-			System.exit(1);
+			System.exit(-1);
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.exit(-1);
@@ -85,10 +84,10 @@ public class NfvInfoSerializer {
 	 */
 	private void doWork( String outputFileName ) 
 			throws JAXBException, NullPointerException, IllegalArgumentException,
-                   FileNotFoundException, DataBindingException {
+                   FileNotFoundException, DataBindingException, NfvReaderException {
 		
 		if ( outputFileName == null )
-			throw new NullPointerException("Output file name cannot be null.");
+			throw new NullPointerException( "doWork: output file name cannot be null" );
 			
 		// read data to marshal from interfaces -----------------------------
 		NFVSystemType nfvSystem = builder.buildNFVSystemType();
