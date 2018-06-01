@@ -20,6 +20,7 @@ gen/
 
 # ignore junit temp folders
 temp*/
+junit*
 
 # ingnore runner
 run.sh

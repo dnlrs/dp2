@@ -2,6 +2,7 @@ package it.polito.dp2.NFV.sol2;
 
 import java.net.URI;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
@@ -45,6 +46,7 @@ public class Neo4jSimpleWebAPI {
 	
 	private static Neo4jSimpleWebAPI instance = null;
 	
+	private Client _client = null;
 	
 	/**
 	 * Creates a {@link Neo4jSimpleWebAPI} singleton instance.
@@ -87,6 +89,28 @@ public class Neo4jSimpleWebAPI {
 	}
 	
 	
+	// ======================================================================
+	// CLIENT
+	// ======================================================================
+	/**
+	 * Create a new {@link Client} (heavy object) for this instance, it improves
+	 * performance, since the creation of a {@link Client} is quite expensive.
+	 * <p>
+	 * <b>If you create it, you close it when finished ( .closeClient() )</b>
+	 * 
+	 */
+	protected void newClient() {
+		if ( _client == null )
+			_client = ClientBuilder.newClient();
+	}
+	
+	protected void closeClient() {
+		if ( _client != null ) {
+			_client.close();
+			_client = null;
+		}
+	}
+	
 	
 	
 	// ======================================================================
@@ -112,12 +136,19 @@ public class Neo4jSimpleWebAPI {
 		
 		URI localURI = _uriBuilder.clone().path( URI_NODE ).build();
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Node n = _client.target( localURI )
 				        .request( MediaType.APPLICATION_XML )
 				        .post( Entity.entity( node, MediaType.APPLICATION_XML ),
 				        	   Node.class );
-		_client.close();
+		
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		return n.getId();
 	}
@@ -140,11 +171,18 @@ public class Neo4jSimpleWebAPI {
 		
 		URI localURI = _uriBuilder.clone().path( URI_NODE_id ).build( graphNodeID );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Node n = _client.target( localURI )
 				        .request( MediaType.APPLICATION_XML )
 				        .get( Node.class );
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		return n;
 	}
@@ -166,11 +204,18 @@ public class Neo4jSimpleWebAPI {
 		
 		URI localURI = _uriBuilder.clone().path( URI_NODE_id ).build( graphNodeID );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Response response = _client.target( localURI )
 	                               .request( MediaType.APPLICATION_XML )
 	                               .delete();
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		if ( response.getStatus() >= 400 )
 			throw new WebApplicationException( "deleteNode: node delete error" );
@@ -201,11 +246,18 @@ public class Neo4jSimpleWebAPI {
 
 		URI localURI = _uriBuilder.clone().path( URI_NODE_id_PROPERTIES ).build( graphNodeID );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Response response = _client.target( localURI )
 		                           .request( MediaType.APPLICATION_XML )
                                    .put( Entity.entity( properties, MediaType.APPLICATION_XML ) );
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		if ( response.getStatus() >= 400 )
 			throw new WebApplicationException( "updateNodeProperties: PUT error" );
@@ -229,11 +281,18 @@ public class Neo4jSimpleWebAPI {
 		
 		URI localURI = _uriBuilder.clone().path( URI_NODE_id_PROPERTIES ).build( graphNodeID );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Properties properties = _client.target( localURI )
                                        .request( MediaType.APPLICATION_XML )
                                        .get( Properties.class );
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		return properties;
 	}
@@ -255,11 +314,18 @@ public class Neo4jSimpleWebAPI {
 		
 		URI localURI = _uriBuilder.clone().path( URI_NODE_id_PROPERTIES ).build( graphNodeID );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Response response = _client.target( localURI )
                                    .request( MediaType.APPLICATION_XML )
                                    .delete();
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		if ( response.getStatus() >= 400 )
 			throw new WebApplicationException( "deleteNodeProperties: DELETE error" );
@@ -285,11 +351,18 @@ public class Neo4jSimpleWebAPI {
 				                  .path( URI_NODE_id_PROPERTIES_property )
 				                  .build( graphNodeID, property.getName() );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Response response = _client.target( localURI )
 				                   .request( MediaType.APPLICATION_XML )
 				                   .put( Entity.entity( property, MediaType.APPLICATION_XML ) );
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		if ( response.getStatus() >= 400 )
 			throw new WebApplicationException( "updateNodeProperty: PUT error" );
@@ -316,11 +389,18 @@ public class Neo4jSimpleWebAPI {
                                   .path( URI_NODE_id_PROPERTIES_property )
                                   .build( graphNodeID, property_name );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Property property =  _client.target( localURI )
                                     .request( MediaType.APPLICATION_XML )
                                     .get( Property.class );
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		return property;
 	}
@@ -345,11 +425,18 @@ public class Neo4jSimpleWebAPI {
 				                  .path( URI_NODE_id_PROPERTIES_property )
 				                  .build( graphNodeID, property_name );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Response response = _client.target( localURI )
                                    .request( MediaType.APPLICATION_XML )
                                    .delete();
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		if ( response.getStatus() >= 400 )
 			throw new WebApplicationException( "deleteNodeProperty: DELETE error" );
@@ -382,11 +469,18 @@ public class Neo4jSimpleWebAPI {
                                   .path( URI_NODE_id_LABELS )
                                   .build( graphNodeID );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Response r = _client.target( localURI )
 							.request( MediaType.APPLICATION_XML )
 	                        .post( Entity.entity( label, MediaType.APPLICATION_XML ) );
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		if ( r.getStatus() >= 400 )
 			throw new WebApplicationException( "createNodeLabel: POST error" );
@@ -412,11 +506,18 @@ public class Neo4jSimpleWebAPI {
                                   .path( URI_NODE_id_LABELS )
                                   .build( graphNodeID );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Labels labels = _client.target( localURI )
                                .request( MediaType.APPLICATION_XML )
                                .get( Labels.class );
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		return labels;
 	}
@@ -441,11 +542,18 @@ public class Neo4jSimpleWebAPI {
                                   .path( URI_NODE_id_LABELS )
                                   .build( graphNodeID );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Response r =  _client.target( localURI )
                              .request( MediaType.APPLICATION_XML )
                              .put( Entity.entity( label, MediaType.APPLICATION_XML ) );
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		if ( r.getStatus() >= 400 )
 			throw new WebApplicationException( "updateNodeLabels: POST error" );
@@ -471,11 +579,18 @@ public class Neo4jSimpleWebAPI {
                                   .path( URI_NODE_id_LABELS_label )
                                   .build( graphNodeID, label_name );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Response response = _client.target( localURI )
                                    .request( MediaType.APPLICATION_XML )
                                    .delete();
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		if ( response.getStatus() >= 400 )
 			throw new WebApplicationException( "deleteNodeLabel: DELETE error" );
@@ -509,12 +624,19 @@ public class Neo4jSimpleWebAPI {
                                   .path( URI_NODE_id_RELATIONSHIPS )
                                   .build( graphNodeID );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Relationship r = _client.target( localURI )
 	                            .request( MediaType.APPLICATION_XML )
 	                            .post( Entity.entity( relationship, MediaType.APPLICATION_XML ), 
 	                            		Relationship.class );
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		return r.getId();
 	}
@@ -540,11 +662,18 @@ public class Neo4jSimpleWebAPI {
                                   .path( URI_RELATIONSHIP_id )
                                   .build( relationshipID );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Relationship r = _client.target( localURI )
                                 .request( MediaType.APPLICATION_XML )
                                 .get( Relationship.class );
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		return r;
 	}
@@ -568,11 +697,18 @@ public class Neo4jSimpleWebAPI {
                                   .path( URI_RELATIONSHIP_id )
                                   .build( relationshipID );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Response response = _client.target( localURI )
                                    .request( MediaType.APPLICATION_XML )
                                    .delete();
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		if ( response.getStatus() >= 400 )
 			throw new WebApplicationException( "deleteRelationship: DELETE error" );
@@ -599,11 +735,18 @@ public class Neo4jSimpleWebAPI {
                                   .path( URI_NODE_id_RELATIONSHIPS_ALL )
                                   .build( graphNodeID );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Relationships r = _client.target( localURI )
                                  .request( MediaType.APPLICATION_XML )
                                  .get( Relationships.class );
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		return r;
 	}
@@ -630,11 +773,18 @@ public class Neo4jSimpleWebAPI {
                                   .path( URI_NODE_id_RELATIONSHIPS_IN )
                                   .build( graphNodeID );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Relationships r = _client.target( localURI )
                                  .request( MediaType.APPLICATION_XML )
                                  .get( Relationships.class );
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		return r;
 	}
@@ -661,11 +811,18 @@ public class Neo4jSimpleWebAPI {
                                   .path( URI_NODE_id_RELATIONSHIPS_OUT )
                                   .build( graphNodeID );
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+		
 		Relationships r = _client.target( localURI )
                                  .request( MediaType.APPLICATION_XML )
                                  .get( Relationships.class );
-		_client.close();
+
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		return r;
 	}
@@ -679,7 +836,8 @@ public class Neo4jSimpleWebAPI {
 	
 	
 	/**
-	 * Retrieves all GraphNodes reachable from the specified GraphNode.
+	 * Retrieves all GraphNodes reachable from the specified GraphNode 
+	 * sequentially.
 	 * <p> 
 	 * GET ...{@value #URI_NODE_id_REACHABLENODES}
 	 * 
@@ -698,7 +856,7 @@ public class Neo4jSimpleWebAPI {
 	 * @throws Exception
 	 */
 	protected 
-	Nodes getReacheableNodesFromNode( String graphNodeID, Set<String> graphNodeTypes, String label ) 
+	Nodes getReacheableNodesFromNodeS( String graphNodeID, Set<String> graphNodeTypes, String label ) 
 			throws Exception {
 		
 		if ( ( graphNodeID == null ) || ( graphNodeTypes == null ) )
@@ -724,12 +882,83 @@ public class Neo4jSimpleWebAPI {
 		
 //		System.err.println(localURI.toString());
 		
-		Client _client = ClientBuilder.newClient();
+		boolean clientIsLocallyBuilt = false;
+		if ( _client == null ) {			
+			_client = ClientBuilder.newClient();
+			clientIsLocallyBuilt = true;
+		}
+	
 		Nodes nodes = _client.target( localURI )
                              .request( MediaType.APPLICATION_XML )
                              .get( Nodes.class );
-		_client.close();
+		
+		if ( clientIsLocallyBuilt )
+			closeClient();
 		
 		return nodes;
 	}
+	
+	/**
+	 * Retrieves all GraphNodes reachable from the specified GraphNode in an
+	 * asynchronous way.
+	 * <p> 
+	 * GET ...{@value #URI_NODE_id_REACHABLENODES}
+	 * 
+	 * <p> 
+	 * <b>note</b>: <br> 
+	 * {@code graphNodeTypes} cannot be null, if no graph node types are to be
+	 * specified and empty set must be passed as parameter. <br>
+	 * {@code label} must be null if no label has to be specified.
+	 * 
+	 * 
+	 * @param  graphNodeID      the GraphNode ID
+	 * @param  graphNodeTypes   the GraphNode types to be considered
+	 * @param  label            the GraphNode label to be considered
+	 * @return                  a {@link Nodes} objects with all the reachable 
+	 *                          GraphNodes data
+	 * @throws Exception
+	 */
+	protected 
+	Future<Nodes> getReacheableNodesFromNode( String graphNodeID, Set<String> graphNodeTypes, String label ) 
+			throws Exception {
+		
+		if ( ( graphNodeID == null ) || ( graphNodeTypes == null ) )
+			throw new NullPointerException( "getReacheableNodesFromNode: null argument" );
+		
+		if ( _client == null )
+			throw new NullPointerException( "getReacheableNodesFromNode: client must be created by the caller through \"newClient()\"" );
+		
+		UriBuilder localBuilder = _uriBuilder.clone().path( URI_NODE_id_REACHABLENODES );
+		
+		if ( !( graphNodeTypes.isEmpty() ) ) {
+			String relationshipTypes = new String( "" );
+			
+			for ( String type : graphNodeTypes )
+				relationshipTypes = relationshipTypes.concat( type ).concat( "%7C" );
+			
+			relationshipTypes = relationshipTypes.substring( 0, ( relationshipTypes.length() - 3 ) );
+			
+			localBuilder = localBuilder.queryParam( URI_QP_RELATIONSHIPTYPES, relationshipTypes );
+		}
+		
+		if ( label != null )
+			localBuilder = localBuilder.queryParam( URI_QP_NODELABELS, label );
+		
+		URI localURI = localBuilder.build( graphNodeID );
+		
+//		// debug purposes
+//		System.err.println(localURI.toString());
+		
+		Future<Nodes> futureNodes = _client.target( localURI )
+                                     .request( MediaType.APPLICATION_XML )
+                                     .async()
+                                     .get( Nodes.class );
+		
+		return futureNodes;
+	}
+	
+	
+	
+	
+	
 }

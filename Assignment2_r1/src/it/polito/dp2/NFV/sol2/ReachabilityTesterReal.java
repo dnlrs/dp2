@@ -1,7 +1,11 @@
 package it.polito.dp2.NFV.sol2;
 
+import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Future;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
@@ -28,6 +32,11 @@ import it.polito.dp2.NFV.lab2.UnknownNameException;
  */
 public class ReachabilityTesterReal implements ReachabilityTester {
 	
+	private final PrintStream debug = new PrintStream( "debug.txt" );
+//	private final static boolean SEQUENTIAL = true;
+	private final static boolean SEQUENTIAL = false;
+	
+	private final static int    SLEEPING_TIME_MS              = 100; // experimental, avoid "aggressive polling"
 	private final static String PROPERTY_NAME_NAME            = "name";
 	
 	private final static String RELATIONSHIP_FORWARDSTO_TYPE  = "ForwardsTo";
@@ -35,6 +44,7 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 	
 	private final static String NODE_LABEL = "Node";
 	private final static String HOST_LABEL = "Host";
+	
 	
 	private final NfvReader         monitor; // Access to NFV System interfaces
 	private final Neo4jSimpleWebAPI neo4jWS; // (my) Neo4j WebService API			
@@ -83,7 +93,7 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 
 		Set<LinkReader> setOFLinkInterfaces = new HashSet<LinkReader>();
 		
-		try { 
+		try {
 			/* 1. for each node in the NFFG:
 			 * 1.a. Prepare an XML Node with data taken from the node interface
 			 * 1.b. Ask the web service to create a new graph node according to
@@ -106,7 +116,10 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 			 * 3.c. Save the returned relationship id
 			 * 3.d. Save all links found in the NFFG
 			 */
+			neo4jWS.newClient();
+			
 			for ( NodeReader nodeI : monitor.getNffg( nffgName ).getNodes() ) {
+				debug.println("node: "+nodeI.getName());
 				
 				// 1.a.
 				Node nodeXMLNode = createXMLNodeFromNodeReader( nodeI ); // 1.a	
@@ -144,6 +157,10 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 						    allocatedOnRelationshipID);
 				// 3.d.
 				setOFLinkInterfaces.addAll( nodeI.getLinks() );
+				
+				for ( LinkReader linkI : nodeI.getLinks() )
+					debug.println("    link: "+ linkI.getName() + " [ to "+linkI.getDestinationNode().getName() + " ]");
+				
 			}
 
 			/* 4. for each link in the NFFG create a relationship on the web
@@ -171,6 +188,8 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 				// 4.d.
 				map.addLink( nffgName, linkI.getName(), forwardsToRelationshipID );
 			}
+
+			neo4jWS.closeClient();
 			
 		} catch ( WebApplicationException | ProcessingException e ) {
 			throw new ServiceException( e.getMessage() );
@@ -183,11 +202,27 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 	}
 
 	
-
 	@Override
 	public Set<ExtendedNodeReader> getExtendedNodes( String nffgName )
 			throws UnknownNameException, NoGraphException, ServiceException {
 		
+		if ( SEQUENTIAL ) {
+
+			return syncGetExtendedNodes( nffgName );
+			
+		} else {
+				
+			return asyncGetExtendedNodes( nffgName );
+		}
+		
+	}
+	
+	
+	
+	
+	private Set<ExtendedNodeReader> syncGetExtendedNodes( String nffgName )
+			throws UnknownNameException, NoGraphException, ServiceException {
+	
 		if ( nffgName == null )
 			throw new UnknownNameException( "getExtendedNodes: null argument" );
 		
@@ -198,15 +233,24 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 			throw new NoGraphException( "getExtendedNodes: NFFG is not loaded" );
 		
 		Set<ExtendedNodeReader> result = new HashSet<ExtendedNodeReader>();
-
+		
+		neo4jWS.newClient();
+		
 		for ( NodeReader nodeI : monitor.getNffg( nffgName ).getNodes() ) {
+			
+			debug.print("getting reachable hosts for node " + nodeI.getName()+"...");
 			
 			try {
 				
 				String nodeGraphNodeID = map.getGraphNodeIDFromNodeName( nodeI.getName() );
-	
-				Nodes xmlNodes = neo4jWS.getReacheableNodesFromNode( nodeGraphNodeID, 
-								                                     new HashSet<String>(), /* types */
+				
+				Set<String> types = new HashSet<String>();
+				types.add( RELATIONSHIP_FORWARDSTO_TYPE );
+				types.add( RELATIONSHIP_ALLOCATEDON_TYPE );
+				
+				Nodes xmlNodes = neo4jWS.getReacheableNodesFromNodeS( nodeGraphNodeID, 
+//								                                     new HashSet<String>(), /* types */
+																	 types,
 								                                     HOST_LABEL );
 			
 				Set<HostReader> setOfHostReaders = new HashSet<HostReader>();
@@ -237,10 +281,168 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 				throw new ServiceException( e.getMessage() );
 			}
 			
+			debug.println("done.");
+			
 		}
+		
+		neo4jWS.closeClient();
+		
+		return result;
+		
+	}
+	
+	
+	private Set<ExtendedNodeReader> asyncGetExtendedNodes( String nffgName )
+			throws UnknownNameException, NoGraphException, ServiceException {
+		
+
+		if ( nffgName == null )
+		throw new UnknownNameException( "getExtendedNodes: null argument" );
+	
+		if ( monitor.getNffg( nffgName ) == null )
+			throw new UnknownNameException( "getExtendedNodes: inexistent NFFG" );
+		
+		if ( !( isLoaded( nffgName ) ) )
+			throw new NoGraphException( "getExtendedNodes: NFFG is not loaded" );
+		
+		neo4jWS.newClient();
+		
+		ConcurrentMap<NodeReader, Future<Nodes>> mapOfFutureNodes = 
+				new ConcurrentHashMap<NodeReader, Future<Nodes>>();
+		
+		// for each node request to the web service the reachable hosts
+		for ( NodeReader nodeI : monitor.getNffg( nffgName ).getNodes() ) {
+
+			String nodeGraphNodeID = map.getGraphNodeIDFromNodeName( nodeI.getName() );
+			try {
+				
+				Future<Nodes> futureNodes = 
+						neo4jWS.getReacheableNodesFromNode( nodeGraphNodeID, 
+								new HashSet<String>(), /* types */ 
+								HOST_LABEL );
+						
+				mapOfFutureNodes.put( nodeI, futureNodes );
+			
+			} catch ( Exception e ) {
+				throw new ServiceException( e.getMessage() );
+			}
+		}
+		
+		
+		Set<ExtendedNodeReader> result = new HashSet<ExtendedNodeReader>();
+		// get ready results for every node
+		while ( !( mapOfFutureNodes.isEmpty() ) ) {
+			
+			for ( NodeReader nodeI : mapOfFutureNodes.keySet() ) {
+				
+				Future<Nodes> futureNodes = mapOfFutureNodes.get( nodeI );
+				
+				if ( futureNodes.isCancelled() )
+					throw new ServiceException( "getExtendedNodes: request was cancelled" );
+				
+				if ( !( futureNodes.isDone() ) ) {
+					continue; // this node is not yet completed
+				}
+				debug.print("DEBUG: node \"" + nodeI.getName() + "\" is ");
+				debug.println("ready");
+				
+				try {
+					
+					Nodes xmlNodes                   = futureNodes.get();	
+					Set<HostReader> setOfHostReaders = new HashSet<HostReader>();
+					
+					for ( Nodes.Node xmlNode : xmlNodes.getNode() ) {
+						
+						boolean propertyFound = false;
+						for ( Property property : xmlNode.getProperties().getProperty() )
+							if ( property.getName().compareTo( PROPERTY_NAME_NAME ) == 0 ) {
+								setOfHostReaders.add( monitor.getHost( property.getValue() ) );
+								propertyFound = true;
+								break;
+							}
+						if ( !propertyFound )
+							throw new ServiceException( "getExtendedNodes: \"name\" property not found" );
+					}
+					
+					result.add( new ExtendedNodeReaderReal( nodeI, setOfHostReaders ) );
+					mapOfFutureNodes.remove( nodeI );
+					
+				} catch ( Exception e ) {
+					throw new ServiceException( e.getMessage() );
+				}
+				
+			}
+			
+//			try {
+//				Thread.sleep( SLEEPING_TIME_MS );
+//			} catch (InterruptedException e ) {}
+		}
+		
+		neo4jWS.closeClient();
 		
 		return result;
 	}
+	
+	
+
+	// Synchronous method, for each node client waits for result
+//	@Override
+//	public Set<ExtendedNodeReader> getExtendedNodes( String nffgName )
+//			throws UnknownNameException, NoGraphException, ServiceException {
+//		
+//		if ( nffgName == null )
+//			throw new UnknownNameException( "getExtendedNodes: null argument" );
+//		
+//		if ( monitor.getNffg( nffgName ) == null )
+//			throw new UnknownNameException( "getExtendedNodes: inexistent NFFG" );
+//		
+//		if ( !( isLoaded( nffgName ) ) )
+//			throw new NoGraphException( "getExtendedNodes: NFFG is not loaded" );
+//		
+//		Set<ExtendedNodeReader> result = new HashSet<ExtendedNodeReader>();
+//
+//		for ( NodeReader nodeI : monitor.getNffg( nffgName ).getNodes() ) {
+//			
+//			try {
+//				
+//				String nodeGraphNodeID = map.getGraphNodeIDFromNodeName( nodeI.getName() );
+//	
+//				Nodes xmlNodes = neo4jWS.getReacheableNodesFromNode( nodeGraphNodeID, 
+//								                                     new HashSet<String>(), /* types */
+//								                                     HOST_LABEL );
+//			
+//				Set<HostReader> setOfHostReaders = new HashSet<HostReader>();
+//				for ( Nodes.Node xmlNode : xmlNodes.getNode() ) {
+//					
+//					String nodeName = null;
+//					for ( Property property : xmlNode.getProperties().getProperty() )
+//						if ( property.getName().compareTo( PROPERTY_NAME_NAME ) == 0 ) {
+//							nodeName = property.getValue();
+//							break;
+//						}
+//					
+//					if ( nodeName != null ) {
+//						HostReader reachableHostI = monitor.getHost( nodeName );
+//						setOfHostReaders.add( reachableHostI );
+//					} else {
+//						throw new ServiceException( "getExtendedNodes: \"name\" property not found" );
+//					}
+//				}
+//				
+//				ExtendedNodeReaderReal extendedNode = 
+//						new ExtendedNodeReaderReal( nodeI, setOfHostReaders );
+//				result.add( extendedNode );
+//
+//			} catch ( WebApplicationException | ProcessingException e ) {
+//				throw new ServiceException( e.getMessage() );
+//			} catch ( Exception e ) {
+//				throw new ServiceException( e.getMessage() );
+//			}
+//			
+//		}
+//		
+//		return result;
+//	}
 
 	
 	
