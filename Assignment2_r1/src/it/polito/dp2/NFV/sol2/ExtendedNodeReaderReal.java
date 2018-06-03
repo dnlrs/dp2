@@ -14,50 +14,50 @@ import it.polito.dp2.NFV.lab2.ServiceException;
 
 /**
  * An implementation of the {@link ExtendedNodeReader} interface.
- * 
+ *
  * @author    Daniel C. Rusu
  * @studentID 234428
  */
 public class ExtendedNodeReaderReal implements ExtendedNodeReader {
-	
-	private Set<HostReader> reachableHosts;
-	private NodeReader      node;
-	
-	public ExtendedNodeReaderReal( NodeReader node, Set<HostReader> reachableHosts ) {
-		
-		this.node = node;
-		this.reachableHosts = new HashSet<HostReader>( reachableHosts );
-	}
-	
-	@Override
-	public Set<HostReader> getReachableHosts() 
-			throws NoGraphException, ServiceException {
-		return reachableHosts;
-	}
 
-	@Override
-	public VNFTypeReader getFuncType() {
-		return node.getFuncType();
-	}
+    private Set<HostReader> reachableHosts;
+    private NodeReader      node;
 
-	@Override
-	public HostReader getHost() {
-		return node.getHost();
-	}
+    public ExtendedNodeReaderReal( NodeReader node, Set<HostReader> reachableHosts ) {
 
-	@Override
-	public Set<LinkReader> getLinks() {
-		return node.getLinks();
-	}
+        this.node = node;
+        this.reachableHosts = new HashSet<HostReader>( reachableHosts );
+    }
 
-	@Override
-	public NffgReader getNffg() {
-		return node.getNffg();
-	}
+    @Override
+    public Set<HostReader> getReachableHosts()
+            throws NoGraphException, ServiceException {
+        return reachableHosts;
+    }
 
-	@Override
-	public String getName() {
-		return node.getName();
-	}
+    @Override
+    public VNFTypeReader getFuncType() {
+        return node.getFuncType();
+    }
+
+    @Override
+    public HostReader getHost() {
+        return node.getHost();
+    }
+
+    @Override
+    public Set<LinkReader> getLinks() {
+        return node.getLinks();
+    }
+
+    @Override
+    public NffgReader getNffg() {
+        return node.getNffg();
+    }
+
+    @Override
+    public String getName() {
+        return node.getName();
+    }
 
 }

@@ -6,7 +6,7 @@
 	</description>
 
 	
-	<property name="neo4j.location" value="/opt/neo4j-community-3.2.3"/>
+	<property name="neo4j.location" value="/opt/neo4j-community-3.2.12"/>
 
 	<target name="start-neo4j">
 		<exec executable="/bin/bash">

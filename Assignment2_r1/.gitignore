@@ -15,5 +15,5 @@ build/
 gen-src/
 
 # debug files
-log.txt
-debug.txt
+log*.txt
+debug*.txt
