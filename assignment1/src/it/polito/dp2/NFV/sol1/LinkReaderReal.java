@@ -6,7 +6,7 @@ import it.polito.dp2.NFV.sol1.jaxb.Link;
 
 /**
  * An implementation of the {@link LinkReader} interface.
- * 
+ *
  * @author    Daniel C. Rusu
  * @studentID 234428
  */
@@ -14,18 +14,18 @@ public class LinkReaderReal implements LinkReader {
 
 	private Adapter adapter;
 	private Link    link;
-	
-	
+
+
 	protected LinkReaderReal( Adapter adapter, Link l )
 			throws NullPointerException {
-		
+
 		if ( ( adapter == null ) || ( l == null ) )
 			throw new NullPointerException("Null argument.");
-		
+
 		this.adapter = adapter;
 		this.link    = l;
 	}
-	
+
 	@Override
 	public String getName() {
 		return link.getName();
@@ -43,9 +43,9 @@ public class LinkReaderReal implements LinkReader {
 
 	@Override
 	public int getLatency() {
-		if ( link.getMaxLatency() == null ) 
+		if ( link.getMaxLatency() == null )
 			return 0; // NOTE: link latency may be missing
-		
+
 		return link.getMaxLatency().getValue();
 	}
 
@@ -54,7 +54,7 @@ public class LinkReaderReal implements LinkReader {
 	public float getThroughput() {
 		if ( link.getMinThroughput() == null )
 			return 0; // NOTE: link throughput may be missing
-		
+
 		return link.getMinThroughput().getValue();
 	}
 

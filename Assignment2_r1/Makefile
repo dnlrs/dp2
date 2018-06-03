@@ -5,11 +5,11 @@ all: reset-all
 
 reset-all:
 	echo -n "stopping tomcat..."
-	tomcat-stop >> /dev/null
+	tomcat-stop >> /dev/null 2>&1
 	sleep 2
 	echo "done."
 	echo -n "stopping neo4j..."
-	neo4j stop >> /dev/null
+	neo4j stop >> /dev/null 2>&1
 	sleep 5
 	echo "done."
 	echo -n "clearing neo4j databases..."

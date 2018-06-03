@@ -20,24 +20,24 @@ import org.xml.sax.SAXException;
 /**
  * A simple wrapper for methods useful to set schemas in the JAXB marshaller
  * and JAXB unmarshaller.
- * 
+ *
  * @author    Daniel C. Rusu
  * @studentID 234428
  */
 public class MyJAXBWrapper {
-	
-	protected static void marshallerSetSchema( Marshaller m, String schemaFileName ) 
-			throws SAXException, JAXBException, IllegalArgumentException, 
+
+	protected static void marshallerSetSchema( Marshaller m, String schemaFileName )
+			throws SAXException, JAXBException, IllegalArgumentException,
 		       	   NullPointerException, SchemaFactoryConfigurationError,
 			       UnsupportedOperationException, FileNotFoundException {
-		
+
 		if ( ( m == null ) || ( schemaFileName == null ) )
 			throw new NullPointerException("Null argument");
 
-		
-		StreamSource source = new StreamSource( new FileInputStream( schemaFileName ) );
-		SchemaFactory sf = SchemaFactory.newInstance( XMLConstants.W3C_XML_SCHEMA_NS_URI );
-		Schema schema = sf.newSchema( source );			
+
+		StreamSource  source = new StreamSource( new FileInputStream( schemaFileName ) );
+		SchemaFactory sf     = SchemaFactory.newInstance( XMLConstants.W3C_XML_SCHEMA_NS_URI );
+		Schema        schema = sf.newSchema( source );
 
 		m.setSchema(schema);
 		m.setEventHandler(
@@ -53,25 +53,26 @@ public class MyJAXBWrapper {
 					}
 				}
 				);
-		
+
 	}
-	
-	protected static void unmarshallerSetSchema( Unmarshaller um, String schemaFileName ) 
-			throws SAXException, JAXBException, IllegalArgumentException, 
+
+	protected static void unmarshallerSetSchema( Unmarshaller um, String schemaFileName )
+			throws SAXException, JAXBException, IllegalArgumentException,
 			       NullPointerException, SchemaFactoryConfigurationError,
 				   UnsupportedOperationException, FileNotFoundException {
-		
+
 		if ( ( um == null ) || ( schemaFileName == null ) )
 			throw new NullPointerException("Null argument");
-		
 
-		StreamSource source = new StreamSource( new FileInputStream( schemaFileName ) );
-		SchemaFactory sf    = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        Schema schema       = sf.newSchema( source );
+
+		StreamSource  source = new StreamSource( new FileInputStream( schemaFileName ) );
+		SchemaFactory sf     = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        Schema        schema = sf.newSchema( source );
 
         um.setSchema(schema);
         um.setEventHandler(
             new ValidationEventHandler() {
+                @Override
                 public boolean handleEvent(ValidationEvent ve) {
                     if (ve.getSeverity() != ValidationEvent.WARNING) {
                         ValidationEventLocator vel = ve.getLocator();

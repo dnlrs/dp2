@@ -6,23 +6,23 @@ import it.polito.dp2.NFV.sol1.jaxb.VNF;
 
 /**
  * An implementation of the {@link VNFTypeReader} interface.
- * 
+ *
  * @author    Daniel C. Rusu
  * @studentID 234428
  */
 public class VNFTypeReaderReal implements VNFTypeReader {
-	
+
 	private VNF vnf;
-	
-	
+
+
 	protected VNFTypeReaderReal( VNF v ) throws NullPointerException {
 		if ( v == null )
 			throw new NullPointerException("Null argument.");
-		
-		this.vnf = v;		
+
+		this.vnf = v;
 	}
-	
-	
+
+
 	@Override
 	public String getName() {
 		return vnf.getName();
