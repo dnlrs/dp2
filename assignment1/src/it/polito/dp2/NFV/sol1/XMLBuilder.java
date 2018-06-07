@@ -83,7 +83,7 @@ public class XMLBuilder  {
 		if ( nfvSystem == null )
 			throw new NfvReaderException( "getRootElement: null argument" );
 
-		return this.of.createNFVSystem(nfvSystem);
+		return this.of.createNFVSystem( nfvSystem );
 	}
 
 

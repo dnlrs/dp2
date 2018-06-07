@@ -88,10 +88,10 @@ public class XMLValidator {
 	 * <li> name is valid
 	 * <li> installedMemory is not null and valid
 	 * <li> installedStorage is not null and valid
-	 * <li> memory value > 0
-	 * <li> storage value > 0
-	 * <li> storage value > 0
-	 * <li> max VNFs value > 0
+	 * <li> memory value >= 0
+	 * <li> storage value >= 0
+	 * <li> storage value >= 0
+	 * <li> max VNFs value >= 0
 	 * <li> allocatedNodes object is not null
 	 * </ul>
 	 *
@@ -109,7 +109,9 @@ public class XMLValidator {
 		try {
 			if ( !( h.getName().matches( NAME_REGEX ) ) )
 				return false; // invalid name
-		} catch ( PatternSyntaxException e ) {}
+		} catch ( PatternSyntaxException e ) {
+		    return false;
+		}
 
 		SizeInMB s_am = h.getInstalledMemory();
 		SizeInMB s_as = h.getInstalledStorage();
@@ -252,7 +254,7 @@ public class XMLValidator {
 		try {
 			@SuppressWarnings("unused")
 			FunctionalType t = FunctionalType.valueOf( v.getFunctionalType().value() );
-		} catch ( IllegalArgumentException e ) {
+		} catch ( NullPointerException | IllegalArgumentException e ) {
 			exists = false;
 		}
 
