@@ -1,0 +1,19 @@
+
+# ignore eclipse project files
+.classpath
+.externalToolBuilders/
+.project
+.settings/
+
+# ignore prof's library
+lib/
+lib-src/
+
+# ignore builds
+bin/
+build/
+gen-src/
+
+# debug files
+log*.txt
+debug*.txt

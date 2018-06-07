@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" 
+        targetNamespace="http://www.example.org/NfvDeployer" 
+        xmlns:tns="http://www.example.org/NfvDeployer" 
+        elementFormDefault="qualified">
+
+ <annotation>
+  <documentation>
+    XML Schema for NfvDeployer service
+  </documentation>
+ </annotation>
+
+ <element name="host"  type="tns:NfvHost"  />
+ <element name="hosts" type="tns:NfvHosts" />
+ <element name="node"  type="tns:NfvNode"  />
+ <element name="nodes" type="tns:NfvNodes" />
+ <element name="nffg"  type="tns:NfvNFFG"  />
+ <element name="nffgs" type="tns:NfvNFFGs" />
+ <element name="link"  type="tns:NfvLink"  />
+ <element name="links" type="tns:NfvLinks" />
+        
+  <complexType name="NfvHosts">
+   <sequence>
+    <element ref="tns:host" minOccurs="0" maxOccurs="unbounded" />
+   </sequence>
+  </complexType>
+
+ <complexType name="NfvNodes">
+  <sequence>
+   <element ref="tns:node" minOccurs="0" maxOccurs="unbounded" />
+  </sequence>
+ </complexType>
+ 
+ <complexType name="NfvNFFGs">
+  <sequence>
+   <element ref="tns:nffg" minOccurs="0" maxOccurs="unbounded" />
+  </sequence>
+ </complexType>
+ 
+ <complexType name="NfvLinks">
+  <sequence>
+   <element ref="tns:link" minOccurs="0" maxOccurs="unbounded" />
+  </sequence>
+ </complexType>
+ 
+  
+ <complexType name="NfvHost">
+  <sequence>
+   <element name="name"             type="string" />
+   <element name="maxVNFs"          type="integer" minOccurs="0" />
+   <element name="installedMemory"  type="integer" minOccurs="0" />
+   <element name="installedStorage" type="integer" minOccurs="0" />
+   <element name="self"             type="tns:SelfRef" minOccurs="0" />
+   <element name="hostedNodes"      type="tns:NfvNodes" minOccurs="0" />
+  </sequence>
+ </complexType>
+ 
+ 
+ <complexType name="NfvNode">
+  <sequence>
+   <element name="name"           type="string" />
+   <element name="functionalType" type="string"       minOccurs="0" />
+   <element name="hostingHost"    type="string"       minOccurs="0" />
+   <element name="associatedNFFG" type="string"       minOccurs="0" />
+   <element name="self"           type="tns:SelfRef"  minOccurs="0" />
+   <element name="links"          type="tns:NfvLinks" minOccurs="0" />
+  </sequence>
+ </complexType>
+ 
+ <complexType name="NfvNFFG">
+  <sequence>
+   <element name="name"           type="string" />
+   <element name="deployTime"     type="dateTime"     minOccurs="0" />
+   <element name="self"           type="tns:SelfRef"  minOccurs="0" />
+   <element name="allocatedNodes" type="tns:NfvNodes" minOccurs="0" />
+  </sequence>
+ </complexType>
+ 
+ 
+ <complexType name="NfvLink">
+  <sequence>
+   <element name="name" type="string" />
+   <choice>
+    <sequence>
+     <element name="sourceNode"      type="tns:NfvNode" />
+     <element name="destinationNode" type="tns:NfvNode" />
+    </sequence>
+    <sequence>
+     <element name="sourceHost"      type="tns:NfvHost" />
+     <element name="destinationHost" type="tns:NfvHost" />
+    </sequence>
+   </choice>
+   <element name="minThroughput" type="float"   minOccurs="0" />
+   <element name="maxLatency"    type="integer" minOccurs="0" />
+  </sequence>
+ </complexType>
+ 
+ <complexType name="SelfRef">
+   <attribute name="href" type="anyURI" use="required" />
+ </complexType>
+        
+</schema>
