@@ -18,18 +18,22 @@ public class NfvReaderFactory extends it.polito.dp2.NFV.NfvReaderFactory {
 	}
 
 
+
 	@Override
 	public NfvReader newNfvReader() throws NfvReaderException {
 
+	    NfvSystem nfvSystem = null;
 		try {
 
-			NfvReaderReal realNfvReader = new NfvReaderReal();
-			return realNfvReader;
+			 nfvSystem = new NfvSystem();
 
-		} catch (Exception e) {
+		} catch (NfvReaderException e) {
+			System.err.println( e.getMessage() );
 			e.printStackTrace();
-			throw new NfvReaderException();
+//			throw new NfvReaderException();
 		}
+	    return nfvSystem;
 	}
+
 
 }

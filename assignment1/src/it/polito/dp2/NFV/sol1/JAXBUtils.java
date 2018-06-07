@@ -24,7 +24,7 @@ import org.xml.sax.SAXException;
  * @author    Daniel C. Rusu
  * @studentID 234428
  */
-public class MyJAXBWrapper {
+public class JAXBUtils {
 
 	protected static void marshallerSetSchema( Marshaller m, String schemaFileName )
 			throws SAXException, JAXBException, IllegalArgumentException,

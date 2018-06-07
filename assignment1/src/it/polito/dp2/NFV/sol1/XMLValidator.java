@@ -25,11 +25,11 @@ import it.polito.dp2.NFV.sol1.jaxb.VNF;
  * @author    Daniel C. Rusu
  * @studentID 234428
  */
-public class Validator {
+public class XMLValidator {
 
 	private final static String NAME_REGEX = "[a-zA-Z][a-zA-Z0-9]*";
 
-	protected Validator() {}
+	protected XMLValidator() {}
 
 	/**
 	 * Checks if the {@link NFVSystemType} is not <code>null</code> and has

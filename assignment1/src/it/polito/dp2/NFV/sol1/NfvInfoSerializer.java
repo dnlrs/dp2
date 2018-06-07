@@ -32,7 +32,7 @@ public class NfvInfoSerializer {
 
 	private static final String PROPERTY_USER_DIR    = "user.dir";
 
-	private Builder builder;
+	private XMLBuilder builder;
 
 	/**
 	 * Class constructor.
@@ -40,7 +40,7 @@ public class NfvInfoSerializer {
 	 * @throws NfvReaderException
 	 */
 	public NfvInfoSerializer() throws NfvReaderException {
-		builder = new Builder(); // note: the builder class instantiates the NfvReaderFactory
+		this.builder = new XMLBuilder(); // note: the builder class instantiates the NfvReaderFactory
 	}
 
 
@@ -96,7 +96,7 @@ public class NfvInfoSerializer {
 			throw new NullPointerException( "doWork: output file name cannot be null" );
 
 		// read data to marshal from interfaces -----------------------------
-		NFVSystemType nfvSystem = builder.buildNFVSystemType();
+		NFVSystemType nfvSystem = this.builder.buildNFVSystemType();
 
 		// marshal data -----------------------------------------------------
 		JAXBContext jaxbContext = JAXBContext.newInstance( JAXB_CLASSES_PACKAGE );
@@ -105,16 +105,17 @@ public class NfvInfoSerializer {
 		// set marshaller properties ------------------------------------
 		try {
 
+		    String schemaFile = ( System.getProperty( PROPERTY_USER_DIR ) == null
+		            ? new String("") : System.getProperty(PROPERTY_USER_DIR) );
+
+		    schemaFile = schemaFile.concat( SCHEMA_LOCATION );
+
+			JAXBUtils.marshallerSetSchema(marshaller, schemaFile);
+
 			marshaller.setProperty( Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 
 			String schemaLocationString = new String( TARGET_NAMESPACE + " " + SCHEMA_LOCATION );
 			marshaller.setProperty( Marshaller.JAXB_SCHEMA_LOCATION, schemaLocationString );
-
-			String schemaFile = ( System.getProperty( PROPERTY_USER_DIR ) == null
-									? new String("") : System.getProperty(PROPERTY_USER_DIR) );
-			schemaFile = schemaFile.concat( SCHEMA_LOCATION );
-
-			MyJAXBWrapper.marshallerSetSchema(marshaller, schemaFile);
 
 		} catch ( SchemaFactoryConfigurationError sfce ) {
 			System.err.println(sfce);
@@ -126,7 +127,7 @@ public class NfvInfoSerializer {
 
 
 		// marshal ------------------------------------------------------
-		JAXBElement<NFVSystemType> nfvRootElement = builder.getRootElement( nfvSystem );
+		JAXBElement<NFVSystemType> nfvRootElement = this.builder.getRootElement( nfvSystem );
 
 		if ( nfvRootElement == null )
 			throw new NullPointerException("nfvRootElement is null.");

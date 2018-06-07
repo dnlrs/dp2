@@ -43,7 +43,7 @@ import it.polito.dp2.NFV.sol1.jaxb.VNF;
  * @author    Daniel C. Rusu
  * @studentID 234428
  */
-public class Builder  {
+public class XMLBuilder  {
 
 	private final static String NAME_REGEX = "[a-zA-Z][a-zA-Z0-9]*";
 
@@ -51,15 +51,15 @@ public class Builder  {
 	private ObjectFactory of;      // JAXB object factory
 
 
-	protected Builder()
+	protected XMLBuilder()
 			throws NfvReaderException {
 
 		try {
 
 			NfvReaderFactory factory = NfvReaderFactory.newInstance();
 
-			monitor   = factory.newNfvReader();
-			of        = new ObjectFactory();
+			this.monitor   = factory.newNfvReader();
+			this.of        = new ObjectFactory();
 
 		} catch ( FactoryConfigurationError fce ) {
 			throw new NfvReaderException( fce.getMessage() );
@@ -83,7 +83,7 @@ public class Builder  {
 		if ( nfvSystem == null )
 			throw new NfvReaderException( "getRootElement: null argument" );
 
-		return of.createNFVSystem(nfvSystem);
+		return this.of.createNFVSystem(nfvSystem);
 	}
 
 
@@ -100,7 +100,7 @@ public class Builder  {
 		Catalogue                   catalogue     = buildCatalogue();     // build Catalogue
 		NFVSystemType.DeployedNFFGs deployedNFFGs = buildDeployedNFFGs(); // deployed NFFGs
 
-		NFVSystemType nfvSystem = of.createNFVSystemType();
+		NFVSystemType nfvSystem = this.of.createNFVSystemType();
 		nfvSystem.setIN( in );                       // add Infrastructure Network to NFVSystem
 		nfvSystem.setCatalogue( catalogue );         // add Catalogue to NFVSystem
 		nfvSystem.setDeployedNFFGs( deployedNFFGs ); // add deployedNFFGs to NFVSystem
@@ -120,12 +120,12 @@ public class Builder  {
 			throws NfvReaderException {
 
 		InfrastructureNetwork.Hosts hosts =
-				of.createInfrastructureNetworkHosts();
+				this.of.createInfrastructureNetworkHosts();
 
 		InfrastructureNetwork.Connections connections =
-				of.createInfrastructureNetworkConnections();
+				this.of.createInfrastructureNetworkConnections();
 
-		Set<HostReader> setHostInterfaces = monitor.getHosts();
+		Set<HostReader> setHostInterfaces = this.monitor.getHosts();
 
 		/* NOTE: if no hosts then no connections */
 		if ( !( setHostInterfaces.isEmpty() ) ) {
@@ -161,7 +161,7 @@ public class Builder  {
 		}
 
 		// prepare IN -------------------------------------------------------
-		InfrastructureNetwork in = of.createInfrastructureNetwork();
+		InfrastructureNetwork in = this.of.createInfrastructureNetwork();
 		in.setHosts( hosts );
 		in.setConnections( connections );
 
@@ -181,9 +181,9 @@ public class Builder  {
 	private Catalogue buildCatalogue()
 			throws NfvReaderException {
 
-		Catalogue catalogue = of.createCatalogue();
+		Catalogue catalogue = this.of.createCatalogue();
 
-		Set<VNFTypeReader> setVNFsInterfaces = monitor.getVNFCatalog();
+		Set<VNFTypeReader> setVNFsInterfaces = this.monitor.getVNFCatalog();
 
 		if ( !( setVNFsInterfaces.isEmpty() ) ) {
 			List<VNF> liveListVNFs = catalogue.getVnf();
@@ -215,9 +215,9 @@ public class Builder  {
 			throws NfvReaderException {
 
 		NFVSystemType.DeployedNFFGs deployedNFFGs =
-				of.createNFVSystemTypeDeployedNFFGs();
+				this.of.createNFVSystemTypeDeployedNFFGs();
 
-		Set<NffgReader> setNFFGsInterfaces = monitor.getNffgs( null );
+		Set<NffgReader> setNFFGsInterfaces = this.monitor.getNffgs( null );
 
 		if ( !( setNFFGsInterfaces.isEmpty() ) ) {
 			List<NFFG> liveListNFFGs = deployedNFFGs.getNffg();
@@ -262,7 +262,7 @@ public class Builder  {
 		SizeInMB as = buildSizeInMB( BigInteger.valueOf( hI.getAvailableStorage() ) );
 
 		// retrieve all nodes allocated in current host ---------------------
-		Host.AllocatedNodes allocatedNodes = of.createHostAllocatedNodes();
+		Host.AllocatedNodes allocatedNodes = this.of.createHostAllocatedNodes();
 
 		Set<NodeReader> setNodesInterfaces = hI.getNodes();
 
@@ -302,7 +302,7 @@ public class Builder  {
 					throw new NfvReaderException( "buildHost: bad node/NFFG name" );
 
 
-				NodeRef nodeRef = of.createNodeRef();
+				NodeRef nodeRef = this.of.createNodeRef();
 				nodeRef.setName( nodeName );
 				nodeRef.setAssociatedNFFG( nffgName );
 
@@ -315,7 +315,7 @@ public class Builder  {
 		}
 
 		// prepare host data structure --------------------------------------
-		Host host = of.createHost();
+		Host host = this.of.createHost();
 		host.setName( hI.getName() );
 		host.setInstalledMemory( am );
 		host.setInstalledStorage( as );
@@ -343,7 +343,7 @@ public class Builder  {
 		if ( value.intValue() < 0  )
 			throw new NfvReaderException( "buildSizeInMB: invalid value" );
 
-		SizeInMB sim = of.createSizeInMB();
+		SizeInMB sim = this.of.createSizeInMB();
 		sim.setValue( value );
 		sim.setUnit( sim.getUnit() );
 
@@ -369,7 +369,7 @@ public class Builder  {
 			throw new NfvReaderException( "buildConnection: null argument" );
 
 		ConnectionPerformanceReader connectionInterface =
-				monitor.getConnectionPerformance( sourceHostI, destHostI );
+				this.monitor.getConnectionPerformance( sourceHostI, destHostI );
 
 		if ( connectionInterface == null )
 			return null; // no connection between hosts
@@ -378,7 +378,7 @@ public class Builder  {
 		if ( ( sourceHostI.getName() == null ) || ( destHostI.getName() == null ) )
 			throw new NfvReaderException( "buildConnection: invalid endpoints" );
 
-		Connection.ConnectionID connectionID = of.createConnectionConnectionID();
+		Connection.ConnectionID connectionID = this.of.createConnectionConnectionID();
 		connectionID.setSourceHost( sourceHostI.getName() );
 		connectionID.setDestinationHost( destHostI.getName() );
 
@@ -386,7 +386,7 @@ public class Builder  {
 		if ( connectionInterface.getThroughput() < 0 )
 			throw new NfvReaderException( "buildConnection: invalid throughput" );
 
-		Throughput throughput = of.createThroughput();
+		Throughput throughput = this.of.createThroughput();
 		throughput.setValue( connectionInterface.getThroughput() );
 		throughput.setUnit( throughput.getUnit() );
 
@@ -394,12 +394,12 @@ public class Builder  {
 		if ( connectionInterface.getLatency() < 0 )
 			throw new NfvReaderException( "buildConnection: invalid latency" );
 
-		Latency latency = of.createLatency();
+		Latency latency = this.of.createLatency();
 		latency.setValue( connectionInterface.getLatency() );
 		latency.setUnit( latency.getUnit() );
 
 		// prepare connection -----------------------------------------------
-		Connection connection = of.createConnection();
+		Connection connection = this.of.createConnection();
 		connection.setConnectionID( connectionID );
 		connection.setAverageThroughput( throughput );
 		connection.setLatency( latency );
@@ -440,7 +440,7 @@ public class Builder  {
 		String functionalTypeName = vnfInterface.getFunctionalType().value();
 
 		// prepare VNF ------------------------------------------------------
-		VNF vnf = of.createVNF();
+		VNF vnf = this.of.createVNF();
 		vnf.setName( vnfInterface.getName() );
 		vnf.setRequiredMemory( rm );
 		vnf.setRequiredStorage( rs );
@@ -475,7 +475,7 @@ public class Builder  {
 			throw new NfvReaderException( "buildNFFG: invalid NFFG deploy time" );
 
 		// retrieve nffg's nodes --------------------------------------------
-		NFFG.Nodes nodes = of.createNFFGNodes();
+		NFFG.Nodes nodes = this.of.createNFFGNodes();
 
 		Set<NodeReader> setNodeInterfaces = nffgInterface.getNodes();
 
@@ -506,7 +506,7 @@ public class Builder  {
 		}
 
 		// prepare NFFG -----------------------------------------------------
-		NFFG nffg = of.createNFFG();
+		NFFG nffg = this.of.createNFFG();
 		nffg.setName( nffgInterface.getName() );
 		nffg.setDeployTime( time );
 		nffg.setNodes( nodes );
@@ -542,12 +542,12 @@ public class Builder  {
 			throw new NfvReaderException( "buildNode: invalid Node name" );
 
 
-		if ( ( monitor.getHost( nodeInterface.getHost().getName() ) == null ) ||
-			 ( monitor.getNffg( nodeInterface.getNffg().getName() ) == null ) )
+		if ( ( this.monitor.getHost( nodeInterface.getHost().getName() ) == null ) ||
+			 ( this.monitor.getNffg( nodeInterface.getNffg().getName() ) == null ) )
 			throw new NfvReaderException( "buildNode: inexistent hosting host/NFFG" );
 
 		// retrieve links ---------------------------------------------------
-		Node.Links links = of.createNodeLinks();
+		Node.Links links = this.of.createNodeLinks();
 
 		Set<LinkReader>  setLinkInterfaces = nodeInterface.getLinks();
 
@@ -565,7 +565,7 @@ public class Builder  {
 		}
 
 		// Prepare node -----------------------------------------------------
-		Node node = of.createNode();
+		Node node = this.of.createNode();
 		node.setName( nodeInterface.getName() );
 		node.setHostingHost( nodeInterface.getHost().getName() );
 		node.setAssociatedNFFG( nodeInterface.getNffg().getName() );
@@ -603,11 +603,11 @@ public class Builder  {
 			 ( linkInterface.getDestinationNode().getName() == null ) )
 			throw new NfvReaderException( "buildLink: missing link endpoint names" );
 
-		if ( ( monitor.getNffg( linkInterface.getSourceNode().getNffg().getName() )      == null ) ||
-			 ( monitor.getNffg( linkInterface.getDestinationNode().getNffg().getName() ) == null ) )
+		if ( ( this.monitor.getNffg( linkInterface.getSourceNode().getNffg().getName() )      == null ) ||
+			 ( this.monitor.getNffg( linkInterface.getDestinationNode().getNffg().getName() ) == null ) )
 			throw new NfvReaderException( "buildLink: invalid endpoints" );
 
-		if ( monitor.getConnectionPerformance( linkInterface.getSourceNode().getHost(),
+		if ( this.monitor.getConnectionPerformance( linkInterface.getSourceNode().getHost(),
 				                               linkInterface.getDestinationNode().getHost() ) == null )
 			throw new NfvReaderException( "buildLink: invalid link, no connection between hosts hosting node enpoints" );
 
@@ -619,11 +619,11 @@ public class Builder  {
 			{
 				HostReader srcHost = linkInterface.getSourceNode().getHost();
 				HostReader dstHost = linkInterface.getDestinationNode().getHost();
-				if ( linkInterface.getThroughput() < monitor.getConnectionPerformance( srcHost, dstHost ).getThroughput() )
+				if ( linkInterface.getThroughput() < this.monitor.getConnectionPerformance( srcHost, dstHost ).getThroughput() )
 					throw new NfvReaderException( "buildLink: throughput exceeding connection limits" );
 			}
 
-			throughput = of.createThroughput();
+			throughput = this.of.createThroughput();
 			throughput.setValue( linkInterface.getThroughput() );
 			throughput.setUnit( throughput.getUnit() );
 		}
@@ -635,17 +635,17 @@ public class Builder  {
 			{
 				HostReader srcHost = linkInterface.getSourceNode().getHost();
 				HostReader dstHost = linkInterface.getDestinationNode().getHost();
-				if ( linkInterface.getLatency() < monitor.getConnectionPerformance( srcHost, dstHost ).getLatency() )
+				if ( linkInterface.getLatency() < this.monitor.getConnectionPerformance( srcHost, dstHost ).getLatency() )
 					throw new NfvReaderException( "buildLink: latency exceeding connection limits" );
 			}
 
-			latency = of.createLatency();
+			latency = this.of.createLatency();
 			latency.setValue( linkInterface.getLatency() );
 			latency.setUnit( latency.getUnit() );
 		}
 
         // prepare Link -----------------------------------------------------
-		Link link = of.createLink();
+		Link link = this.of.createLink();
 		link.setName( linkInterface.getName() );
 		link.setSourceNode( linkInterface.getSourceNode().getName() );
 		link.setDestinationNode( linkInterface.getDestinationNode().getName() );
