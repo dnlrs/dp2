@@ -41,7 +41,7 @@ public class NfvSystem implements NfvReader {
             loader.loadFromXMLFile( this.db );
 
         } catch ( NfvReaderException e ) {
-            System.err.println();
+//            e.printStackTrace();
             System.err.println( "An ERROR occurred while loading XML file." );
             if ( e.getMessage() != null ) {
                 System.err.println( e.getMessage() );

@@ -619,7 +619,7 @@ public class XMLBuilder  {
 			{
 				HostReader srcHost = linkInterface.getSourceNode().getHost();
 				HostReader dstHost = linkInterface.getDestinationNode().getHost();
-				if ( linkInterface.getThroughput() < this.monitor.getConnectionPerformance( srcHost, dstHost ).getThroughput() )
+				if ( linkInterface.getThroughput() > this.monitor.getConnectionPerformance( srcHost, dstHost ).getThroughput() )
 					throw new NfvReaderException( "buildLink: throughput exceeding connection limits" );
 			}
 

@@ -18,11 +18,11 @@ import it.polito.dp2.NFV.VNFTypeReader;
  */
 public class RealNode extends RealNamedEntity implements NodeReader {
 
-    private RealHost    host;
-    private RealNffg    nffg;
-    private RealVNFType funcType;
+    private final RealHost    host;
+    private final RealNffg    nffg;
+    private final RealVNFType funcType;
 
-    private CopyOnWriteArraySet<RealLink> links;
+    private final CopyOnWriteArraySet<RealLink> links;
 
     private final Object lockHost     = new Object();
     private final Object lockNffg     = new Object();
@@ -38,10 +38,27 @@ public class RealNode extends RealNamedEntity implements NodeReader {
                     throws NullPointerException, IllegalArgumentException {
 
         super( name );
-        this.setHost( host );
-        this.setNffg( nffg );
-        this.setFuncType( funcType );
-        this.setLinks( links );
+
+        /*
+         * Checks
+         */
+        if ( host == null )
+            throw new IllegalArgumentException( "new Node: null argument" );
+
+        if ( nffg == null )
+            throw new IllegalArgumentException( "new Node: null argument" );
+
+        if ( funcType == null )
+            throw new IllegalArgumentException( "new Node: null argument" );
+
+        if ( links.contains( null ) )
+            throw new NullPointerException(
+                    "new Node: argument set contains null elements" );
+
+        this.host     = host;
+        this.nffg     = nffg;
+        this.funcType = funcType;
+        this.links    = new CopyOnWriteArraySet<RealLink>( links );
     }
 
 
@@ -87,55 +104,6 @@ public class RealNode extends RealNamedEntity implements NodeReader {
 
     // setters
 
-
-
-    protected void setHost( RealHost host )
-            throws IllegalArgumentException {
-
-        if ( host == null )
-            throw new IllegalArgumentException( "setHost: null argument" );
-
-        synchronized ( this.lockHost ) {
-            this.host = host;
-        }
-    }
-
-
-    protected void setNffg( RealNffg nffg )
-            throws IllegalArgumentException {
-
-        if ( nffg == null )
-            throw new IllegalArgumentException( "setNffg: null argument" );
-
-        synchronized ( this.lockNffg ) {
-            this.nffg = nffg;
-        }
-    }
-
-
-    protected void setFuncType( RealVNFType funcType )
-            throws IllegalArgumentException {
-
-        if ( funcType == null )
-            throw new IllegalArgumentException( "setFuncType: null argument" );
-
-        synchronized ( this.lockFuncType ) {
-            this.funcType = funcType;
-        }
-    }
-
-
-    protected void setLinks( Set<RealLink> links )
-            throws NullPointerException {
-
-        if ( links.contains( null ) )
-            throw new NullPointerException( "setLinks: argument Set contains null elements" );
-
-        synchronized ( this.lockLinks ) {
-            this.links = new CopyOnWriteArraySet<RealLink>( links );
-        }
-    }
-
     protected void addLink( RealLink link )
             throws NullPointerException {
 
@@ -143,9 +111,12 @@ public class RealNode extends RealNamedEntity implements NodeReader {
             throw new NullPointerException( "addLink: null argument" );
 
         synchronized ( this.lockLinks ) {
+
+            for ( RealLink l : this.links )
+                if ( l.getName().compareTo( link.getName() ) == 0 )
+                    throw new NullPointerException( "addLink: duplicate link" );
+
             this.links.add( link );
         }
     }
-
-
 }

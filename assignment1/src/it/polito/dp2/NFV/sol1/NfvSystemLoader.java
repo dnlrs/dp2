@@ -31,6 +31,12 @@ import it.polito.dp2.NFV.sol1.jaxb.NodeRef;
 import it.polito.dp2.NFV.sol1.jaxb.Throughput;
 import it.polito.dp2.NFV.sol1.jaxb.VNF;
 
+/**
+ * Loads the {@link NfvSystemDBMS} with data unmarshalled from an XML File.
+ *
+ * @author    Daniel C. Rusu
+ * @studentID 234428
+ */
 public class NfvSystemLoader {
 
     private static final String JAXB_CLASSES_PACKAGE = "it.polito.dp2.NFV.sol1.jaxb";
@@ -74,9 +80,9 @@ public class NfvSystemLoader {
         if ( liveListXMLHosts.size() == 0 )
             return; // no hosts, no connections, no NFFGs, no system
 
+//        HashMap<String, Set<String>> hostsNodes = loadHostsNodes( liveListXMLHosts );
         HashMap<String, Set<String>> hostsNodes = new HashMap<String, Set<String>>();
         HashMap<String, RealHost>    hosts      = loadHosts( liveListXMLHosts, hostsNodes );
-//        HashMap<String, Set<String>> hostsNodes = loadHostsNodes( liveListXMLHosts );
 
         /*
          * Retrieve Connections
@@ -211,8 +217,8 @@ public class NfvSystemLoader {
 
     private
     HashMap<String, RealHost> loadHosts(
-            List<Host> liveListXMLHosts,
-            HashMap<String, Set<String>> hostsNodes )
+            List<Host>                   liveListXMLHosts,
+            HashMap<String, Set<String>> hostsNodes        )
                     throws NfvReaderException {
 
         if ( liveListXMLHosts == null )
@@ -242,6 +248,9 @@ public class NfvSystemLoader {
                 /*
                  * Add host
                  */
+                if ( hosts.containsKey( host.getName() ) )
+                    throw new NfvReaderException( "loadHosts: found duplicate Host" );
+
                 hosts.put( host.getName(), host );
 
                 /*
@@ -263,9 +272,12 @@ public class NfvSystemLoader {
                         throw new NfvReaderException( "loadHosts: found invalid NodeRef" );
 
                     try {
+                        if ( currentHostNodes.contains( xmlNodeRef.getName() ) )
+                            throw new NfvReaderException( "loadHosts: found duplicate Host NodeRef " );
+
                         currentHostNodes.add( xmlNodeRef.getName() );
                     } catch ( Exception e ) {
-                        throw new NfvReaderException( e.getMessage() );
+                        throw new NfvReaderException( e );
                     }
                 }
             }
@@ -326,8 +338,8 @@ public class NfvSystemLoader {
 
     private
     HashMap<String, RealConnection> loadConnections(
-            List<Connection> liveListXMLConnections,
-            HashMap<String, RealHost> hosts )
+            List<Connection>          liveListXMLConnections,
+            HashMap<String, RealHost> hosts                   )
                     throws NfvReaderException {
 
         if ( (liveListXMLConnections == null) || (hosts == null) )
@@ -379,11 +391,14 @@ public class NfvSystemLoader {
                 /*
                  * Add connection
                  */
+                if ( connections.containsKey( connectionName ) )
+                    throw new NfvReaderException( "loadConnections: found duplicate Connection" );
+
                 connections.put( connectionName, connection );
             }
 
         } catch ( NullPointerException | IllegalArgumentException e ) {
-            throw new NfvReaderException( e.getMessage() );
+            throw new NfvReaderException( e );
         }
 
         return connections;
@@ -412,13 +427,16 @@ public class NfvSystemLoader {
                                 xmlVNF.getRequiredMemory().getValue().intValue(),
                                 xmlVNF.getRequiredStorage().getValue().intValue()
                                 );
-                    /*
-                     * Add VNF
-                     */
-                    vnfs.put( vnf.getName(), vnf);
+                /*
+                 * Add VNF
+                 */
+                if ( vnfs.containsKey( vnf.getName() ) )
+                    throw new NfvReaderException( "loadVNFs: found duplicate VNF" );
+
+                vnfs.put( vnf.getName(), vnf);
             }
         } catch ( NullPointerException | IllegalArgumentException e ) {
-            throw new NfvReaderException( e.getMessage() );
+            throw new NfvReaderException( e );
         }
 
         return vnfs;
@@ -458,11 +476,17 @@ public class NfvSystemLoader {
                                 new HashSet<RealNode>() /* no nodes for now */
                                 );
 
+                /*
+                 * Add NFFG
+                 */
+                if ( nffgs.containsKey( nffg.getName() ) )
+                    throw new NfvReaderException( "loadNFFGs: found duplicate NFFG" );
+
                 nffgs.put( nffg.getName(), nffg );
 
                 List<Node> liveListXMLNodes = xmlNFFG.getNodes().getNode();
                 if ( liveListXMLNodes.size() == 0 ) {
-                    continue; // this nffg has no nodes in it
+                    continue; // this NFFG has no nodes in it
                 }
 
                 HashMap<String, RealNode> nffgNodes = new HashMap<String, RealNode>();
@@ -470,13 +494,15 @@ public class NfvSystemLoader {
                 for ( Node xmlNode : liveListXMLNodes ) {
 
                     if ( !( this.validator.isValidNode( xmlNode ) ) )
-                        throw new NfvReaderException( "loadNFFGs: found invalid Node" );
+                        throw new NfvReaderException(
+                                "loadNFFGs: found invalid Node" );
 
                     /* This checks:
                      *  - if the node really belongs to current NFFG
                      */
                     if ( xmlNode.getAssociatedNFFG().compareTo( xmlNFFG.getName()) != 0 )
-                        throw new NullPointerException( "loadNFFGs: nffg-node inconsistency" );
+                        throw new NullPointerException(
+                                "loadNFFGs: nffg-node inconsistency" );
 
                     /* This checks:
                      *  - if node name is valid
@@ -508,6 +534,9 @@ public class NfvSystemLoader {
                     /*
                      * Gather all NFFG's nodes
                      */
+                    if ( nffgNodes.containsKey( node.getName() ) )
+                        throw new NfvReaderException( "loadNFFGs: found duplicate Node in NFFG" );
+
                     nffgNodes.put( node.getName(), node );
                 }
 
@@ -522,10 +551,12 @@ public class NfvSystemLoader {
                     for ( Link xmlLink : liveListXMLLinks ) {
 
                         if ( !( this.validator.isValidLink( xmlLink ) ) )
-                            throw new NfvReaderException( "loadNFFGs: found invalid Link" );
+                            throw new NfvReaderException(
+                                    "loadNFFGs: found invalid Link" );
 
                         if ( xmlLink.getSourceNode().compareTo( xmlNode.getName() ) != 0 )
-                            throw new NfvReaderException( "loadNFFGs: link-node inconsistency" );
+                            throw new NfvReaderException(
+                                    "loadNFFGs: link-node inconsistency" );
 
 
                         /* This checks
@@ -561,12 +592,22 @@ public class NfvSystemLoader {
 
                         RealConnection connection = connections.get( connectionName );
 
-                        if ( (connection.getLatency()    < link.getLatency())  ||
-                             (connection.getThroughput() < link.getThroughput()) )
-                            throw new NullPointerException( "loadNFFGs: link-connection inconsistency" );
+                        if ( connection == null )
+                            throw new NullPointerException(
+                                    "loadNFFGs: link follows inexistent connection" );
 
+                        if ( link.getLatency() != 0 )
+                            if ( !(connection.getLatency() <= link.getLatency()) )
+                                throw new NullPointerException(
+                                        "loadNFFGs: link-connection latency inconsistency" );
 
-                        /* Add link to node
+                        if ( link.getThroughput() != 0F )
+                            if ( !(connection.getThroughput() >= link.getThroughput()) )
+                                throw new NullPointerException(
+                                        "loadNFFGs: link-connection throughput inconsistency" );
+
+                        /*
+                         * Add link to node
                          */
                         (nffgNodes.get( xmlNode.getName() )).addLink( link );
                     }

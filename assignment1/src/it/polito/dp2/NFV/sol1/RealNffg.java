@@ -17,11 +17,9 @@ import it.polito.dp2.NFV.NodeReader;
  */
 public class RealNffg extends RealNamedEntity implements NffgReader {
 
-    private GregorianCalendar deployTime;
+    private final GregorianCalendar             deployTime;
+    private final CopyOnWriteArraySet<RealNode> nodes;
 
-    private CopyOnWriteArraySet<RealNode> nodes;
-
-    private final Object lockDeployTime = new Object();
     private final Object lockNodes = new Object();
 
     // constructors
@@ -30,8 +28,28 @@ public class RealNffg extends RealNamedEntity implements NffgReader {
             throws NullPointerException, IllegalArgumentException {
 
         super( name );
-        this.setDeployTime( deployTime );
-        this.setNodes( nodes );
+
+        /*
+         * Checks
+         */
+        if ( deployTime == null )
+            throw new IllegalArgumentException( "new NFFG: null argument" );
+
+        if ( nodes.contains( null ) )
+            throw new NullPointerException(
+                    "new NFFG: trying to add null nodes" );
+
+        /*
+         * Set deploy time
+         */
+        this.deployTime = new GregorianCalendar();
+        this.deployTime.setTime( deployTime.getTime() );
+        this.deployTime.setTimeZone( deployTime.getTimeZone() );
+
+        /*
+         * Set nodes
+         */
+        this.nodes = new CopyOnWriteArraySet<RealNode>( nodes );
     }
 
 
@@ -40,9 +58,7 @@ public class RealNffg extends RealNamedEntity implements NffgReader {
 
     @Override
     public Calendar getDeployTime() {
-        synchronized ( this.lockDeployTime ) {
-            return this.deployTime;
-        }
+        return this.deployTime;
     }
 
     @Override
@@ -80,15 +96,6 @@ public class RealNffg extends RealNamedEntity implements NffgReader {
 
 
     // setters
-
-
-    protected void setNodes( Set<RealNode> nodes )
-            throws NullPointerException {
-        synchronized ( this.lockNodes ) {
-            this.nodes = new CopyOnWriteArraySet<RealNode>( nodes );
-        }
-    }
-
     protected void addNode( RealNode node )
             throws NullPointerException {
 
@@ -96,24 +103,12 @@ public class RealNffg extends RealNamedEntity implements NffgReader {
             throw new NullPointerException( "addNode: null argument" );
 
         synchronized ( this.lockNodes ) {
+
+            for ( RealNode n : this.nodes )
+                if ( n.getName().compareTo( node.getName() ) == 0 )
+                    throw new NullPointerException( "addNode: duplicate node" );
+
             this.nodes.add( node );
         }
-
     }
-
-
-    protected void setDeployTime( Calendar deployTime )
-            throws IllegalArgumentException {
-
-        if ( deployTime == null )
-            throw new IllegalArgumentException( "setDeploytime: null argument" );
-
-        synchronized ( this.lockDeployTime ) {
-            this.deployTime = new GregorianCalendar();
-            this.deployTime.setTime( deployTime.getTime() );
-            this.deployTime.setTimeZone( deployTime.getTimeZone() );
-        }
-    }
-
-
 }

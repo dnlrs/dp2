@@ -13,8 +13,8 @@ import it.polito.dp2.NFV.ConnectionPerformanceReader;
  */
 public class RealConnection extends RealNamedEntity implements ConnectionPerformanceReader {
 
-    private AtomicInteger latency;
-    private AtomicLong    throughput;
+    private final AtomicInteger latency;
+    private final AtomicLong    throughput;
 
 
     // constructors
@@ -24,8 +24,20 @@ public class RealConnection extends RealNamedEntity implements ConnectionPerform
             throws IllegalArgumentException {
 
         super( name );
-        setLatency( latency );
-        setThroughput( throughput );
+
+        /*
+         * Checks
+         */
+        if ( latency < 0 )
+            throw new IllegalArgumentException(
+                    "new Connection: latency cannot be less than 0" );
+
+        if ( throughput < 0F )
+            throw new IllegalArgumentException(
+                    "new Connection: throughput cannot be less than 0" );
+
+        this.latency    = new AtomicInteger( latency );
+        this.throughput = new AtomicLong( Double.doubleToLongBits( throughput ) );
     }
 
 
@@ -45,26 +57,4 @@ public class RealConnection extends RealNamedEntity implements ConnectionPerform
 
         return (float) Double.longBitsToDouble( this.throughput.longValue() );
     }
-
-
-    // setters
-
-
-
-    protected void setLatency( int latency ) {
-
-        if ( latency < 0 )
-            throw new IllegalArgumentException( "setLatency: latency cannot be less than 0" );
-
-        this.latency = new AtomicInteger( latency );
-    }
-
-
-    protected void setThroughput( float throughput ) {
-        if ( throughput < 0F )
-            throw new IllegalArgumentException( "setThroughput: throughput cannot be less than 0" );
-
-        this.throughput = new AtomicLong( Double.doubleToLongBits( throughput ) );
-    }
-
 }

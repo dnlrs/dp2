@@ -95,14 +95,20 @@ public class NfvInfoSerializer {
 		if ( outputFileName == null )
 			throw new NullPointerException( "doWork: output file name cannot be null" );
 
-		// read data to marshal from interfaces -----------------------------
+		/*
+		 * Read data to marshal from interfaces
+		 */
 		NFVSystemType nfvSystem = this.builder.buildNFVSystemType();
 
-		// marshal data -----------------------------------------------------
+		/*
+		 * Create marshaller
+		 */
 		JAXBContext jaxbContext = JAXBContext.newInstance( JAXB_CLASSES_PACKAGE );
 		Marshaller  marshaller  = jaxbContext.createMarshaller();
 
-		// set marshaller properties ------------------------------------
+		/*
+		 *  Set marshaller properties ------------------------------------
+		 */
 		try {
 
 		    String schemaFile = ( System.getProperty( PROPERTY_USER_DIR ) == null
@@ -125,8 +131,9 @@ public class NfvInfoSerializer {
 			System.err.println("could not set marshaller properties.");
 		}
 
-
-		// marshal ------------------------------------------------------
+		/*
+		 * Marshal data
+		 */
 		JAXBElement<NFVSystemType> nfvRootElement = this.builder.getRootElement( nfvSystem );
 
 		if ( nfvRootElement == null )

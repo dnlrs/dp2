@@ -14,33 +14,26 @@ public class RealNamedEntity implements NamedEntityReader {
 
     private final static String NAME_REGEX = "[a-zA-Z][a-zA-Z0-9]*";
 
-    private String       name;
-    private final Object lockName = new Object();
+    private final String name;
 
 
     protected RealNamedEntity( String name ) {
-        this.setName( name );
-    }
 
-    @Override
-    public String getName() {
-        synchronized ( this.lockName ) {
-            return new String ( this.name );
-        }
-    }
-
-    protected void setName( String name )
-            throws IllegalArgumentException {
-
+        /*
+         * Checks
+         */
         if ( name == null )
             throw new IllegalArgumentException( "setName: null argument" );
 
         if ( !( name.matches( NAME_REGEX ) ) )
             throw new IllegalArgumentException( "setName: invalid name" );
 
-        synchronized ( this.lockName ) {
-            this.name = new String( name );
-        }
+        this.name = new String( name );
+    }
+
+    @Override
+    public String getName() {
+        return new String ( this.name );
     }
 
     public static boolean nameIsValid( String name ) {

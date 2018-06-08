@@ -30,7 +30,7 @@ public class NfvReaderFactory extends it.polito.dp2.NFV.NfvReaderFactory {
 		} catch (NfvReaderException e) {
 			System.err.println( e.getMessage() );
 			e.printStackTrace();
-//			throw new NfvReaderException();
+			throw new NfvReaderException();
 		}
 	    return nfvSystem;
 	}
