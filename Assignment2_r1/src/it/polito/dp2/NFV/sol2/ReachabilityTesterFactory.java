@@ -11,14 +11,17 @@ public class ReachabilityTesterFactory extends it.polito.dp2.NFV.lab2.Reachabili
         ReachabilityTester r = null;
         try {
 
-            r = new ReachabilityTesterReal();
+            r = new RealReachabilityTester();
 
-        } catch (Exception e) {
-
+        } catch ( ReachabilityTesterException e ) {
             e.printStackTrace();
-            throw new ReachabilityTesterException(e.getMessage());
-
+            throw new ReachabilityTesterException( e );
+        } catch ( Exception e ) {
+            System.err.println( "Unknown exception" );
+            e.printStackTrace();
+            throw new ReachabilityTesterException( e );
         }
+
         return r;
     }
 

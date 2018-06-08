@@ -12,6 +12,7 @@ import javax.ws.rs.WebApplicationException;
 import it.polito.dp2.NFV.FactoryConfigurationError;
 import it.polito.dp2.NFV.HostReader;
 import it.polito.dp2.NFV.LinkReader;
+import it.polito.dp2.NFV.NffgReader;
 import it.polito.dp2.NFV.NfvReader;
 import it.polito.dp2.NFV.NfvReaderException;
 import it.polito.dp2.NFV.NfvReaderFactory;
@@ -20,6 +21,7 @@ import it.polito.dp2.NFV.lab2.AlreadyLoadedException;
 import it.polito.dp2.NFV.lab2.ExtendedNodeReader;
 import it.polito.dp2.NFV.lab2.NoGraphException;
 import it.polito.dp2.NFV.lab2.ReachabilityTester;
+import it.polito.dp2.NFV.lab2.ReachabilityTesterException;
 import it.polito.dp2.NFV.lab2.ServiceException;
 import it.polito.dp2.NFV.lab2.UnknownNameException;
 
@@ -29,7 +31,7 @@ import it.polito.dp2.NFV.lab2.UnknownNameException;
  * @author    Daniel C. Rusu
  * @studentID 234428
  */
-public class ReachabilityTesterReal implements ReachabilityTester {
+public class RealReachabilityTester implements ReachabilityTester {
 
     /*
      * This timer may be used to avoid "aggressive polling" in the asynchronous
@@ -40,40 +42,37 @@ public class ReachabilityTesterReal implements ReachabilityTester {
      */
 //    private final static int    SLEEPING_TIME_MS              = 100;
 
-    private final static String PROPERTY_NAME_NAME            = "name";
+    private final NfvReader             monitor; // Access to NFV System interfaces
+    private final Neo4jSimpleWebAPI     neo4jWS; // (my) Neo4j WebService API
+    private final Neo4jSimpleXMLBuilder builder; // builds neo4J XML objects
+    private final IDsMappingService     map;     // keeps mapping with graph nodes IDs
 
-    private final static String RELATIONSHIP_FORWARDSTO_TYPE  = "ForwardsTo";
-    private final static String RELATIONSHIP_ALLOCATEDON_TYPE = "AllocatedOn";
-
-    private final static String NODE_LABEL = "Node";
-    private final static String HOST_LABEL = "Host";
-
-
-    private final NfvReader         monitor; // Access to NFV System interfaces
-    private final Neo4jSimpleWebAPI neo4jWS; // (my) Neo4j WebService API
-    private final IDsMappingService map;     // keeps mapping with graph nodes IDs
-    private final ObjectFactory     of;      // WADL/JAXB object factory
-
-    private final Set<String> loadedNFFGs;   // keeps trace of loaded NFFGs
+    private final Set<String>           loadedNFFGs;   // keeps trace of loaded NFFGs
 
 
-    protected ReachabilityTesterReal()
-            throws NfvReaderException, Exception {
+    protected RealReachabilityTester()
+            throws ReachabilityTesterException {
 
         try {
 
             NfvReaderFactory factory = NfvReaderFactory.newInstance();
 
-            monitor = factory.newNfvReader();
-            of      = new ObjectFactory();
-            neo4jWS = Neo4jSimpleWebAPI.newInstance();
+            this.monitor = factory.newNfvReader();
+            this.neo4jWS = Neo4jSimpleWebAPI.newInstance();
+            this.builder = new Neo4jSimpleXMLBuilder();
 
         } catch ( FactoryConfigurationError fce ) {
-            throw new Exception( fce.getMessage() );
+            throw new ReachabilityTesterException( fce.getException() );
+        } catch ( NfvReaderException
+                  | Neo4jSimpleWebAPIException e ) {
+            throw new ReachabilityTesterException( e );
+        } catch ( Exception e ) {
+            System.err.println( "Unknown exception" );
+            throw new ReachabilityTesterException( e );
         }
 
-        map         = new IDsMappingService();
-        loadedNFFGs = new HashSet<String>();
+        this.map         = new IDsMappingService();
+        this.loadedNFFGs = new HashSet<String>();
     }
 
 
@@ -88,17 +87,17 @@ public class ReachabilityTesterReal implements ReachabilityTester {
      *   <li> c. Save the returned graph node id
      * </ul>
      *
-     * <li> 2. new graph node from current NFFG node's hosting host
+     * <li> 1.2. new graph node from current NFFG node's hosting host
      * <ul>
      *   <li> a. Prepare an XML Node with data taken from the host hosting
      *           the current nodeI
      *   <li> b. Ask the web service to create a new graph node according to
-     *           the XML Node
+     *           the XML Node ( unless 1.2.d. )
      *   <li> c. Save the returned graph node id
      *   <li> d. If there already was a graph node for this host, simply
      *           retrieve its id
      * </ul>
-     * <li> 3. create relationship between node and host
+     * <li> 1.3. create relationship between node and host
      * <ul>
      *   <li> a. Prepare an XML Relationship with necessary data
      *   <li> b. Ask web service to create a new relationship between the
@@ -106,7 +105,7 @@ public class ReachabilityTesterReal implements ReachabilityTester {
      *   <li> c. Save the returned relationship id
      *   <li> d. Save all links found for current nodeI
      * </ul>
-     * <li> 4. for each link in the NFFG create a relationship on the web
+     * <li> 2. for each link in the NFFG create a relationship on the web
      *         service
      * <ul>
      *   <li> a. Retrieve the source graph node and the destination graph
@@ -121,13 +120,13 @@ public class ReachabilityTesterReal implements ReachabilityTester {
      */
     @Override
     public void loadGraph( String nffgName )
-            throws UnknownNameException, AlreadyLoadedException, ServiceException {
-
+            throws UnknownNameException,
+                       AlreadyLoadedException, ServiceException {
 
         if ( nffgName == null )
             throw new UnknownNameException( "loadGraph: null argument" );
 
-        if ( monitor.getNffg( nffgName ) == null )
+        if ( this.monitor.getNffg( nffgName ) == null )
             throw new UnknownNameException( "loadGraph: inexistent NFFG" );
 
         if ( isLoaded( nffgName ) )
@@ -135,80 +134,120 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 
         try {
 
-            map.newNffgLinkToRelMapping( nffgName ); // init relationsihpID mappings for this NFFG
+            /* init relationsihpID mappings for this NFFG */
+            this.map.initLinksMappingForNFFG( nffgName ); //
 
             Set<LinkReader> setOFLinkInterfaces = new HashSet<LinkReader>();
 
-            neo4jWS.newClient();
-            // 1.
-            for ( NodeReader nodeI : monitor.getNffg( nffgName ).getNodes() ) {
-                // 1.a.
-                Node nodeXMLNode       = createXMLNodeFromNodeReader( nodeI );
-                // 1.b.
-                String nodeGraphNodeID = neo4jWS.createGraphNode( nodeXMLNode );
-                neo4jWS.createNodeLabel( nodeGraphNodeID, nodeXMLNode.getLabels() );
-                // 1.c.
-                map.addNode( nodeGraphNodeID, nodeI.getName() );
+            this.neo4jWS.newClient();
+            NffgReader nffg = this.monitor.getNffg( nffgName );
 
-                // 2
+            // 1.
+            for ( NodeReader nodeI : nffg.getNodes() ) {
+
+                // 1.a.
+                Node nodeXMLNode =
+                        this.builder.createXMLNodeFromNodeReader( nodeI );
+
+                // 1.b.
+                String nodeGraphNodeID =
+                        this.neo4jWS.createGraphNode( nodeXMLNode );
+
+                this.neo4jWS.createNodeLabel(
+                        nodeGraphNodeID,
+                        nodeXMLNode.getLabels() );
+                // 1.c.
+                this.map.addNode( nodeGraphNodeID, nodeI.getName() );
+
+                // 1.2
                 HostReader hostI       = nodeI.getHost();
                 String hostGraphNodeID = null;
-                if ( map.hostNameIsPresent( hostI.getName() ) ) {
+
+                if ( this.map.hostNameIsPresent( hostI.getName() ) ) {
                     // 2.d.
-                    hostGraphNodeID  = map.getGraphNodeIDFromHostName( hostI.getName() );
+                    hostGraphNodeID  =
+                            this.map.getGraphNodeIDFromHostName( hostI.getName() );
+
                 } else {
                     // 2.a.
-                    Node hostXMLNode = createXMLNodeFromHostReader( hostI );
+                    Node hostXMLNode =
+                            this.builder.createXMLNodeFromHostReader( hostI );
+
                     // 2.b.
-                    hostGraphNodeID  = neo4jWS.createGraphNode( hostXMLNode );
-                    neo4jWS.createNodeLabel( hostGraphNodeID, hostXMLNode.getLabels() );
+                    hostGraphNodeID  =
+                            this.neo4jWS.createGraphNode( hostXMLNode );
+
+                    this.neo4jWS.createNodeLabel(
+                            hostGraphNodeID,
+                            hostXMLNode.getLabels() );
+
                     // 2.c.
-                    map.addHost( hostGraphNodeID, hostI.getName() );
+                    this.map.addHost( hostGraphNodeID, hostI.getName() );
                 }
 
-                // 3. / 3.a.
+                // 1.3. / 1.3.a.
                 Relationship allocatedOnRelationship =
-                        createXMLAllocatedOnRel( nodeGraphNodeID, hostGraphNodeID );
-                // 3.b.
+                        this.builder.createXMLAllocatedOnRel(
+                                nodeGraphNodeID,
+                                hostGraphNodeID );
+                // 1.3.b.
                 String allocatedOnRelationshipID =
-                        neo4jWS.createNodeRelationship( nodeGraphNodeID, allocatedOnRelationship );
-                // 3.c.
-                map.addLink( nffgName,
-                             new String( nodeI.getName() + "-" + hostI.getName() ), /* relationship local name "nodeName-hostName" */
-                             allocatedOnRelationshipID );
-                // 3.d.
+                        this.neo4jWS.createNodeRelationship(
+                                nodeGraphNodeID,
+                                allocatedOnRelationship );
+                // 1.3.c.
+                this.map.addLink(
+                        nffgName,
+                        new String( nodeI.getName() + "TO" + hostI.getName() ), /* "nodeNameTOhostName" */
+                        allocatedOnRelationshipID );
+
+                // 1.3.d.
                 setOFLinkInterfaces.addAll( nodeI.getLinks() );
             }
 
-            // 4.
+            // 2.
             for ( LinkReader linkI : setOFLinkInterfaces ) {
+
                 // 4.a.
                 String srcNodeName    = linkI.getSourceNode().getName();
                 String dstNodeName    = linkI.getDestinationNode().getName();
-                String srcGraphNodeID = map.getGraphNodeIDFromNodeName( srcNodeName );
-                String dstGraphNodeID = map.getGraphNodeIDFromNodeName( dstNodeName );
-                // 4.b.
+                String srcGraphNodeID = this.map.getGraphNodeIDFromNodeName( srcNodeName );
+                String dstGraphNodeID = this.map.getGraphNodeIDFromNodeName( dstNodeName );
+
+                // 2.b.
                 Relationship forwardsToRelationship =
-                        createXMLForwardToRel( srcGraphNodeID, dstGraphNodeID );
-                // 4.c.
+                        this.builder.createXMLForwardToRel(
+                                srcGraphNodeID,
+                                dstGraphNodeID );
+                // 2.c.
                 String forwardsToRelationshipID =
-                        neo4jWS.createNodeRelationship( srcGraphNodeID, forwardsToRelationship);
-                // 4.d.
-                map.addLink( nffgName, linkI.getName(), forwardsToRelationshipID );
+                        this.neo4jWS.createNodeRelationship(
+                                srcGraphNodeID,
+                                forwardsToRelationship);
+                // 2.d.
+                this.map.addLink(
+                        nffgName,
+                        linkI.getName(),
+                        forwardsToRelationshipID );
             }
 
-            neo4jWS.closeClient();
+        } catch ( Neo4jSimpleWebAPIException
+                  | WebApplicationException
+                  | ProcessingException
+                  | NullPointerException e ) {
 
-        } catch ( WebApplicationException | ProcessingException e ) {
-            neo4jWS.closeClient();
             throw new ServiceException( e.getMessage() );
+
         } catch ( Exception e ) {
-            neo4jWS.closeClient();
+            System.err.println( "Unknown exception" );
             throw new ServiceException( e.getMessage() );
+
+        } finally {
+            this.neo4jWS.closeClient();
         }
 
         // remember loaded NFFGs
-        loadedNFFGs.add( nffgName );
+        this.loadedNFFGs.add( nffgName );
     }
 
 
@@ -231,7 +270,7 @@ public class ReachabilityTesterReal implements ReachabilityTester {
         if ( nffgName == null )
             throw new UnknownNameException( "getExtendedNodes: null argument" );
 
-        if ( monitor.getNffg( nffgName ) == null )
+        if ( this.monitor.getNffg( nffgName ) == null )
             throw new UnknownNameException( "getExtendedNodes: inexistent NFFG" );
 
         if ( !( isLoaded( nffgName ) ) )
@@ -241,32 +280,26 @@ public class ReachabilityTesterReal implements ReachabilityTester {
         ConcurrentMap<NodeReader, Future<Nodes>> mapOfFutureNodes =
                 new ConcurrentHashMap<NodeReader, Future<Nodes>>();
 
-        neo4jWS.newClient();
+        this.neo4jWS.newClient();
 
         try {
             // for each node, ask for reachable hosts to the web service
-            for ( NodeReader nodeI : monitor.getNffg( nffgName ).getNodes() ) {
+            for ( NodeReader nodeI : this.monitor.getNffg( nffgName ).getNodes() ) {
 
                 Future<Nodes> futureNodes =
-                        neo4jWS.asyncGetReacheableNodesFromNode(
-                                    map.getGraphNodeIDFromNodeName( nodeI.getName() ) /* graph node ID */,
+                        this.neo4jWS.asyncGetReacheableNodesFromNode(
+                                    this.map.getGraphNodeIDFromNodeName( nodeI.getName() ) /* graph node ID */,
                                     new HashSet<String>() /* types */,
-                                    HOST_LABEL );
+                                    Neo4jSimpleXMLBuilder.LABEL_HOST );
 
                 mapOfFutureNodes.put( nodeI, futureNodes );
             }
 
-        } catch ( Exception e ) {
-            neo4jWS.closeClient();
-            throw new ServiceException( e.getMessage() );
-        }
+            Set<ExtendedNodeReader> result = new HashSet<ExtendedNodeReader>();
 
-
-        Set<ExtendedNodeReader> result = new HashSet<ExtendedNodeReader>();
-        // get ready results for every node
-        try {
-
+            // get ready results for every node
             while ( !( mapOfFutureNodes.isEmpty() ) ) {
+
                 for ( NodeReader nodeI : mapOfFutureNodes.keySet() ) {
 
                     Future<Nodes> futureNodes = mapOfFutureNodes.get( nodeI );
@@ -274,7 +307,7 @@ public class ReachabilityTesterReal implements ReachabilityTester {
                     if ( futureNodes.isCancelled() )
                         throw new ServiceException( "getExtendedNodes: request was cancelled" );
 
-                    if ( !( futureNodes.isDone() ) ) {
+                    if ( !(futureNodes.isDone()) ) {
                         continue; // this node is not yet completed
                     }
 
@@ -285,17 +318,19 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 
                         boolean propertyFound = false;
                         for ( Property property : xmlNode.getProperties().getProperty() )
-                            if ( property.getName().compareTo( PROPERTY_NAME_NAME ) == 0 ) {
-                                setOfHostReaders.add( monitor.getHost( property.getValue() ) );
+                            if ( property.getName().compareTo( Neo4jSimpleXMLBuilder.PROPERTY_NAME ) == 0 ) {
+
+                                setOfHostReaders.add( this.monitor.getHost( property.getValue() ) );
                                 propertyFound = true;
                                 break;
+
                             }
 
                         if ( !propertyFound )
                             throw new ServiceException( "getExtendedNodes: \"name\" property not found" );
                     }
 
-                    result.add( new ExtendedNodeReaderReal( nodeI, setOfHostReaders ) );
+                    result.add( new RealExtendedNode( nodeI, setOfHostReaders ) );
                     mapOfFutureNodes.remove( nodeI );
                 }
                 /*
@@ -306,13 +341,13 @@ public class ReachabilityTesterReal implements ReachabilityTester {
 //                } catch (InterruptedException e ) {}
             }
 
-        } catch ( Exception e ) {
-            neo4jWS.closeClient();
-            throw new ServiceException( e.getMessage() );
-        }
+            return result;
 
-        neo4jWS.closeClient();
-        return result;
+        } catch ( Exception e ) {
+            throw new ServiceException( e.getMessage() );
+        } finally {
+            this.neo4jWS.closeClient();
+        }
     }
 
 
@@ -395,90 +430,13 @@ public class ReachabilityTesterReal implements ReachabilityTester {
         if ( nffgName == null )
             throw new UnknownNameException( "isLoaded: null argument" );
 
-        if ( monitor.getNffg( nffgName ) == null )
+        if ( this.monitor.getNffg( nffgName ) == null )
             throw new UnknownNameException( "isLoaded: inexistent NFFG" );
 
-        if ( loadedNFFGs.contains( nffgName ) )
+        if ( this.loadedNFFGs.contains( nffgName ) )
             return true;
 
         return false;
-    }
-
-
-
-    private Node createXMLNodeFromNodeReader( NodeReader nodeInterface )
-            throws NullPointerException, Exception {
-
-        if ( nodeInterface == null )
-            throw new NullPointerException( "createXMLNodeFromNodeReader: null argument" );
-
-        Property nodeProperty = of.createProperty();
-        nodeProperty.setName( PROPERTY_NAME_NAME );
-        nodeProperty.setValue( nodeInterface.getName() );
-
-        Properties nodeProperties = of.createProperties();
-        nodeProperties.getProperty().add( nodeProperty );
-
-        Labels nodeLabels = of.createLabels();
-        nodeLabels.getLabel().add( NODE_LABEL );
-
-        Node xmlNode = of.createNode();
-        xmlNode.setProperties( nodeProperties );
-        xmlNode.setLabels( nodeLabels );
-
-        return xmlNode;
-    }
-
-
-    private Node createXMLNodeFromHostReader( HostReader hostInterface )
-            throws NullPointerException, Exception {
-
-        if ( hostInterface == null )
-            throw new NullPointerException( "createXMLNodeFromHostReader: null argument" );
-
-        Property hostProperty = of.createProperty();
-        hostProperty.setName( PROPERTY_NAME_NAME );
-        hostProperty.setValue( hostInterface.getName() );
-
-        Properties hostProperties = of.createProperties();
-        hostProperties.getProperty().add( hostProperty );
-
-        Labels hostLabels = of.createLabels();
-        hostLabels.getLabel().add( HOST_LABEL );
-
-        Node xmlNode = of.createNode();
-        xmlNode.setProperties( hostProperties );
-        xmlNode.setLabels( hostLabels );
-
-        return xmlNode;
-    }
-
-    private Relationship createXMLAllocatedOnRel( String nodeGraphNodeID, String hostGraphNodeID )
-            throws NullPointerException {
-
-        if ( ( nodeGraphNodeID == null ) || ( hostGraphNodeID == null ) )
-            throw new NullPointerException( "createXMLAllocatedOnRel: null argument" );
-
-        Relationship relationship = of.createRelationship();
-        relationship.setSrcNode( nodeGraphNodeID );
-        relationship.setDstNode( hostGraphNodeID );
-        relationship.setType( RELATIONSHIP_ALLOCATEDON_TYPE );
-
-        return relationship;
-    }
-
-    private Relationship createXMLForwardToRel( String srcGraphNodeID, String dstGraphNodeID )
-            throws NullPointerException {
-
-        if ( ( srcGraphNodeID == null ) || ( dstGraphNodeID == null ) )
-            throw new NullPointerException( "createXMLForwardToRel: null argument" );
-
-        Relationship relationship = of.createRelationship();
-        relationship.setSrcNode( srcGraphNodeID );
-        relationship.setDstNode( dstGraphNodeID );
-        relationship.setType( RELATIONSHIP_FORWARDSTO_TYPE );
-
-        return relationship;
     }
 
 }

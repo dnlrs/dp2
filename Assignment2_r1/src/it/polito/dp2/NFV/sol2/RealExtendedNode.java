@@ -14,16 +14,19 @@ import it.polito.dp2.NFV.lab2.ServiceException;
 
 /**
  * An implementation of the {@link ExtendedNodeReader} interface.
+ * <p>
+ * This is a simplified implementation using the interfaces
+ * provided by the NVF System. 
  *
  * @author    Daniel C. Rusu
  * @studentID 234428
  */
-public class ExtendedNodeReaderReal implements ExtendedNodeReader {
+public class RealExtendedNode implements ExtendedNodeReader {
 
-    private Set<HostReader> reachableHosts;
-    private NodeReader      node;
+    private final Set<HostReader> reachableHosts;
+    private final NodeReader      node;
 
-    public ExtendedNodeReaderReal( NodeReader node, Set<HostReader> reachableHosts ) {
+    public RealExtendedNode( NodeReader node, Set<HostReader> reachableHosts ) {
 
         this.node = node;
         this.reachableHosts = new HashSet<HostReader>( reachableHosts );
@@ -32,32 +35,32 @@ public class ExtendedNodeReaderReal implements ExtendedNodeReader {
     @Override
     public Set<HostReader> getReachableHosts()
             throws NoGraphException, ServiceException {
-        return reachableHosts;
+        return this.reachableHosts;
     }
 
     @Override
     public VNFTypeReader getFuncType() {
-        return node.getFuncType();
+        return this.node.getFuncType();
     }
 
     @Override
     public HostReader getHost() {
-        return node.getHost();
+        return this.node.getHost();
     }
 
     @Override
     public Set<LinkReader> getLinks() {
-        return node.getLinks();
+        return this.node.getLinks();
     }
 
     @Override
     public NffgReader getNffg() {
-        return node.getNffg();
+        return this.node.getNffg();
     }
 
     @Override
     public String getName() {
-        return node.getName();
+        return this.node.getName();
     }
 
 }

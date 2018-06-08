@@ -29,17 +29,20 @@ public class IDsMappingService {
     private final HashMap<String, HashMap<String, String>> relIDToLinkName;
     private final HashMap<String, HashMap<String, String>> linkNameToRelID;
 
+    private final Object lockNodes = new Object();
+    private final Object lockHosts = new Object();
+    private final Object lockLinks = new Object();
 
     protected IDsMappingService() {
 
-        graphNodeIDToNodeName = new HashMap<String, String>();
-        nodeNameToGraphNodeID = new HashMap<String, String>();
+        this.graphNodeIDToNodeName = new HashMap<String, String>();
+        this.nodeNameToGraphNodeID = new HashMap<String, String>();
 
-        graphNodeIDToHostName = new HashMap<String, String>();
-        hostNameToGraphNodeID = new HashMap<String, String>();
+        this.graphNodeIDToHostName = new HashMap<String, String>();
+        this.hostNameToGraphNodeID = new HashMap<String, String>();
 
-        relIDToLinkName = new HashMap<String, HashMap<String, String>>();
-        linkNameToRelID = new HashMap<String, HashMap<String, String>>();
+        this.relIDToLinkName = new HashMap<String, HashMap<String, String>>();
+        this.linkNameToRelID = new HashMap<String, HashMap<String, String>>();
     }
 
 
@@ -54,21 +57,27 @@ public class IDsMappingService {
         if ( ( graphNodeID == null ) || ( nodeName == null ) )
             throw new NullPointerException( "addNode: null argument" );
 
-        graphNodeIDToNodeName.put( graphNodeID, nodeName );
-        nodeNameToGraphNodeID.put( nodeName, graphNodeID );
+        synchronized ( this.lockNodes ) {
+            this.graphNodeIDToNodeName.put( graphNodeID, nodeName );
+            this.nodeNameToGraphNodeID.put( nodeName, graphNodeID );
+        }
     }
 
     protected String getNodeNamefromGraphNodeID( String graphNodeID )
             throws NullPointerException {
 
         if ( graphNodeID == null )
-            throw new NullPointerException( "getNodeNamefromGraphNodeID: null argument" );
+            throw new NullPointerException(
+                    "getNodeNamefromGraphNodeID: null argument" );
 
-        String result = graphNodeIDToNodeName.get( graphNodeID );
-        if ( result == null )
-            throw new NullPointerException( "getNodeNamefromGraphNodeID: graphNodeID not found" );
+        synchronized ( this.lockNodes ) {
+            String result = this.graphNodeIDToNodeName.get( graphNodeID );
+            if ( result == null )
+                throw new NullPointerException(
+                        "getNodeNamefromGraphNodeID: graphNodeID not found" );
 
-        return result;
+            return new String( result );
+        }
     }
 
 
@@ -76,13 +85,29 @@ public class IDsMappingService {
             throws NullPointerException {
 
         if ( nodeName == null )
-            throw new NullPointerException( "getGraphNodeIDFromNodeName: null argument" );
+            throw new NullPointerException(
+                    "getGraphNodeIDFromNodeName: null argument" );
 
-        String result = nodeNameToGraphNodeID.get( nodeName );
-        if ( result == null )
-            throw new NullPointerException( "getGraphNodeIDFromNodeName: nodeName not found" );
+        synchronized ( this.lockNodes ) {
+            String result = this.nodeNameToGraphNodeID.get( nodeName );
+            if ( result == null )
+                throw new NullPointerException(
+                        "getGraphNodeIDFromNodeName: nodeName not found" );
 
-        return result;
+            return new String( result );
+        }
+    }
+
+    protected boolean nodeNameIsPresent( String nodeName ) {
+
+        if ( nodeName == null )
+            throw new NullPointerException( "nodeNameIsPresent: null agument" );
+
+        synchronized ( this.lockNodes ) {
+            return this.nodeNameToGraphNodeID.containsKey( nodeName );
+        }
+
+
     }
 
 
@@ -97,8 +122,10 @@ public class IDsMappingService {
         if ( ( graphNodeID == null ) || ( hostName == null ) )
             throw new NullPointerException( "addHost: null argument" );
 
-        graphNodeIDToHostName.put( graphNodeID, hostName );
-        hostNameToGraphNodeID.put( hostName, graphNodeID );
+        synchronized ( this.lockHosts ) {
+            this.graphNodeIDToHostName.put( graphNodeID, hostName );
+            this.hostNameToGraphNodeID.put( hostName, graphNodeID );
+        }
     }
 
 
@@ -106,13 +133,17 @@ public class IDsMappingService {
             throws NullPointerException {
 
         if ( graphNodeID == null )
-            throw new NullPointerException( "getHostNameFromGraphNodeID: null argument" );
+            throw new NullPointerException(
+                    "getHostNameFromGraphNodeID: null argument" );
 
-        String result = graphNodeIDToHostName.get( graphNodeID );
-        if ( result == null )
-            throw new NullPointerException( "getHostNameFromGraphNodeID: graphNodeID not found" );
+        synchronized ( this.lockHosts ) {
+            String result = this.graphNodeIDToHostName.get( graphNodeID );
+            if ( result == null )
+                throw new NullPointerException(
+                        "getHostNameFromGraphNodeID: graphNodeID not found" );
 
-        return result;
+            return new String( result );
+        }
 
     }
 
@@ -121,13 +152,17 @@ public class IDsMappingService {
             throws NullPointerException {
 
         if ( hostName == null )
-            throw new NullPointerException( "getGraphNodeIDFromHostName: null argument" );
+            throw new NullPointerException(
+                    "getGraphNodeIDFromHostName: null argument" );
 
-        String result = hostNameToGraphNodeID.get( hostName );
-        if ( result == null )
-            throw new NullPointerException( "getGraphNodeIDFromHostName: hostName not found" );
+        synchronized ( this.lockHosts ) {
+            String result = this.hostNameToGraphNodeID.get( hostName );
+            if ( result == null )
+                throw new NullPointerException(
+                        "getGraphNodeIDFromHostName: hostName not found" );
 
-        return result;
+            return new String( result );
+        }
     }
 
 
@@ -137,7 +172,9 @@ public class IDsMappingService {
         if ( hostName == null )
             throw new NullPointerException( "hostNameIsPresent: null agument" );
 
-        return hostNameToGraphNodeID.containsKey( hostName );
+        synchronized ( this.lockHosts ) {
+            return this.hostNameToGraphNodeID.containsKey( hostName );
+        }
     }
 
 
@@ -147,47 +184,68 @@ public class IDsMappingService {
     // LINKS
     // ======================================================================
 
-    protected void newNffgLinkToRelMapping( String nffgName )
+    protected void initLinksMappingForNFFG( String nffgName )
             throws NullPointerException {
 
         if ( nffgName == null )
-            throw new NullPointerException( "newNffgLinkToRelMapping: null argument" );
+            throw new NullPointerException(
+                    "newNffgLinkToRelMapping: null argument" );
 
-        relIDToLinkName.put( nffgName, new HashMap<String, String>() );
-        linkNameToRelID.put( nffgName, new HashMap<String, String>() );
+        synchronized ( this.lockLinks ) {
+            this.relIDToLinkName.put( nffgName, new HashMap<String, String>() );
+            this.linkNameToRelID.put( nffgName, new HashMap<String, String>() );
+        }
     }
 
 
-    protected void addLink( String nffgName, String linkName, String relationshipID )
+    protected void addLink(
+            String nffgName,
+            String linkName,
+            String relationshipID )
             throws NullPointerException {
 
-        if ( ( nffgName == null ) | ( linkName == null ) || ( relationshipID == null ) )
+        if ( ( nffgName == null ) ||
+                ( linkName == null ) ||
+                ( relationshipID == null ) )
             throw new NullPointerException( "addLink: null argument" );
 
-        if ( ( relIDToLinkName.get( nffgName ) == null ) ||
-                ( linkNameToRelID.get( nffgName ) == null ) )
-            throw new NullPointerException( "addLink: mapping for nffgName not found" );
+        synchronized ( this.lockLinks ) {
 
-        relIDToLinkName.get( nffgName ).put( relationshipID, linkName );
-        linkNameToRelID.get( nffgName ).put( linkName, relationshipID );
+            if ( ( this.relIDToLinkName.get( nffgName ) == null ) ||
+                    ( this.linkNameToRelID.get( nffgName ) == null ) )
+                throw new NullPointerException(
+                        "addLink: mapping for nffgName not found" );
+
+            (this.relIDToLinkName.get( nffgName )).put( relationshipID, linkName );
+            (this.linkNameToRelID.get( nffgName )).put( linkName, relationshipID );
+
+        }
     }
 
 
-    protected String getLinkNameFromRelID( String nffgName, String relationshipID )
-            throws NullPointerException {
+    protected String getLinkNameFromRelID(
+            String nffgName,
+            String relationshipID )
+                    throws NullPointerException {
 
         if ( ( nffgName == null ) || ( relationshipID == null ) )
-            throw new NullPointerException( "getLinkNameFromRelID: null argument" );
+            throw new NullPointerException(
+                    "getLinkNameFromRelID: null argument" );
 
-        if ( relIDToLinkName.get( nffgName ) == null )
-            throw new NullPointerException( "getLinkNameFromRelID: mapping for nffgName not found" );
+        synchronized ( this.lockLinks ) {
 
-        String result = relIDToLinkName.get( nffgName ).get( relationshipID );
-        if ( result == null )
-            throw new NullPointerException( "getLinkNameFromRelID: relationshipID not found in nffgName mapping" );
+            if ( this.relIDToLinkName.get( nffgName ) == null )
+                throw new NullPointerException(
+                        "getLinkNameFromRelID: mapping for nffgName not found" );
 
-        return result;
+            String result = (this.relIDToLinkName.get( nffgName )).get( relationshipID );
+            if ( result == null )
+                throw new NullPointerException(
+                        "getLinkNameFromRelID: relationshipID not found" );
 
+            return new String( result );
+
+        }
     }
 
 
@@ -195,12 +253,22 @@ public class IDsMappingService {
             throws NullPointerException {
 
         if ( ( nffgName == null ) || ( linkName == null ) )
-            throw new NullPointerException( "getRelIDFromLinkName: null argument" );
+            throw new NullPointerException(
+                    "getRelIDFromLinkName: null argument" );
 
-        String result = linkNameToRelID.get( nffgName ).get( linkName );
-        if ( result == null )
-            throw new NullPointerException( "getRelIDFromLinkName: linkName not found in nffgName mapping" );
+        synchronized ( this.lockLinks ) {
 
-        return result;
+            if ( this.linkNameToRelID.get( nffgName ) == null )
+                throw new NullPointerException(
+                        "getRelIDFromLinkName: mapping for nffgName not found" );
+
+            String result = this.linkNameToRelID.get( nffgName ).get( linkName );
+            if ( result == null )
+                throw new NullPointerException(
+                        "getRelIDFromLinkName: linkName not found" );
+
+            return new String( result );
+
+        }
     }
 }
