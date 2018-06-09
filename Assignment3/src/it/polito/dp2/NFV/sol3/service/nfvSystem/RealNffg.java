@@ -17,11 +17,10 @@ import it.polito.dp2.NFV.NodeReader;
  */
 public class RealNffg extends RealNamedEntity implements NffgReader {
 
-    private GregorianCalendar deployTime;
+    private final GregorianCalendar             deployTime;
+    private final CopyOnWriteArraySet<RealNode> nodes;
 
-    private CopyOnWriteArraySet<RealNode> nodes;
-
-
+    private final Object lockNodes = new Object();
 
     // constructors
 
@@ -29,8 +28,28 @@ public class RealNffg extends RealNamedEntity implements NffgReader {
             throws NullPointerException, IllegalArgumentException {
 
         super( name );
-        this.setDeployTime( deployTime );
-        this.setNodes( nodes );
+
+        /*
+         * Checks
+         */
+        if ( deployTime == null )
+            throw new IllegalArgumentException( "new NFFG: null argument" );
+
+        if ( nodes.contains( null ) )
+            throw new NullPointerException(
+                    "new NFFG: trying to add null nodes" );
+
+        /*
+         * Set deploy time
+         */
+        this.deployTime = new GregorianCalendar();
+        this.deployTime.setTime( deployTime.getTime() );
+        this.deployTime.setTimeZone( deployTime.getTimeZone() );
+
+        /*
+         * Set nodes
+         */
+        this.nodes = new CopyOnWriteArraySet<RealNode>( nodes );
     }
 
 
@@ -39,14 +58,14 @@ public class RealNffg extends RealNamedEntity implements NffgReader {
 
     @Override
     public Calendar getDeployTime() {
-        synchronized ( this.deployTime ) {
-            return this.deployTime;
-        }
+        return this.deployTime;
     }
 
     @Override
-    public synchronized Set<NodeReader> getNodes() {
-        return new HashSet<NodeReader> ( this.nodes );
+    public Set<NodeReader> getNodes() {
+        synchronized ( this.lockNodes ) {
+            return new HashSet<NodeReader> ( this.nodes );
+        }
     }
 
     @Override
@@ -58,7 +77,7 @@ public class RealNffg extends RealNamedEntity implements NffgReader {
         if ( !( RealNamedEntity.nameIsValid( nodeName ) ) )
             return null;
 
-        synchronized ( this.nodes ) {
+        synchronized ( this.lockNodes ) {
             for ( NodeReader nodeI : this.nodes )
                 if ( nodeI.getName().compareTo( nodeName ) == 0 )
                     return nodeI;
@@ -68,44 +87,28 @@ public class RealNffg extends RealNamedEntity implements NffgReader {
     }
 
 
-    protected synchronized Set<RealNode> getRealNodes() {
-        return new HashSet<RealNode>( this.nodes );
+    protected Set<RealNode> getRealNodes() {
+        synchronized ( this.lockNodes ) {
+            return new HashSet<RealNode>( this.nodes );
+        }
     }
 
 
 
     // setters
-
-
-    protected synchronized void setNodes( Set<RealNode> nodes )
-            throws NullPointerException {
-        this.nodes = new CopyOnWriteArraySet<RealNode>( nodes );
-    }
-
     protected void addNode( RealNode node )
             throws NullPointerException {
 
         if ( node == null )
             throw new NullPointerException( "addNode: null argument" );
 
-        synchronized (this.nodes) {
+        synchronized ( this.lockNodes ) {
+
+            for ( RealNode n : this.nodes )
+                if ( n.getName().compareTo( node.getName() ) == 0 )
+                    throw new NullPointerException( "addNode: duplicate node" );
+
             this.nodes.add( node );
         }
-
     }
-
-
-    protected void setDeployTime( Calendar deployTime )
-            throws IllegalArgumentException {
-
-        if ( deployTime == null )
-            throw new IllegalArgumentException( "setDeploytime: null argument" );
-        synchronized ( this.deployTime ) {
-            this.deployTime = new GregorianCalendar();
-            this.deployTime.setTime( deployTime.getTime() );
-            this.deployTime.setTimeZone( deployTime.getTimeZone() );
-        }
-    }
-
-
 }

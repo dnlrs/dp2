@@ -2,8 +2,6 @@ package it.polito.dp2.NFV.sol3.service.nfvSystem;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.lang3.EnumUtils;
-
 import it.polito.dp2.NFV.FunctionalType;
 import it.polito.dp2.NFV.VNFTypeReader;
 
@@ -16,13 +14,11 @@ import it.polito.dp2.NFV.VNFTypeReader;
 public class RealVNFType extends RealNamedEntity implements VNFTypeReader {
 
 
-    private FunctionalType functionalType;
-    private AtomicInteger requiredMemory;
-    private AtomicInteger requiredStorage;
-
+    private final FunctionalType functionalType;
+    private final AtomicInteger  requiredMemory;
+    private final AtomicInteger  requiredStorage;
 
     // constructors
-
 
     protected RealVNFType(
             String name, FunctionalType functionalType,
@@ -30,9 +26,36 @@ public class RealVNFType extends RealNamedEntity implements VNFTypeReader {
                     throws NullPointerException, IllegalArgumentException {
 
         super( name );
-        this.setFunctionalType( functionalType );
-        this.setRequiredMemory( requiredMemory );
-        this.setRequiredStorage( requiredStorage );
+
+        /*
+         * Checks
+         */
+        if ( functionalType == null )
+            throw new IllegalArgumentException(
+                    "new VNFType: null argument" );
+
+        boolean functionalTypeValid = false;
+        for ( FunctionalType type : FunctionalType.values() )
+            if ( type.value().equals(functionalType.value()) ) {
+                functionalTypeValid = true;
+                break;
+            }
+        if ( !functionalTypeValid )
+            throw new IllegalArgumentException(
+                    "new VNFType: invalid enum" );
+
+        if ( requiredMemory < 0 )
+            throw new IllegalArgumentException(
+                    "new VNFType: memory cannot be less than 0" );
+
+        if ( requiredStorage < 0 )
+            throw new IllegalArgumentException(
+                    "new VNFType: storage cannot be less than 0" );
+
+
+        this.functionalType  = functionalType;
+        this.requiredMemory  = new AtomicInteger( requiredMemory );
+        this.requiredStorage = new AtomicInteger( requiredStorage );
     }
 
 
@@ -43,9 +66,7 @@ public class RealVNFType extends RealNamedEntity implements VNFTypeReader {
 
     @Override
     public FunctionalType getFunctionalType() {
-        synchronized ( this.functionalType ) {
-            return this.functionalType;
-        }
+        return this.functionalType;
     }
 
     @Override
@@ -57,45 +78,4 @@ public class RealVNFType extends RealNamedEntity implements VNFTypeReader {
     public int getRequiredStorage() {
         return this.requiredStorage.intValue();
     }
-
-
-    // setters
-
-
-    protected void setFunctionalType( FunctionalType functionalType )
-            throws IllegalArgumentException {
-
-        if ( functionalType == null )
-            throw new IllegalArgumentException( "setFunctionalType: null argument" );
-
-        if ( !( EnumUtils.isValidEnum(FunctionalType.class, functionalType.value()) ) )
-            throw new IllegalArgumentException( "setFunctionalType: invalid enum" );
-
-        synchronized ( this.functionalType ) {
-            this.functionalType = functionalType;
-        }
-    }
-
-
-
-    protected void setRequiredMemory( int requiredMemory )
-            throws IllegalArgumentException {
-
-        if ( requiredMemory < 0 )
-            throw new IllegalArgumentException( "setRequiredMemory: memory cannot be less than 0" );
-
-        this.requiredMemory = new AtomicInteger( requiredMemory );
-    }
-
-
-
-    protected void setRequiredStorage(Integer requiredStorage)
-            throws IllegalArgumentException {
-
-        if ( requiredStorage < 0 )
-            throw new IllegalArgumentException( "setRequiredStorage: storage cannot be less than 0" );
-
-        this.requiredStorage = new AtomicInteger( requiredStorage );
-    }
-
 }
