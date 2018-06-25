@@ -1,0 +1,962 @@
+<h1>NfvDeployer REST API Documentation</h1>
+
+<h2>Resources</h2>
+
+<p>Resource                                | XML representation    | Meaning
+--------------------------------------- | --------------------- | -------------------------------------------------
+services                                | services              | the set of all collections accessible through this API
+hosts                                   | nfvHosts              | the set of all Hosts in the NFV System
+hosts > {hostName}                      | nfvHost               | a single Host
+hosts > {hostName} > nodes              | nfvNodes              | the set of Nodes allocated on this Host
+connections                             | nfvLinks              | the set of all Connections in the NFV System
+vnfs                                    | nfvVNFs               | the set of all VNFs in the NFV System
+vnfs > {vnfName}                        | nfvVNF                | a single VNF <br />
+nffgs                                   | nfvNFFGs              | the set of all NFFGs in the NFV System <br />
+nffgs > {nffgName}                      | nfvNFFG               | a single NFFG <br />
+nffgs > {nffgName} > nodes              | nfvNodes              | the set of all Nodes in this NFFG <br />
+nffgs > {nffgName} > links              | nfvLinks              | the set of all Links in this NFFG <br />
+nffgs > {nffgName} > links > {linkName} | nfvLink               | a single Link in this NFFG <br />
+nodes                                   | nfvNodes              | the set of all Nodes in the NFV System <br />
+nodes > {nodeName}                      | nfvNode               | a single Node <br />
+nodes > {nodeName} > reachableHosts     | nfvHosts              | the set of all reachable Hosts from this Node <br />
+nodes > {nodeName} > links              | nfvLinks              | the set of all links with this Node as the source</p>
+
+<p>Resource                                | URL
+----------------------------------------|------------------------------
+services                                | /services
+hosts                                   | /hosts <br />
+hosts > {hostName}                      | /hosts/{hostName}
+hosts > {hostName} > nodes              | /hosts/{hostName}/nodes
+connections                             | /connections <br />
+vnfs                                    | /vnfs
+vnfs > {vnfName}                        | /vnfs/{vnfName}
+nffgs                                   | /nffgs <br />
+nffgs > {nffgName}                      | /nffgs/{nffgName} <br />
+nffgs > {nffgName} > nodes              | /nffgs/{nffgName}/nodes
+nffgs > {nffgName} > links              | /nffgs/{nffgName}/links <br />
+nffgs > {nffgName} > links > {linkName} | /nffgs/{nffgName}/links/{linkName}
+nodes                                   | /nodes <br />
+nodes > {nodeName}                      | /nodes/{nodeName} <br />
+nodes > {nodeName} > reachableHosts     | /nodes/{nodeName}/reachableHosts
+nodes > {nodeName} > links              | /nodes/{nodeName}/links</p>
+
+<h2>Operations</h2>
+
+<h3>Operations on Hosts</h3>
+
+<h4>Get all Hosts in the NFV System</h4>
+
+<p><code>HTTP
+GET .../hosts[?page=??&amp;itemsPerPage=??]
+</code></p>
+
+<h6>Content Type</h6>
+
+<ul>
+<li>application/xml</li>
+</ul>
+
+<h6>Query options</h6>
+
+<p>Name          | Value Type  | Use      | Default
+--------------|-------------|----------|----------
+page          | int         | optional | 0 (all pages)
+itemsPerPage  | int         | optional | 20</p>
+
+<h6>Responses</h6>
+
+<p>Code          | Status          | Body
+--------------|-----------------|------------
+200           | OK              | nfvHosts
+204           | No Content      |
+500           | Server Error    |</p>
+
+<h6>Example Request</h6>
+
+<p><code>HTTP
+GET http://localhost:8080/NfvDeployer/rest/hosts/hosts
+</code></p>
+
+<h6>Example Response</h6>
+
+<p><em>200</em> OK</p>
+
+<p><code>XML
+&lt;nfvHosts xmlns="http://www.example.org/NfvDeployer"&gt;
+ &lt;nfvHost&gt;
+  &lt;name&gt;H0&lt;/name&gt;
+  &lt;maxVNFs&gt;7&lt;/maxVNFs&gt;
+  &lt;hostedNodes&gt;NATc0Nffg0&lt;/hostedNodes&gt;
+  &lt;hostedNodes&gt;WEBCLIENTt0Nffg0&lt;/hostedNodes&gt;
+  &lt;installedMemory&gt;7900&lt;/installedMemory&gt;
+  &lt;installedStorage&gt;15000&lt;/installedStorage&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/hosts/H0"/&gt;
+  &lt;hostedNodesLink href="http://localhost:8080/NfvDeployer/rest/hosts/H0/nodes"/&gt;
+ &lt;/nfvHost&gt;
+ &lt;nfvHost&gt;
+  &lt;name&gt;H1&lt;/name&gt;
+  &lt;maxVNFs&gt;12&lt;/maxVNFs&gt;
+  &lt;hostedNodes&gt;VPNd1Nffg0&lt;/hostedNodes&gt;
+  &lt;hostedNodes&gt;WEBCLIENTt1Nffg0&lt;/hostedNodes&gt;
+  &lt;installedMemory&gt;3500&lt;/installedMemory&gt;
+  &lt;installedStorage&gt;86000&lt;/installedStorage&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/hosts/H1"/&gt;
+  &lt;hostedNodesLink href="http://localhost:8080/NfvDeployer/rest/hosts/H1/nodes"/&gt;
+ &lt;/nfvHost&gt;
+&lt;/nfvHosts&gt;
+</code></p>
+
+<h4>Get a specific Host</h4>
+
+<p><code>HTTP
+GET .../hosts/{hostName}
+</code></p>
+
+<h6>Content Type</h6>
+
+<ul>
+<li>application/xml</li>
+</ul>
+
+<h6>Responses</h6>
+
+<p>Code          | Status          | Body
+--------------|-----------------|------------
+200           | OK              | nfvHost
+400           | Bad Request     | 
+404           | Not Found       |
+500           | Server Error    |</p>
+
+<h6>Example Request</h6>
+
+<p><code>HTTP
+GET http://localhost:8080/NfvDeployer/rest/hosts/hosts/H0
+</code></p>
+
+<h6>Example Response</h6>
+
+<p><em>200</em> OK</p>
+
+<p><code>XML
+&lt;nfvHost xmlns="http://www.example.org/NfvDeployer"&gt;
+ &lt;name&gt;H0&lt;/name&gt;
+ &lt;maxVNFs&gt;7&lt;/maxVNFs&gt;
+ &lt;hostedNodes&gt;NATc0Nffg0&lt;/hostedNodes&gt;
+ &lt;hostedNodes&gt;WEBCLIENTt0Nffg0&lt;/hostedNodes&gt;
+ &lt;installedMemory&gt;7900&lt;/installedMemory&gt;
+ &lt;installedStorage&gt;15000&lt;/installedStorage&gt;
+ &lt;self href="http://localhost:8080/NfvDeployer/rest/hosts/H0"/&gt;
+ &lt;hostedNodesLink href="http://localhost:8080/NfvDeployer/rest/hosts/H0/nodes"/&gt;
+&lt;/nfvHost&gt;
+</code></p>
+
+<h4>Get all Nodes hosted on a specific Host</h4>
+
+<p><code>HTTP
+GET .../hosts/{hostName}/nodes
+</code></p>
+
+<h6>Content Type</h6>
+
+<ul>
+<li>application/xml</li>
+</ul>
+
+<h6>Query options</h6>
+
+<p>Name          | Value Type  | Use      | Default
+--------------|-------------|----------|---------
+detailed      | int         | optional | 1 (<code>true</code>)</p>
+
+<p><em>detailed</em> may be set to <strong>0</strong> (<code>false</code>) or <strong>1</strong> (<code>true</code>)</p>
+
+<p>if <em>detailed</em> is <code>true</code> then for each Node also the Links starting from that Node
+will be reported</p>
+
+<h6>Responses</h6>
+
+<p>Code          | Status          | Body
+--------------|-----------------|------------
+200           | OK              | nfvNodes
+204           | No content      |
+400           | Bad Request     | 
+404           | Not Found       |
+500           | Server Error    |</p>
+
+<h6>Example Request</h6>
+
+<p><code>HTTP
+GET http://localhost:8080/NfvDeployer/rest/hosts/hosts/H0/nodes
+</code></p>
+
+<h6>Example Response</h6>
+
+<p><em>200</em> OK</p>
+
+<p><code>XML
+&lt;nfvNodes xmlns="http://www.example.org/NfvDeployer"&gt;
+ &lt;nfvNode&gt;
+  &lt;name&gt;NATc0Nffg0&lt;/name&gt;
+  &lt;functionalType&gt;NATc&lt;/functionalType&gt;
+  &lt;hostingHost&gt;H0&lt;/hostingHost&gt;
+  &lt;associatedNFFG&gt;Nffg0&lt;/associatedNFFG&gt;
+  &lt;nfvArc&gt;
+   &lt;name&gt;Link7&lt;/name&gt;
+   &lt;src&gt;NATc0Nffg0&lt;/src&gt;
+   &lt;dst&gt;WEBSERVERt1Nffg0&lt;/dst&gt;
+   &lt;throughput&gt;0.0&lt;/throughput&gt;
+   &lt;latency&gt;0&lt;/latency&gt;
+   &lt;self href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/links/Link7"/&gt;
+   &lt;srcLink href="http://localhost:8080/NfvDeployer/rest/nodes/NATc0Nffg0"/&gt;
+   &lt;dstLink href="http://localhost:8080/NfvDeployer/rest/nodes/WEBSERVERt1Nffg0"/&gt;
+  &lt;/nfvArc&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/nodes/NATc0Nffg0"/&gt;
+  &lt;functionalTypeLink href="http://localhost:8080/NfvDeployer/rest/vnfs/NATc"/&gt;
+  &lt;hostingHostLink href="http://localhost:8080/NfvDeployer/rest/hosts/H0"/&gt;
+  &lt;associatedNFFGLink href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0"/&gt;
+  &lt;linksLink href="http://localhost:8080/NfvDeployer/rest/nodes/NATc0Nffg0/links"/&gt;
+  &lt;reachableHostsLink href="http://localhost:8080/NfvDeployer/rest/nodes/NATc0Nffg0/reachableHosts"/&gt;
+ &lt;/nfvNode&gt;
+ &lt;nfvNode&gt;
+  &lt;name&gt;WEBCLIENTt0Nffg0&lt;/name&gt;
+  &lt;functionalType&gt;WEBCLIENTt&lt;/functionalType&gt;
+  &lt;hostingHost&gt;H0&lt;/hostingHost&gt;
+  &lt;associatedNFFG&gt;Nffg0&lt;/associatedNFFG&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/nodes/WEBCLIENTt0Nffg0"/&gt;
+  &lt;functionalTypeLink href="http://localhost:8080/NfvDeployer/rest/vnfs/WEBCLIENTt"/&gt;
+  &lt;hostingHostLink href="http://localhost:8080/NfvDeployer/rest/hosts/H0"/&gt;
+  &lt;associatedNFFGLink href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0"/&gt;
+  &lt;linksLink href="http://localhost:8080/NfvDeployer/rest/nodes/WEBCLIENTt0Nffg0/links"/&gt;
+  &lt;reachableHostsLink href="http://localhost:8080/NfvDeployer/rest/nodes/WEBCLIENTt0Nffg0/reachableHosts"/&gt;
+ &lt;/nfvNode&gt;
+&lt;/nfvNodes&gt;
+</code></p>
+
+<h3>Operations on Connections</h3>
+
+<h4>Get all Connections</h4>
+
+<p><code>HTTP
+GET .../connections[?sourceHost=??&amp;destinationHost=??]
+</code></p>
+
+<p>If <em>sourceHost</em> and <em>destinationHost</em> are specified, only the connection between these Hosts, if it exists, will be returned.</p>
+
+<p>If only <em>sourceHost</em> or <em>destinationHost</em> are specified only connections starting from <em>sourceHost</em> or arriving to <em>destinationHost</em> will be returned accordingly.</p>
+
+<p>If no query is specified, all connections in the NFV System will be returned.</p>
+
+<h6>Content Type</h6>
+
+<ul>
+<li>application/xml</li>
+</ul>
+
+<h6>Query options</h6>
+
+<p>Name            | Value Type  | Use      | Default
+----------------|-------------|----------|---------
+sourceHost      | string      | optional | null
+destinationHost | string      | optional | null</p>
+
+<h6>Responses</h6>
+
+<p>Code          | Status          | Body
+--------------|-----------------|------------
+200           | OK              | nfvArcs
+204           | No content      |
+404           | Not Found       |
+500           | Server Error    |</p>
+
+<h6>Example Request</h6>
+
+<p><code>HTTP
+GET http://localhost:8080/NfvDeployer/rest/connections
+</code></p>
+
+<h6>Example Response</h6>
+
+<p><em>200</em> OK
+<code>XML
+&lt;nfvArcs xmlns="http://www.example.org/NfvDeployer"&gt;
+ &lt;nfvArc&gt;
+  &lt;name&gt;H0TOH0&lt;/name&gt;
+  &lt;src&gt;H0&lt;/src&gt;
+  &lt;dst&gt;H0&lt;/dst&gt;
+  &lt;throughput&gt;74.88&lt;/throughput&gt;
+  &lt;latency&gt;0&lt;/latency&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/connections?sourceHost=H0&amp;amp;destinationHost=H0"/&gt;
+  &lt;srcLink href="http://localhost:8080/NfvDeployer/rest/hosts/H0"/&gt;
+  &lt;dstLink href="http://localhost:8080/NfvDeployer/rest/hosts/H0"/&gt;
+ &lt;/nfvArc&gt;
+ &lt;nfvArc&gt;
+  &lt;name&gt;H0TOH1&lt;/name&gt;
+  &lt;src&gt;H0&lt;/src&gt;
+  &lt;dst&gt;H1&lt;/dst&gt;
+  &lt;throughput&gt;16.54&lt;/throughput&gt;
+  &lt;latency&gt;44&lt;/latency&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/connections?sourceHost=H0&amp;amp;destinationHost=H1"/&gt;
+  &lt;srcLink href="http://localhost:8080/NfvDeployer/rest/hosts/H0"/&gt;
+  &lt;dstLink href="http://localhost:8080/NfvDeployer/rest/hosts/H1"/&gt;
+ &lt;/nfvArc&gt;
+&lt;/nfvArcs&gt;
+</code></p>
+
+<h3>Operations on VNFs</h3>
+
+<h4>Get all VNFs (the Catalogue)</h4>
+
+<p><code>HTTP
+GET .../vnfs
+</code></p>
+
+<h6>Content Type</h6>
+
+<ul>
+<li>application/xml</li>
+</ul>
+
+<h6>Responses</h6>
+
+<p>Code          | Status          | Body
+--------------|-----------------|------------
+200           | OK              | nfvVNFs
+204           | No content      |
+500           | Server Error    |</p>
+
+<h6>Example Request</h6>
+
+<p><code>HTTP
+GET http://localhost:8080/NfvDeployer/rest/vnfs
+</code></p>
+
+<h6>Example Response</h6>
+
+<p><em>200</em> OK
+<code>XML
+&lt;nfvVNFs xmlns="http://www.example.org/NfvDeployer"&gt;
+ &lt;nfvVNF&gt;
+  &lt;name&gt;CACHEa&lt;/name&gt;
+  &lt;functionalType&gt;CACHE&lt;/functionalType&gt;
+  &lt;requiredMemory&gt;39&lt;/requiredMemory&gt;
+  &lt;requiredStorage&gt;110&lt;/requiredStorage&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/vnfs/CACHEa"/&gt;
+ &lt;/nfvVNF&gt;
+ &lt;nfvVNF&gt;
+  &lt;name&gt;FWb&lt;/name&gt;
+  &lt;functionalType&gt;FW&lt;/functionalType&gt;
+  &lt;requiredMemory&gt;47&lt;/requiredMemory&gt;
+  &lt;requiredStorage&gt;690&lt;/requiredStorage&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/vnfs/FWb"/&gt;
+ &lt;/nfvVNF&gt;
+&lt;/nfvVNFs&gt;
+</code></p>
+
+<h4>Get a specific VNF</h4>
+
+<p><code>HTTP
+GET .../vnfs/{vnfName}
+</code></p>
+
+<h6>Content Type</h6>
+
+<ul>
+<li>application/xml</li>
+</ul>
+
+<h6>Responses</h6>
+
+<p>Code          | Status          | Body
+--------------|-----------------|------------
+200           | OK              | nfvVNF
+204           | No content      |
+500           | Server Error    |</p>
+
+<h6>Example Request</h6>
+
+<p><code>HTTP
+GET http://localhost:8080/NfvDeployer/rest/vnfs/CACHEa
+</code></p>
+
+<h6>Example Response</h6>
+
+<p><em>200</em> OK
+<code>XML
+&lt;nfvVNF xmlns="http://www.example.org/NfvDeployer"&gt;
+ &lt;name&gt;CACHEa&lt;/name&gt;
+ &lt;functionalType&gt;CACHE&lt;/functionalType&gt;
+ &lt;requiredMemory&gt;39&lt;/requiredMemory&gt;
+ &lt;requiredStorage&gt;110&lt;/requiredStorage&gt;
+ &lt;self href="http://localhost:8080/NfvDeployer/rest/vnfs/CACHEa"/&gt;
+&lt;/nfvVNF&gt;
+</code></p>
+
+<h3>Operations on NFFGs</h3>
+
+<h4>Get all NFFGs</h4>
+
+<p><code>HTTP
+GET .../nffgs[?detailed=??&amp;page=??&amp;itemsPerPage=??&amp;date=??]
+</code></p>
+
+<p>If <em>page</em> number is specified the results will be returned paginated.</p>
+
+<p>If <em>detailed</em> is <code>true</code> for each NFFG also details about allocated Nodes (and their Links) will be returned.</p>
+
+<p>if <em>date</em> is specified only NFFG deployed after specified date will be returned.  </p>
+
+<h6>Content Type</h6>
+
+<ul>
+<li>application/xml</li>
+</ul>
+
+<h6>Query options</h6>
+
+<p>Name            | Value Type  | Use      | Default
+----------------|-------------|----------|---------
+detailed        | int         | optional | 1 (<code>true</code>)
+date            | dateTime    | optional |
+page            | int         | optional | 0 (all pages) 
+itemsPerPage    | int         | optional | 20</p>
+
+<h6>Responses</h6>
+
+<p>Code          | Status          | Body
+--------------|-----------------|------------
+200           | OK              | nfvNFFGs
+204           | No content      |
+500           | Server Error    |</p>
+
+<h6>Example Request</h6>
+
+<p><code>HTML
+GET http://localhost:8080/NfvDeployer/rest/nffgs
+</code></p>
+
+<h6>Example Response</h6>
+
+<p><em>200</em> OK
+```XML
+<nfvNFFGs xmlns="http://www.example.org/NfvDeployer">
+ <nfvNFFG>
+  <name>Nffg0</name>
+  <deployTime>2016-09-28T16:11:20.000+02:00</deployTime>
+  <nfvNode>
+   <name>CACHEa4Nffg0</name>
+   <functionalType>CACHEa</functionalType>
+   <hostingHost>H8</hostingHost>
+   <associatedNFFG>Nffg0</associatedNFFG>
+   <self href="http://localhost:8080/NfvDeployer/rest/nodes/CACHEa4Nffg0"/>
+   <functionalTypeLink href="http://localhost:8080/NfvDeployer/rest/vnfs/CACHEa"/>
+   <hostingHostLink href="http://localhost:8080/NfvDeployer/rest/hosts/H8"/>
+   <associatedNFFGLink href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0"/>
+   <linksLink href="http://localhost:8080/NfvDeployer/rest/nodes/CACHEa4Nffg0/links"/>
+   <reachableHostsLink href="http://localhost:8080/NfvDeployer/rest/nodes/CACHEa4Nffg0/reachableHosts"/>
+  </nfvNode>
+  <self href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0"/>
+  <allocatedNodesLink href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/nodes"/>
+ </nfvNFFG>
+ <nfvNFFG>
+  <name>Nffg1</name>
+  <deployTime>2016-10-28T16:08:20.000+02:00</deployTime>
+  <nfvNode>
+   <name>CACHEa4Nffg1</name>
+   <functionalType>CACHEa</functionalType>
+   <hostingHost>H8</hostingHost>
+   <associatedNFFG>Nffg1</associatedNFFG>
+   <self href="http://localhost:8080/NfvDeployer/rest/nodes/CACHEa4Nffg1"/>
+   <functionalTypeLink href="http://localhost:8080/NfvDeployer/rest/vnfs/CACHEa"/>
+   <hostingHostLink href="http://localhost:8080/NfvDeployer/rest/hosts/H8"/>
+   <associatedNFFGLink href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg1"/>
+   <linksLink href="http://localhost:8080/NfvDeployer/rest/nodes/CACHEa4Nffg0/links"/>
+   <reachableHostsLink href="http://localhost:8080/NfvDeployer/rest/nodes/CACHEa4Nffg1/reachableHosts"/>
+  </nfvNode>
+  <self href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg1"/>
+  <allocatedNodesLink href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg1/nodes"/>
+ </nfvNFFG></p>
+
+<p></nfvNFFGs>
+```</p>
+
+<h4>Get a specific NFFG</h4>
+
+<p><code>HTTP
+GET .../nffgs/{nffgName}[?detailed=??]
+</code></p>
+
+<p>If <em>detailed</em> is <code>true</code> then also details about allocated Nodes (and their Links) will be returned.</p>
+
+<h6>Content Type</h6>
+
+<ul>
+<li>application/xml</li>
+</ul>
+
+<h6>Query options</h6>
+
+<p>Name            | Value Type  | Use      | Default
+----------------|-------------|----------|---------
+detailed        | int         | optional | 1 (<code>true</code>)</p>
+
+<h6>Responses</h6>
+
+<p>Code          | Status          | Body
+--------------|-----------------|------------
+200           | OK              | nfvNFFG
+400           | Bad Request     |
+404           | Not Found       |
+500           | Server Error    |</p>
+
+<h6>Example Request</h6>
+
+<p><code>HTML
+GET http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0
+</code></p>
+
+<h6>Example Response</h6>
+
+<p><em>200</em> OK
+<code>XML
+&lt;nfvNFFG xmlns="http://www.example.org/NfvDeployer"&gt;
+ &lt;name&gt;Nffg0&lt;/name&gt;
+ &lt;deployTime&gt;2016-09-28T16:11:20.000+02:00&lt;/deployTime&gt;
+ &lt;nfvNode&gt;
+  &lt;name&gt;CACHEa4Nffg0&lt;/name&gt;
+  &lt;functionalType&gt;CACHEa&lt;/functionalType&gt;
+  &lt;hostingHost&gt;H8&lt;/hostingHost&gt;
+  &lt;associatedNFFG&gt;Nffg0&lt;/associatedNFFG&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/nodes/CACHEa4Nffg0"/&gt;
+  &lt;functionalTypeLink href="http://localhost:8080/NfvDeployer/rest/vnfs/CACHEa"/&gt;
+  &lt;hostingHostLink href="http://localhost:8080/NfvDeployer/rest/hosts/H8"/&gt;
+  &lt;associatedNFFGLink href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0"/&gt;
+  &lt;linksLink href="http://localhost:8080/NfvDeployer/rest/nodes/CACHEa4Nffg0/links"/&gt;
+  &lt;reachableHostsLink href="http://localhost:8080/NfvDeployer/rest/nodes/CACHEa4Nffg0/reachableHosts"/&gt;
+ &lt;/nfvNode&gt;
+ &lt;self href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0"/&gt;
+ &lt;allocatedNodesLink href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/nodes"/&gt;
+&lt;/nfvNFFG&gt;
+</code></p>
+
+<h4>Get all Nodes belonging to a specific NFFG</h4>
+
+<p><code>HTTP
+GET .../nffgs/{nffgName}/nodes[?detailed=??&amp;page=??&amp;itemsPerPage=??]
+</code></p>
+
+<p>If <em>page</em> number is specified the results will be returned paginated.</p>
+
+<p>If <em>detailed</em> is <code>true</code> for each Node also details about their Links will be returned.</p>
+
+<h6>Content Type</h6>
+
+<ul>
+<li>application/xml</li>
+</ul>
+
+<h6>Query options</h6>
+
+<p>Name            | Value Type  | Use      | Default
+----------------|-------------|----------|---------
+detailed        | int         | optional | 1 (<code>true</code>)
+page            | int         | optional | 0 (all pages) 
+itemsPerPage    | int         | optional | 20</p>
+
+<h6>Responses</h6>
+
+<p>Code          | Status          | Body
+--------------|-----------------|------------
+200           | OK              | nfvNodes
+404           | Not Found       |
+500           | Server Error    |</p>
+
+<h6>Example Request</h6>
+
+<p><code>HTML
+GET http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/nodes
+</code></p>
+
+<h6>Example Response</h6>
+
+<p><em>200</em> OK
+<code>XML
+&lt;nfvNodes xmlns="http://www.example.org/NfvDeployer"&gt;
+ &lt;nfvNode&gt;
+  &lt;name&gt;CACHEa4Nffg0&lt;/name&gt;
+  &lt;functionalType&gt;CACHEa&lt;/functionalType&gt;
+  &lt;hostingHost&gt;H8&lt;/hostingHost&gt;
+  &lt;associatedNFFG&gt;Nffg0&lt;/associatedNFFG&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/nodes/CACHEa4Nffg0"/&gt;
+  &lt;functionalTypeLink href="http://localhost:8080/NfvDeployer/rest/vnfs/CACHEa"/&gt;
+  &lt;hostingHostLink href="http://localhost:8080/NfvDeployer/rest/hosts/H8"/&gt;
+  &lt;associatedNFFGLink href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0"/&gt;
+  &lt;linksLink href="http://localhost:8080/NfvDeployer/rest/nodes/CACHEa4Nffg0/links"/&gt;
+  &lt;reachableHostsLink href="http://localhost:8080/NfvDeployer/rest/nodes/CACHEa4Nffg0/reachableHosts"/&gt;
+ &lt;/nfvNode&gt;
+ &lt;nfvNode&gt;
+  &lt;name&gt;FWb6Nffg0&lt;/name&gt;
+  &lt;functionalType&gt;FWb&lt;/functionalType&gt;
+  &lt;hostingHost&gt;H1&lt;/hostingHost&gt;
+  &lt;associatedNFFG&gt;Nffg0&lt;/associatedNFFG&gt;
+  &lt;nfvArc&gt;
+   &lt;name&gt;Link1&lt;/name&gt;
+   &lt;src&gt;FWb6Nffg0&lt;/src&gt;
+   &lt;dst&gt;MAILCLIENTt0Nffg0&lt;/dst&gt;
+   &lt;throughput&gt;0.0&lt;/throughput&gt;
+   &lt;latency&gt;0&lt;/latency&gt;
+   &lt;self href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/links/Link1"/&gt;
+   &lt;srcLink href="http://localhost:8080/NfvDeployer/rest/nodes/FWb6Nffg0"/&gt;
+   &lt;dstLink href="http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0"/&gt;
+  &lt;/nfvArc&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/nodes/FWb6Nffg0"/&gt;
+  &lt;functionalTypeLink href="http://localhost:8080/NfvDeployer/rest/vnfs/FWb"/&gt;
+  &lt;hostingHostLink href="http://localhost:8080/NfvDeployer/rest/hosts/H1"/&gt;
+  &lt;associatedNFFGLink href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0"/&gt;
+  &lt;linksLink href="http://localhost:8080/NfvDeployer/rest/nodes/FWb6Nffg0/links"/&gt;
+  &lt;reachableHostsLink href="http://localhost:8080/NfvDeployer/rest/nodes/FWb6Nffg0/reachableHosts"/&gt;
+ &lt;/nfvNode&gt;
+&lt;/nfvNodes&gt;
+</code></p>
+
+<h4>Get all Links existing in a specific NFFG</h4>
+
+<p><code>HTTP
+GET .../nffgs/{nffgName}/links[?page=??&amp;itemsPerPage=??]
+</code></p>
+
+<h6>Content Type</h6>
+
+<ul>
+<li>application/xml</li>
+</ul>
+
+<h6>Query options</h6>
+
+<p>Name            | Value Type  | Use      | Default
+----------------|-------------|----------|---------
+page            | int         | optional | 0 (all pages) 
+itemsPerPage    | int         | optional | 20</p>
+
+<h6>Responses</h6>
+
+<p>Code          | Status          | Body
+--------------|-----------------|------------
+200           | OK              | nfvArcs
+204           | No Content      |
+404           | Not Found       |
+500           | Server Error    |</p>
+
+<h6>Example Request</h6>
+
+<p><code>HTML
+GET http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/links
+</code></p>
+
+<h6>Example Response</h6>
+
+<p><em>200</em> OK
+<code>XML
+&lt;nfvArcs xmlns="http://www.example.org/NfvDeployer"&gt;
+ &lt;nfvArc&gt;
+  &lt;name&gt;Link0&lt;/name&gt;
+  &lt;src&gt;MAILCLIENTt0Nffg0&lt;/src&gt;
+  &lt;dst&gt;FWb6Nffg0&lt;/dst&gt;
+  &lt;throughput&gt;0.0&lt;/throughput&gt;
+  &lt;latency&gt;0&lt;/latency&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/links/Link0"/&gt;
+  &lt;srcLink href="http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0"/&gt;
+  &lt;dstLink href="http://localhost:8080/NfvDeployer/rest/nodes/FWb6Nffg0"/&gt;
+ &lt;/nfvArc&gt;
+ &lt;nfvArc&gt;
+  &lt;name&gt;Link1&lt;/name&gt;
+  &lt;src&gt;FWb6Nffg0&lt;/src&gt;
+  &lt;dst&gt;MAILCLIENTt0Nffg0&lt;/dst&gt;
+  &lt;throughput&gt;0.0&lt;/throughput&gt;
+  &lt;latency&gt;0&lt;/latency&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/links/Link1"/&gt;
+  &lt;srcLink href="http://localhost:8080/NfvDeployer/rest/nodes/FWb6Nffg0"/&gt;
+  &lt;dstLink href="http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0"/&gt;&lt;/nfvArc&gt;
+&lt;/nfvArcs&gt;
+</code></p>
+
+<h4>Get a specific Link in a specific NFFG</h4>
+
+<p><code>HTTP
+GET .../nffgs/{nffgName}/links/{linkName}
+</code></p>
+
+<h6>Content Type</h6>
+
+<ul>
+<li>application/xml</li>
+</ul>
+
+<h6>Responses</h6>
+
+<p>Code          | Status          | Body
+--------------|-----------------|------------
+200           | OK              | nfvArc
+404           | Not Found       |
+500           | Server Error    |</p>
+
+<h6>Example Request</h6>
+
+<p><code>HTML
+GET http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/links/Link0
+</code></p>
+
+<h6>Example Response</h6>
+
+<p><em>200</em> Ok
+<code>XML
+&lt;nfvArc xmlns="http://www.example.org/NfvDeployer"&gt;
+ &lt;name&gt;Link0&lt;/name&gt;
+ &lt;src&gt;MAILCLIENTt0Nffg0&lt;/src&gt;
+ &lt;dst&gt;FWa0Nffg0&lt;/dst&gt;
+ &lt;throughput&gt;0.0&lt;/throughput&gt;
+ &lt;latency&gt;0&lt;/latency&gt;
+ &lt;self href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/links/Link0"/&gt;
+ &lt;srcLink href="http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0"/&gt;
+ &lt;dstLink href="http://localhost:8080/NfvDeployer/rest/nodes/FWa0Nffg0"/&gt;
+&lt;/nfvArc&gt;
+</code></p>
+
+<h3>Operations on Nodes</h3>
+
+<h4>Get all Nodes</h4>
+
+<p><code>HTTP
+GET .../nodes[?detailed=??&amp;page=??&amp;itemsPerPage=??]
+</code></p>
+
+<p>If <em>detailed</em> is <strong>1</strong> (<code>true</code>) then for each node also detailed info about its Links is returned.</p>
+
+<h6>Content Type</h6>
+
+<ul>
+<li>application/xml</li>
+</ul>
+
+<h6>Query options</h6>
+
+<p>Name            | Value Type  | Use      | Default
+----------------|-------------|----------|---------
+detailed        | int         | optional | 1 (<code>true</code>)
+page            | int         | optional | 0 (all pages) 
+itemsPerPage    | int         | optional | 20</p>
+
+<h6>Responses</h6>
+
+<p>Code          | Status          | Body
+--------------|-----------------|------------
+200           | OK              | nfvNodes
+204           | No Content      |
+500           | Server Error    |</p>
+
+<h6>Example Request</h6>
+
+<p><code>HTML
+GET http://localhost:8080/NfvDeployer/rest/nodes
+</code></p>
+
+<h6>Example Response</h6>
+
+<p><em>200</em> OK
+<code>XML
+&lt;nfvNodes&gt;
+ &lt;nfvNode&gt;
+  &lt;name&gt;FWa0Nffg0&lt;/name&gt;
+  &lt;functionalType&gt;FWa&lt;/functionalType&gt;
+  &lt;hostingHost&gt;H3&lt;/hostingHost&gt;
+  &lt;associatedNFFG&gt;Nffg0&lt;/associatedNFFG&gt;
+  &lt;nfvArc&gt;
+   &lt;name&gt;Link3&lt;/name&gt;
+   &lt;src&gt;FWa0Nffg0&lt;/src&gt;
+   &lt;dst&gt;WEBCLIENTt1Nffg0&lt;/dst&gt;
+   &lt;throughput&gt;0.0&lt;/throughput&gt;
+   &lt;latency&gt;0&lt;/latency&gt;
+   &lt;self href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/links/Link3"/&gt;
+   &lt;srcLink href="http://localhost:8080/NfvDeployer/rest/nodes/FWa0Nffg0"/&gt;
+   &lt;dstLink href="http://localhost:8080/NfvDeployer/rest/nodes/WEBCLIENTt1Nffg0"/&gt;
+  &lt;/nfvArc&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/nodes/FWa0Nffg0"/&gt;
+  &lt;functionalTypeLink href="http://localhost:8080/NfvDeployer/rest/vnfs/FWa"/&gt;
+  &lt;hostingHostLink href="http://localhost:8080/NfvDeployer/rest/hosts/H3"/&gt;
+  &lt;associatedNFFGLink href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0"/&gt;
+  &lt;linksLink href="http://localhost:8080/NfvDeployer/rest/nodes/FWa0Nffg0/links"/&gt;
+  &lt;reachableHostsLink href="http://localhost:8080/NfvDeployer/rest/nodes/FWa0Nffg0/reachableHosts"/&gt;
+ &lt;/nfvNode&gt;
+ &lt;nfvNode&gt;
+  &lt;name&gt;MAILCLIENTt0Nffg0&lt;/name&gt;
+  &lt;functionalType&gt;MAILCLIENTt&lt;/functionalType&gt;
+  &lt;hostingHost&gt;H0&lt;/hostingHost&gt;
+  &lt;associatedNFFG&gt;Nffg0&lt;/associatedNFFG&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0"/&gt;
+  &lt;functionalTypeLink href="http://localhost:8080/NfvDeployer/rest/vnfs/MAILCLIENTt"/&gt;
+  &lt;hostingHostLink href="http://localhost:8080/NfvDeployer/rest/hosts/H0"/&gt;
+  &lt;associatedNFFGLink href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0"/&gt;
+  &lt;linksLink href="http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0/links"/&gt;
+  &lt;reachableHostsLink href="http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0/reachableHosts"/&gt;
+ &lt;/nfvNode&gt;
+&lt;/nfvNodes&gt;
+</code></p>
+
+<h4>Get a specific Node</h4>
+
+<p><code>HTTP
+GET .../nodes/{nodeName}[?detailed=??]
+</code></p>
+
+<h6>Content Type</h6>
+
+<ul>
+<li>application/xml</li>
+</ul>
+
+<h6>Query options</h6>
+
+<p>Name            | Value Type  | Use      | Default
+----------------|-------------|----------|---------
+detailed        | int         | optional | 1 (<code>true</code>)</p>
+
+<h6>Responses</h6>
+
+<p>Code          | Status          | Body
+--------------|-----------------|------------
+200           | OK              | nfvNode
+404           | Not Found       |
+500           | Server Error    |</p>
+
+<h6>Example Request</h6>
+
+<p><code>HTML
+GET http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0
+</code></p>
+
+<h6>Example Response</h6>
+
+<p><em>200</em> OK
+<code>XML
+&lt;nfvNode xmlns="http://www.example.org/NfvDeployer"&gt;
+ &lt;name&gt;MAILCLIENTt0Nffg0&lt;/name&gt;
+ &lt;functionalType&gt;MAILCLIENTt&lt;/functionalType&gt;
+ &lt;hostingHost&gt;H0&lt;/hostingHost&gt;
+ &lt;associatedNFFG&gt;Nffg0&lt;/associatedNFFG&gt;
+ &lt;nfvArc&gt;
+  &lt;name&gt;Link0&lt;/name&gt;
+  &lt;src&gt;MAILCLIENTt0Nffg0&lt;/src&gt;
+  &lt;dst&gt;FWa0Nffg0&lt;/dst&gt;
+  &lt;throughput&gt;0.0&lt;/throughput&gt;
+  &lt;latency&gt;0&lt;/latency&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/links/Link0"/&gt;
+  &lt;srcLink href="http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0"/&gt;
+  &lt;dstLink href="http://localhost:8080/NfvDeployer/rest/nodes/FWa0Nffg0"/&gt;
+ &lt;/nfvArc&gt;
+ &lt;self href="http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0"/&gt;
+ &lt;functionalTypeLink href="http://localhost:8080/NfvDeployer/rest/vnfs/MAILCLIENTt"/&gt;
+ &lt;hostingHostLink href="http://localhost:8080/NfvDeployer/rest/hosts/H0"/&gt;
+ &lt;associatedNFFGLink href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0"/&gt;
+ &lt;linksLink href="http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0/links"/&gt;
+ &lt;reachableHostsLink href="http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0/reachableHosts"/&gt;
+&lt;/nfvNode&gt;
+</code></p>
+
+<h4>Get all reachable Hosts for a specific Node</h4>
+
+<p><code>HTTP
+GET .../nodes/{nodeName}/reachableHosts
+</code></p>
+
+<h6>Content Type</h6>
+
+<ul>
+<li>application/xml</li>
+</ul>
+
+<h6>Responses</h6>
+
+<p>Code          | Status          | Body
+--------------|-----------------|------------
+200           | OK              | nfvHosts
+404           | Not Found       |
+500           | Server Error    |
+502           | Bad Gateway     | </p>
+
+<h6>Example Request</h6>
+
+<p><code>HTTP
+GET http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0/reachableHosts
+</code></p>
+
+<h6>Example Response</h6>
+
+<p><em>200</em> OK
+<code>XML
+&lt;nfvHosts xmlns="http://www.example.org/NfvDeployer"&gt;
+ &lt;nfvHost&gt;
+  &lt;name&gt;H1&lt;/name&gt;
+  &lt;maxVNFs&gt;9&lt;/maxVNFs&gt;
+  &lt;hostedNodes&gt;WEBCLIENTt1Nffg0&lt;/hostedNodes&gt;
+  &lt;hostedNodes&gt;WEBSERVERt2Nffg0&lt;/hostedNodes&gt;
+  &lt;installedMemory&gt;8200&lt;/installedMemory&gt;
+  &lt;installedStorage&gt;71000&lt;/installedStorage&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/hosts/H1"/&gt;
+  &lt;hostedNodesLink href="http://localhost:8080/NfvDeployer/rest/hosts/H1/nodes"/&gt;
+ &lt;/nfvHost&gt;
+ &lt;nfvHost&gt;
+  &lt;name&gt;H0&lt;/name&gt;
+  &lt;maxVNFs&gt;12&lt;/maxVNFs&gt;
+  &lt;hostedNodes&gt;MAILCLIENTt0Nffg0&lt;/hostedNodes&gt;
+  &lt;hostedNodes&gt;MAILSERVERt1Nffg0&lt;/hostedNodes&gt;
+  &lt;installedMemory&gt;6100&lt;/installedMemory&gt;
+  &lt;installedStorage&gt;28000&lt;/installedStorage&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/hosts/H0"/&gt;
+  &lt;hostedNodesLink href="http://localhost:8080/NfvDeployer/rest/hosts/H0/nodes"/&gt;
+ &lt;/nfvHost&gt;
+&lt;/nfvHosts&gt;
+</code></p>
+
+<h4>Get all Links starting from a specific Node</h4>
+
+<p><code>HTTP
+GET .../nodes/{nodeName}/links
+</code></p>
+
+<h6>Content Type</h6>
+
+<ul>
+<li>application/xml</li>
+</ul>
+
+<h6>Responses</h6>
+
+<p>Code          | Status          | Body
+--------------|-----------------|------------
+200           | OK              | nfvArcs
+204           | No content      |
+404           | Not Found       |
+500           | Server Error    |</p>
+
+<h6>Example Request</h6>
+
+<p><code>HTTP
+GET http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0/links
+</code></p>
+
+<h6>Example Response</h6>
+
+<p><em>200</em> Ok
+<code>XML
+&lt;nfvArcs xmlns="http://www.example.org/NfvDeployer"&gt;
+ &lt;nfvArc&gt;
+  &lt;name&gt;Link0&lt;/name&gt;
+  &lt;src&gt;MAILCLIENTt0Nffg0&lt;/src&gt;
+  &lt;dst&gt;FWa0Nffg0&lt;/dst&gt;
+  &lt;throughput&gt;0.0&lt;/throughput&gt;
+  &lt;latency&gt;0&lt;/latency&gt;
+  &lt;self href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/links/Link0"/&gt;
+  &lt;srcLink href="http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0"/&gt;
+  &lt;dstLink href="http://localhost:8080/NfvDeployer/rest/nodes/FWa0Nffg0"/&gt;
+ &lt;/nfvArc&gt;
+&lt;/nfvArcs&gt;
+</code></p>

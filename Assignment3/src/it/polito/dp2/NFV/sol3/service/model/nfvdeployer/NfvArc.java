@@ -8,15 +8,11 @@
 
 package it.polito.dp2.NFV.sol3.service.model.nfvdeployer;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.datatype.XMLGregorianCalendar;
 
 
 /**
@@ -30,10 +26,13 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
  *         &lt;element name="name" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="deployTime" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0"/>
- *         &lt;element ref="{http://www.example.org/NfvDeployer}nfvNode" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="src" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="dst" type="{http://www.w3.org/2001/XMLSchema}string"/>
+ *         &lt;element name="throughput" type="{http://www.w3.org/2001/XMLSchema}float"/>
+ *         &lt;element name="latency" type="{http://www.w3.org/2001/XMLSchema}int"/>
  *         &lt;element name="self" type="{http://www.example.org/NfvDeployer}Link" minOccurs="0"/>
- *         &lt;element name="allocatedNodesLink" type="{http://www.example.org/NfvDeployer}Link" minOccurs="0"/>
+ *         &lt;element name="srcLink" type="{http://www.example.org/NfvDeployer}Link" minOccurs="0"/>
+ *         &lt;element name="dstLink" type="{http://www.example.org/NfvDeployer}Link" minOccurs="0"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -45,21 +44,28 @@ import javax.xml.datatype.XMLGregorianCalendar;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
     "name",
-    "deployTime",
-    "nfvNode",
+    "src",
+    "dst",
+    "throughput",
+    "latency",
     "self",
-    "allocatedNodesLink"
+    "srcLink",
+    "dstLink"
 })
-@XmlRootElement(name = "nfvNFFG")
-public class NfvNFFG {
+@XmlRootElement(name = "nfvArc")
+public class NfvArc {
 
     @XmlElement(required = true)
     protected String name;
-    @XmlSchemaType(name = "dateTime")
-    protected XMLGregorianCalendar deployTime;
-    protected List<NfvNode> nfvNode;
+    @XmlElement(required = true)
+    protected String src;
+    @XmlElement(required = true)
+    protected String dst;
+    protected float throughput;
+    protected int latency;
     protected Link self;
-    protected Link allocatedNodesLink;
+    protected Link srcLink;
+    protected Link dstLink;
 
     /**
      * Gets the value of the name property.
@@ -86,56 +92,83 @@ public class NfvNFFG {
     }
 
     /**
-     * Gets the value of the deployTime property.
+     * Gets the value of the src property.
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public XMLGregorianCalendar getDeployTime() {
-        return deployTime;
+    public String getSrc() {
+        return src;
     }
 
     /**
-     * Sets the value of the deployTime property.
+     * Sets the value of the src property.
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public void setDeployTime(XMLGregorianCalendar value) {
-        this.deployTime = value;
+    public void setSrc(String value) {
+        this.src = value;
     }
 
     /**
-     * Gets the value of the nfvNode property.
+     * Gets the value of the dst property.
      * 
-     * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the nfvNode property.
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getDst() {
+        return dst;
+    }
+
+    /**
+     * Sets the value of the dst property.
      * 
-     * <p>
-     * For example, to add a new item, do as follows:
-     * <pre>
-     *    getNfvNode().add(newItem);
-     * </pre>
-     * 
-     * 
-     * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link NfvNode }
-     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setDst(String value) {
+        this.dst = value;
+    }
+
+    /**
+     * Gets the value of the throughput property.
      * 
      */
-    public List<NfvNode> getNfvNode() {
-        if (nfvNode == null) {
-            nfvNode = new ArrayList<NfvNode>();
-        }
-        return this.nfvNode;
+    public float getThroughput() {
+        return throughput;
+    }
+
+    /**
+     * Sets the value of the throughput property.
+     * 
+     */
+    public void setThroughput(float value) {
+        this.throughput = value;
+    }
+
+    /**
+     * Gets the value of the latency property.
+     * 
+     */
+    public int getLatency() {
+        return latency;
+    }
+
+    /**
+     * Sets the value of the latency property.
+     * 
+     */
+    public void setLatency(int value) {
+        this.latency = value;
     }
 
     /**
@@ -163,27 +196,51 @@ public class NfvNFFG {
     }
 
     /**
-     * Gets the value of the allocatedNodesLink property.
+     * Gets the value of the srcLink property.
      * 
      * @return
      *     possible object is
      *     {@link Link }
      *     
      */
-    public Link getAllocatedNodesLink() {
-        return allocatedNodesLink;
+    public Link getSrcLink() {
+        return srcLink;
     }
 
     /**
-     * Sets the value of the allocatedNodesLink property.
+     * Sets the value of the srcLink property.
      * 
      * @param value
      *     allowed object is
      *     {@link Link }
      *     
      */
-    public void setAllocatedNodesLink(Link value) {
-        this.allocatedNodesLink = value;
+    public void setSrcLink(Link value) {
+        this.srcLink = value;
+    }
+
+    /**
+     * Gets the value of the dstLink property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Link }
+     *     
+     */
+    public Link getDstLink() {
+        return dstLink;
+    }
+
+    /**
+     * Sets the value of the dstLink property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Link }
+     *     
+     */
+    public void setDstLink(Link value) {
+        this.dstLink = value;
     }
 
 }

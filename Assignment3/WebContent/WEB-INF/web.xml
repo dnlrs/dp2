@@ -10,7 +10,9 @@ xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/
       <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
       <init-param>
             <param-name>jersey.config.server.provider.packages</param-name>
-            <param-value>io.swagger.jaxrs.listing, it.polito.dp2.NFV.sol3.service</param-value>
+            <param-value>
+                io.swagger.jaxrs.listing, it.polito.dp2.NFV.sol3.service
+            </param-value>
       </init-param>
       <load-on-startup>1</load-on-startup>
   </servlet>
@@ -23,7 +25,7 @@ xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/
       </init-param>
       <init-param>
           <param-name>swagger.api.basepath</param-name>
-          <param-value>http://localhost:8080/NfvDeployer/rest</param-value>
+          <param-value>http://localhost:8080/NfvDeployer/rest/*</param-value>
       </init-param>
       <load-on-startup>2</load-on-startup>
   </servlet>

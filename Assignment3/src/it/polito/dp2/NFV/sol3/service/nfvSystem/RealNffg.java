@@ -111,4 +111,13 @@ public class RealNffg extends RealNamedEntity implements NffgReader {
             this.nodes.add( node );
         }
     }
+
+    protected void removeNode( String nodeName ) {
+        for ( RealNode node : this.nodes ) {
+            if ( node.getName().compareTo( nodeName ) == 0 ) {
+                this.nodes.remove( node );
+                break;
+            }
+        }
+    }
 }

@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element ref="{http://www.example.org/NfvDeployer}nfvNode" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element ref="{http://www.example.org/NfvDeployer}nfvVNF" maxOccurs="unbounded" minOccurs="0"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -37,40 +37,40 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-    "nfvNode"
+    "nfvVNF"
 })
-@XmlRootElement(name = "nfvNodes")
-public class NfvNodes {
+@XmlRootElement(name = "nfvVNFs")
+public class NfvVNFs {
 
-    protected List<NfvNode> nfvNode;
+    protected List<NfvVNF> nfvVNF;
 
     /**
-     * Gets the value of the nfvNode property.
+     * Gets the value of the nfvVNF property.
      * 
      * <p>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the nfvNode property.
+     * This is why there is not a <CODE>set</CODE> method for the nfvVNF property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
      * <pre>
-     *    getNfvNode().add(newItem);
+     *    getNfvVNF().add(newItem);
      * </pre>
      * 
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link NfvNode }
+     * {@link NfvVNF }
      * 
      * 
      */
-    public List<NfvNode> getNfvNode() {
-        if (nfvNode == null) {
-            nfvNode = new ArrayList<NfvNode>();
+    public List<NfvVNF> getNfvVNF() {
+        if (nfvVNF == null) {
+            nfvVNF = new ArrayList<NfvVNF>();
         }
-        return this.nfvNode;
+        return this.nfvVNF;
     }
 
 }

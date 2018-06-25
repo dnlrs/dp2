@@ -117,6 +117,7 @@ public class RealHost extends RealNamedEntity implements HostReader {
         return this.availableMemory.intValue();
     }
 
+
     @Override
     public int getAvailableStorage() {
 
@@ -133,8 +134,6 @@ public class RealHost extends RealNamedEntity implements HostReader {
     public synchronized Set<NodeReader> getNodes() {
         return new HashSet<NodeReader>( this.nodes );
     }
-
-
 
     // setters
 
@@ -175,5 +174,36 @@ public class RealHost extends RealNamedEntity implements HostReader {
             this.usedStorage.addAndGet( requiredStorage );
             this.usedVNFs.incrementAndGet();
         }
+    }
+
+    protected void removeNode( String nodeName ) {
+
+        for ( RealNode node : this.nodes ) {
+            if ( node.getName().compareTo( nodeName ) == 0 ) {
+                this.nodes.remove( node );
+                break;
+            }
+        }
+    }
+
+    protected boolean isAvailable( int requiredMemory, int requiredStorage ) {
+
+        int freeVNFs = (this.maxVNFs.get() - this.nodes.size());
+
+        if ( freeVNFs < 1 )
+            return false;
+
+        int freeMemory  = this.availableMemory.get();
+        int freeStorage = this.availableStorage.get();
+
+        for ( RealNode node : this.nodes ) {
+            freeMemory  -= node.getFuncType().getRequiredMemory();
+            freeStorage -= node.getFuncType().getRequiredStorage();
+        }
+
+        if ( (freeMemory < requiredMemory) || (freeStorage < requiredStorage) )
+            return false;
+
+        return true;
     }
 }

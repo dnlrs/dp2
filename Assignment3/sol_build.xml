@@ -23,11 +23,13 @@
 	<path id="service.classpath">
     	<pathelement location="${lib.dir}/NFV.jar"/>
         <pathelement location="${lib.dir}/lab3.jar"/>
+        <pathelement location="${lib.dir}/swagger-annotations-1.5.0.jar"/>
         <pathelement location="${ext.lib.dir}/javax.ws.rs-api-2.0.1.jar"/>
         <pathelement location="${ext.lib.dir}/jersey-client-1.19.1.jar"/>
         <pathelement location="${ext.lib.dir}/jersey-core-1.19.1.jar"/>
         <pathelement location="${ext.lib.dir}/jersey-server-2.25.1.jar"/>
-    	<!--
+        <pathelement location="${ext.lib.dir}/jersey-common-2.25.1.jar"/>
+		<!--
     	<fileset dir="${ext.lib.dir}">
             <include name="*.jar" />
             <exclude name="ant-*.jar"/>

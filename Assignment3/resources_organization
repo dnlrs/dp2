@@ -2,12 +2,21 @@
 
 
 /hosts
-    
+
 /hosts/{hostName}
     
 /hosts/{hostName}/nodes
 
-/hosts/{hostName}/nodes/{nodeName}
+
+
+/connections
+
+
+
+/vnfs
+
+/vnfs/{vnfName}    
+
 
 
     
@@ -17,11 +26,9 @@
 
 /nffgs/{nffgName}/nodes
 
-/nffgs/{nffgName}/nodes/{nodeName}
+/nffgs/{nffgName}/links
 
-/nffgs/{nffgName}/nodes/{nodeName}/links
-
-/nffgs/{nffgName}/nodes/{nodeName}/links/{linkName}
+/nffgs/{nffgName}/links/{linkName}
 
 
 
@@ -30,6 +37,34 @@
 
 /nodes/{nodeName}
 
+/nodes/{nodeName}/reachableHosts
+
 /nodes/{nodeName}/links
 
-/nodes/{nodeName}/links/{linkName}
+
+
+
+
+
+Resources
+=========
+
+hosts                                       all hosts in the NFV System
+hosts -> {hostName}                         a single host
+hosts -> {hostName} -> nodes                all nodes allocated on host
+
+connections                                 all connections in the NFV System
+connections -> {connectionName}             a single connection in the NFV System
+
+vnfs                                        all VNFs in the NFV System
+vnfs -> {vnfName}                           a single VNF
+
+nffgs                                       all nffg in the system
+nffgs -> {nffgName}                         a single nffg
+nffgs -> {nffgName} -> nodes                all nodes in this nffg
+nffgs -> {nffgName} -> links                all links in this nffg
+
+nodes                                       all nodes in the NFV System
+nodes -> {nodeName}                         a single node
+nodes -> {nodeName} -> links                all links with this node as the source node
+nodes -> {nodeName} -> links -> {linkName}  a single link

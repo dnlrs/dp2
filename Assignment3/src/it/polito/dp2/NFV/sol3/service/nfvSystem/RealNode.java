@@ -102,7 +102,7 @@ public class RealNode extends RealNamedEntity implements NodeReader {
 
 
 
-    // setters
+    // other
 
     protected void addLink( RealLink link )
             throws NullPointerException {
@@ -118,5 +118,13 @@ public class RealNode extends RealNamedEntity implements NodeReader {
 
             this.links.add( link );
         }
+    }
+
+    protected void removeLink( RealLink link ) {
+        for ( RealLink l : this.links )
+            if ( l.getName().compareTo( link.getName() ) == 0 ) {
+                this.links.remove( link );
+                break;
+            }
     }
 }

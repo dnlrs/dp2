@@ -2,6 +2,12 @@ package it.polito.dp2.NFV.sol3.service.neo4jAPI;
 
 import it.polito.dp2.NFV.HostReader;
 import it.polito.dp2.NFV.NodeReader;
+import it.polito.dp2.NFV.sol3.service.model.neo4j.Labels;
+import it.polito.dp2.NFV.sol3.service.model.neo4j.Node;
+import it.polito.dp2.NFV.sol3.service.model.neo4j.ObjectFactory;
+import it.polito.dp2.NFV.sol3.service.model.neo4j.Properties;
+import it.polito.dp2.NFV.sol3.service.model.neo4j.Property;
+import it.polito.dp2.NFV.sol3.service.model.neo4j.Relationship;
 
 /**
  * Builds XML marshallable Objects starting from NFV System objects interfaces.
@@ -11,24 +17,22 @@ import it.polito.dp2.NFV.NodeReader;
  */
 public class Neo4jSimpleXMLBuilder {
 
-    protected final static String PROPERTY_NAME = "name";
+    public final static String PROPERTY_NAME = "name";
 
-    protected final static String LABEL_NODE = "Node";
-    protected final static String LABEL_HOST = "Host";
+    public final static String LABEL_NODE = "Node";
+    public final static String LABEL_HOST = "Host";
 
-    protected final static String RELATIONSHIP_FORWARDSTO  = "ForwardsTo";
-    protected final static String RELATIONSHIP_ALLOCATEDON = "AllocatedOn";
+    public final static String RELATIONSHIP_FORWARDSTO  = "ForwardsTo";
+    public final static String RELATIONSHIP_ALLOCATEDON = "AllocatedOn";
 
     private final ObjectFactory of;      // WADL/JAXB object factory
 
-
-
-    protected Neo4jSimpleXMLBuilder() {
+    public Neo4jSimpleXMLBuilder() {
         this.of      = new ObjectFactory();
     }
 
 
-    protected Node createXMLNodeFromNodeReader( NodeReader nodeInterface )
+    public Node createXMLNodeFromNodeReader( NodeReader nodeInterface )
             throws NullPointerException, Exception {
 
         if ( nodeInterface == null )
@@ -53,7 +57,7 @@ public class Neo4jSimpleXMLBuilder {
     }
 
 
-    protected Node createXMLNodeFromHostReader( HostReader hostInterface )
+    public Node createXMLNodeFromHostReader( HostReader hostInterface )
             throws NullPointerException, Exception {
 
         if ( hostInterface == null )
@@ -80,7 +84,7 @@ public class Neo4jSimpleXMLBuilder {
 
 
 
-    protected Relationship createXMLAllocatedOnRel(
+    public Relationship createXMLAllocatedOnRel(
             String nodeGraphNodeID,
             String hostGraphNodeID )
                     throws NullPointerException {
@@ -99,7 +103,7 @@ public class Neo4jSimpleXMLBuilder {
 
 
 
-    protected Relationship createXMLForwardToRel(
+    public Relationship createXMLForwardToRel(
             String srcGraphNodeID,
             String dstGraphNodeID )
                     throws NullPointerException {

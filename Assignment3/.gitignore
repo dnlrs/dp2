@@ -17,3 +17,5 @@ gen-src/
 # debug files
 log*.txt
 debug*.txt
+
+target/

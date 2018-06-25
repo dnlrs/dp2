@@ -2,6 +2,8 @@ package it.polito.dp2.NFV.sol3.service.nfvSystem;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import it.polito.dp2.NFV.ConnectionPerformanceReader;
 import it.polito.dp2.NFV.FactoryConfigurationError;
@@ -16,14 +18,16 @@ import it.polito.dp2.NFV.VNFTypeReader;
 
 public class NfvSystemLoader {
 
-    protected void loadFromGenerator( NfvSystemDBMS db )
+    private final static Logger logger = Logger.getLogger( NfvSystemLoader.class.getName() );
+
+    public void loadFromGenerator( NfvSystemDBMS db )
             throws NfvReaderException {
 
         NfvReader monitor = null;
 
         try {
-            NfvReaderFactory factory = NfvReaderFactory.newInstance();
 
+            NfvReaderFactory factory = NfvReaderFactory.newInstance();
             monitor = factory.newNfvReader();
 
         } catch ( FactoryConfigurationError error ) {
@@ -81,7 +85,8 @@ public class NfvSystemLoader {
                 }
             }
         } catch ( NullPointerException | IllegalArgumentException e ) {
-            throw new NfvReaderException( e.getMessage() );
+            logger.log( Level.WARNING, e.getMessage() );
+//            throw new NfvReaderException( e.getMessage() );
         }
 
 
@@ -110,7 +115,9 @@ public class NfvSystemLoader {
         HashMap<String, RealNffg> nffgs = new HashMap<String, RealNffg>();
         try {
 
-            for ( NffgReader nffgI : monitor.getNffgs( null ) ) {
+//            for ( NffgReader nffgI : monitor.getNffgs( null ) ) {
+            {
+                NffgReader nffgI = monitor.getNffg( "Nffg0" ); // load only "Nffg0"
 
                 /* This checks
                  *  - if NFFG name is valid
@@ -200,7 +207,8 @@ public class NfvSystemLoader {
                 nffgs.put( nffg.getName(), nffg );
             }
         } catch ( NullPointerException | IllegalArgumentException e ) {
-            throw new NfvReaderException( e.getMessage() );
+            logger.log( Level.WARNING, e.getMessage() );
+//            throw new NfvReaderException( e.getMessage() );
         }
 
         /*
@@ -213,11 +221,14 @@ public class NfvSystemLoader {
             for ( RealConnection connection : connections.values() ) {
                 db.addConnectionPerformance(connection.getName(), connection);
             }
+            /* add VNFs */
+            db.addCatalog( new HashSet<RealVNFType>( vnfs.values() ) );
             /* add NFFGs, nodes and links */
             db.addNFFGs( new HashSet<RealNffg>( nffgs.values() ) );
 
         } catch ( NullPointerException | IllegalArgumentException e ) {
-            throw new NfvReaderException( e.getMessage() );
+            logger.log( Level.WARNING, e.getMessage() );
+//            throw new NfvReaderException( e.getMessage() );
         }
     }
 
