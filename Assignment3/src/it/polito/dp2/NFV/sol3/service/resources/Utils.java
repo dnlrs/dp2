@@ -35,7 +35,7 @@ public class Utils {
 
         ArrayList<T> orderedList = new ArrayList<T>();
         orderedList.addAll( all );
-//        orderedList.sort( Comparator.comparing( e -> e.getName() ) ); // objects are already ordered
+//        orderedList.sort( Comparator.comparing( e -> e.getName() ) ); // lists are already ordered
 
         Set<T> result = new HashSet<T>();
 

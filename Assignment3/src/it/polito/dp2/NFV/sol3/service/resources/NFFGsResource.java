@@ -3,6 +3,7 @@ package it.polito.dp2.NFV.sol3.service.resources;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -34,7 +35,7 @@ import it.polito.dp2.NFV.sol3.service.nfvSystem.NfvSystem;
 
 @Path( "/nffgs" )
 public class NFFGsResource {
-
+    private final static Logger    logger = Logger.getLogger( NFFGsResource.class.getName() );
     private final static NfvSystem system = new NfvSystem();
 
 
@@ -67,7 +68,7 @@ public class NFFGsResource {
                             system.getNffgs(
                                     (this.date == null ?
                                             null : this.date.toGregorianCalendar() ) )
-                            ); //TODO: check this date
+                            );
         } else {
             nffgs = system.getNffgs( (this.date == null ?
                                             null : this.date.toGregorianCalendar() ) );
@@ -184,14 +185,15 @@ public class NFFGsResource {
             throw new WebApplicationException(
                     Response.Status.BAD_REQUEST ); // 400
 
+
         try {
             system.addNffg( nffg.getName() );
 
             for ( NfvNode node : nffg.getNfvNode() ) {
                 system.addNode(
                         node.getName(),
-                        node.getFunctionalType(),
                         node.getHostingHost(),
+                        node.getFunctionalType(),
                         node.getAssociatedNFFG() );
             }
 
@@ -271,6 +273,8 @@ public class NFFGsResource {
                 Utils.getNFFGLink( uriInfo, nffgI.getName() ) );
         nffg.setAllocatedNodesLink(
                 Utils.getNFFGNodesLink( uriInfo, nffgI.getName() ) );
+        nffg.setLinksLink(
+                Utils.getNFFGLinksLink( uriInfo, nffgI.getName() ) );
 
         if ( (nffg.getSelf() == null) || (nffg.getAllocatedNodesLink() == null) )
             return null;

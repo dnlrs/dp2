@@ -22,13 +22,6 @@ import it.polito.dp2.NFV.sol3.service.UnknownNameException;
 
 /**
  * An implementation of the {@link NfvReader} interface.
- * <p>
- * This class reads, through the {@link NfvSystemLoader}, data from an
- * XML File.
- * <p>
- * If anything goes wrong during unmarshalling or loading of data an
- * empty NFV System is returned. This is done in order to avoid
- * deploying an inconsistent NFV System.
  *
  * @author    Daniel C. Rusu
  * @studentID 234428
@@ -171,6 +164,13 @@ public class NfvSystem implements NfvReader {
         return result;
     }
 
+
+    /**
+     * Adds a NFFG to the system and deploys it into the neo4j Service.
+     *
+     * @param nffgName
+     * @throws ServiceException
+     */
     public void addNffg( String nffgName )
             throws ServiceException {
 
@@ -188,10 +188,16 @@ public class NfvSystem implements NfvReader {
         } catch ( NullPointerException
                   | AlreadyLoadedException
                   | UnknownNameException e ) {
-            throw new ServiceException();
+            throw new ServiceException( e.getMessage() );
         }
     }
 
+
+    /**
+     * Remove a NFFG from the system and undeploys it from the neo4j Service
+     *
+     * @param nffgName
+     */
     public void deleteNffg( String nffgName ) {
 
         RealNffg nffg = db.getNFFG( nffgName );
@@ -218,19 +224,6 @@ public class NfvSystem implements NfvReader {
 
         db.removeNffg( nffgName );
     }
-
-//    public void deployNffg( String nffgName )
-//            throws ServiceException {
-//
-//        NfvSystemDeployer deployer = new NfvSystemDeployer();
-//        try {
-//            deployer.deployNFFG( "Nffg0" );
-//        } catch ( UnknownNameException | AlreadyLoadedException e ) {
-//            throw new ServiceException();
-//        }
-//    }
-
-
 
 
 
@@ -305,6 +298,15 @@ public class NfvSystem implements NfvReader {
         return result;
     }
 
+    /**
+     * adds a node to the system and deploys it to the neo4j Service.
+     *
+     * @param nodeName
+     * @param hostingHost
+     * @param functionalType
+     * @param associatedNFFG
+     * @throws ServiceException
+     */
     public void addNode(
             String nodeName,
             String hostingHost,
@@ -316,8 +318,11 @@ public class NfvSystem implements NfvReader {
         RealVNFType vnf  = db.getVNF( functionalType );
         RealNffg    nffg = db.getNFFG( associatedNFFG );
 
-        if ( (vnf == null) || (nffg == null) )
-            throw new ServiceException();
+        if ( (vnf == null) )
+            throw new ServiceException("addNode: VNF \""+ functionalType +"\" doesn't exist");
+
+        if ( (nffg == null) )
+            throw new ServiceException("addNode: NFFG doesn't exist");
 
         int requiredMemory  = vnf.getRequiredMemory();
         int requiredStorage = vnf.getRequiredStorage();
@@ -352,11 +357,20 @@ public class NfvSystem implements NfvReader {
             NfvSystemDeployer deployer = new NfvSystemDeployer();
             deployer.deployNode( node );
 
-        } catch ( NullPointerException e ) {
+        } catch ( NullPointerException
+                  | IllegalArgumentException e ) {
             throw new ServiceException();
+        } catch ( ServiceException e ) {
         }
     }
 
+    /**
+     * Removes a node from the system and also undeploys it from the
+     * neo4j Service.
+     *
+     * @param nodeName
+     * @throws ServiceException
+     */
     public void deleteNode( String nodeName )
             throws ServiceException {
 
@@ -397,6 +411,14 @@ public class NfvSystem implements NfvReader {
     }
 
 
+    /**
+     * Searches for a host with enough free memory and storage and at least one
+     * VNF slot free.
+     *
+     * @param requiredMemory
+     * @param requiredStorage
+     * @return
+     */
     private RealHost findAvailableHost(
             int requiredMemory,
             int requiredStorage ) {
@@ -447,6 +469,16 @@ public class NfvSystem implements NfvReader {
         return result;
     }
 
+    /**
+     * Adds a link to the system and deploys it into the Neo4j Service.
+     *
+     * @param linkName
+     * @param srcNodeName
+     * @param dstNodeName
+     * @param throughput
+     * @param latency
+     * @throws ServiceException
+     */
     public void addLink(
             String linkName,
             String srcNodeName,
@@ -458,12 +490,16 @@ public class NfvSystem implements NfvReader {
         RealNode srcNode = db.getNode( srcNodeName );
         RealNode dstNode = db.getNode( dstNodeName );
 
-        NffgReader nffg = srcNode.getNffg();
+        if ( srcNode == null )
+            throw new ServiceException( "addLink: source node not found" );
 
-        if ( (srcNode == null)
-                || (dstNode == null)
-                || (nffg == null)    )
-            throw new ServiceException();
+        if ( dstNode == null )
+            throw new ServiceException( "addLink: dest node not found" );
+
+
+        NffgReader nffg = srcNode.getNffg();
+        if ( nffg == null )
+            throw new ServiceException( "addLink: nffg not found" );
 
         try {
 
@@ -485,6 +521,13 @@ public class NfvSystem implements NfvReader {
 
     }
 
+    /**
+     * Removes a link from the system and undeploys it also from the
+     * Neo4j Service.
+     *
+     * @param nffgName
+     * @param linkName
+     */
     public void deleteLink( String nffgName, String linkName ) {
 
         RealLink link = db.getLink( nffgName, linkName );

@@ -11,12 +11,19 @@
 	
 	
 	<property name="service.src.dir" location="${sol.src.dir}/it/polito/dp2/NFV/sol3/service" />
-	<property name="client1.src.dir" location="${sol.src.dir}/src/it/polito/dp2/NFV/sol3/client1" />
-	<property name="client2.src.dir" location="${sol.src.dir}/src/it/polito/dp2/NFV/sol3/client2" />
+	<property name="client1.src.dir" location="${sol.src.dir}/it/polito/dp2/NFV/sol3/client1" />
+	<property name="client2.src.dir" location="${sol.src.dir}/it/polito/dp2/NFV/sol3/client2" />
 
 	
 	<property name="neo4j.artifacts.src.dir"       location="${service.src.dir}/model/neo4j" />
 	<property name="nfvdeployer.artifacts.src.dir" location="${service.src.dir}/model/nfvdeployer" />
+	
+	
+	<property name="client1.artifacts.src.dir" location="${client1.src.dir}/model/nfvdeployer" />
+	<property name="client2.artifacts.src.dir" location="${client2.src.dir}/model/nfvdeployer" />
+	
+	
+	<property name="NfvDeployerWADL" value="${URL}/application.wadl" />
 	
 	
 	
@@ -37,6 +44,16 @@
         -->
     </path>
 	
+	<path id="clients.classpath">
+		<pathelement location="${lib.dir}/NFV.jar"/>
+        <pathelement location="${lib.dir}/lab3.jar"/>
+		<pathelement location="${ext.lib.dir}/javax.ws.rs-api-2.0.1.jar"/>
+		<pathelement location="${ext.lib.dir}/jersey-client-1.19.1.jar"/>
+        <pathelement location="${ext.lib.dir}/jersey-core-1.19.1.jar"/>
+	    <pathelement location="${ext.lib.dir}/jersey-common-2.25.1.jar"/>
+	</path>
+	
+	
 	<!-- define wjc task (WADL to Java) -->
 	<taskdef name="wjc" classname="org.jvnet.ws.wadl2java.WJCTask">
 	    <classpath>
@@ -48,6 +65,8 @@
         <mkdir dir="${sol.build.dir}"/>
 		<mkdir dir="${neo4j.artifacts.src.dir}"/>
 		<mkdir dir="${nfvdeployer.artifacts.src.dir}"/>
+		<mkdir dir="${client1.artifacts.src.dir}" />
+		<mkdir dir="${client2.artifacts.src.dir}" />
 	</target>
 
 	<target name="generate-artifacts" depends="sol-init">
@@ -92,12 +111,75 @@
         </javac>
         <echo message="Done." />
 	</target>
+	
+	
+	<!-- Generate Client1 artifacts -->
+	<target name="generate-client1-artifacts" depends="sol-init">
+    <echo message="Compiling the NfvDeployer WADL descriptions for client1..." />
+    <wjc description="${NfvDeployerWADL}" package="it.polito.dp2.NFV.sol3.client1.model.nfvdeployer" 
+      autoSchemaPackage="false" target="${sol.src.dir}">
+        <!-- <customizations dir="${root.location}" includes="binding.xjc"/> -->
+        <produces dir="${client1.artifacts.src.dir}" includes="*.java"/>
+        <depends dir="${basedir}" includes="build.xml"/>
+        <customClassName uri="${URL}" classname="NfvDeployer"/>
+    </wjc>
+    <echo message="Done." />
+	</target>
+	
+	<target name="generate-client2-artifacts" depends="sol-init">
+	    <echo message="Compiling the NfvDeployer WADL descriptions for client2..." />
+	    <wjc description="${NfvDeployerWADL}" package="it.polito.dp2.NFV.sol3.client2.model.nfvdeployer" 
+	      autoSchemaPackage="false" target="${sol.src.dir}">
+	        <!-- <customizations dir="${root.location}" includes="binding.xjc"/> -->
+	        <produces dir="${client2.artifacts.src.dir}" includes="*.java"/>
+	        <depends dir="${basedir}" includes="build.xml"/>
+	        <customClassName uri="${URL}" classname="NfvDeployer"/>
+	    </wjc>
+	    <echo message="Done." />
+    </target>
+	
+	
+	
+	<target name="build-client" depends="generate-client1-artifacts,generate-client2-artifacts">
+		<echo message="Building sol3.client1..." />
+		<javac 
+            destdir="${build.dir}"
+            debug="${debug}"
+            debuglevel="${debuglevel}"
+            source="${source}"
+            target="${target}"
+		    includeantruntime="false">
+			    <src path="${sol.src.dir}"/>
+			    <include name="it/polito/dp2/NFV/sol3/client1/**" />
+			    <classpath>
+			        <path refid="clients.classpath" />
+			    </classpath>
+		</javac>
+		<echo message="Done." />
+		<echo message="Building sol3.client2..." />
+		        <javac 
+		            destdir="${build.dir}"
+		            debug="${debug}"
+		            debuglevel="${debuglevel}"
+		            source="${source}"
+		            target="${target}"
+		            includeantruntime="false">
+		                <src path="${sol.src.dir}"/>
+		                <include name="it/polito/dp2/NFV/sol3/client2/**" />
+		                <classpath>
+		                    <path refid="clients.classpath" />
+		                </classpath>
+		        </javac>
+		        <echo message="Done." />
+	</target>
 
 
     <target name="sol-clean">
         <delete dir="${sol.build.dir}"/>
         <delete dir="${neo4j.artifacts.src.dir}"/>
         <delete dir="${nfvdeployer.artifacts.src.dir}"/>
+    	<delete dir="${client1.artifacts.src.dir}"/>
+    	<delete dir="${client2.artifacts.src.dir}"/>
     </target>
 
 

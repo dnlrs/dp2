@@ -4,9 +4,12 @@ import java.util.Calendar;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.logging.Logger;
 
 
 public class NfvSystemDBMS {
+
+    private final static Logger logger = Logger.getLogger( NfvSystemDBMS.class.getName() );
 
     private final ConcurrentSkipListMap<String, RealHost>    dbHosts;
     private final ConcurrentSkipListMap<String, RealNffg>    dbNFFGs;
@@ -308,12 +311,13 @@ public class NfvSystemDBMS {
             RealLink link      )
                     throws NullPointerException {
 
-        RealLink oldLink =
-                (this.dbLinks.get( nffgName )).putIfAbsent(link.getName(), link);
-
-        if ( oldLink != null )
-            throw new NullPointerException(
-                    "nfvSystem: duplicate Link within NFFG detected" );
+        (this.dbLinks.get( nffgName )).put(link.getName(), link);
+//        RealLink oldLink =
+//                (this.dbLinks.get( nffgName )).putIfAbsent(link.getName(), link);
+//
+//        if ( oldLink != null )
+//            throw new NullPointerException(
+//                    "nfvSystem: duplicate Link within NFFG detected" );
     }
 
     protected void removeLink(

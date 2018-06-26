@@ -49,6 +49,7 @@
     <element name="deployTime"         type="dateTime" minOccurs="0" />
     <element ref="tns:nfvNode"                         minOccurs="0" maxOccurs="unbounded"   />
     <element name="self"               type="tns:Link" minOccurs="0" />
+    <element name="linksLink"          type="tns:Link" minOccurs="0" />
     <element name="allocatedNodesLink" type="tns:Link" minOccurs="0" />
    </sequence>
   </complexType>

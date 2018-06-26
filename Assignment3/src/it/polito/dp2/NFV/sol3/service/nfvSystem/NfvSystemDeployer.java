@@ -34,56 +34,10 @@ public class NfvSystemDeployer {
 
 
 
-
-
-    /**
-     * Strategy:
-     * <ul>
-     * <li> 1. for each node in the NFFG:
-     * <ul>
-     *   <li> a. Prepare an XML Node with data taken from the node interface
-     *   <li> b. Ask the web service to create a new graph node according to
-     *           the XML Node
-     *   <li> c. Save the returned graph node id
-     * </ul>
-     *
-     * <li> 1.2. new graph node from current NFFG node's hosting host
-     * <ul>
-     *   <li> a. Prepare an XML Node with data taken from the host hosting
-     *           the current nodeI
-     *   <li> b. Ask the web service to create a new graph node according to
-     *           the XML Node ( unless 1.2.d. )
-     *   <li> c. Save the returned graph node id
-     *   <li> d. If there already was a graph node for this host, simply
-     *           retrieve its id
-     * </ul>
-     * <li> 1.3. create relationship between node and host
-     * <ul>
-     *   <li> a. Prepare an XML Relationship with necessary data
-     *   <li> b. Ask web service to create a new relationship between the
-     *           graph nodes
-     *   <li> c. Save the returned relationship id
-     *   <li> d. Save all links found for current nodeI
-     * </ul>
-     * <li> 2. for each link in the NFFG create a relationship on the web
-     *         service
-     * <ul>
-     *   <li> a. Retrieve the source graph node and the destination graph
-     *           node of each link according to its source NFFG node and
-     *           destination NFFG node
-     *   <li> b. Create an XML Relationship with necessary data
-     *   <li> c. Ask web service to create a new relationship between
-     *           the graph nodes
-     *   <li> d. Save the relationship id
-     * </ul>
-     * </ul>
-     */
     public void deployNFFG( String nffgName )
             throws UnknownNameException,
                        AlreadyLoadedException,
                        ServiceException {
-
-//        Neo4jSimpleXMLBuilder builder = new Neo4jSimpleXMLBuilder();
 
         if ( nffgName == null )
             throw new UnknownNameException( "loadGraph: null argument" );
@@ -95,13 +49,6 @@ public class NfvSystemDeployer {
             throw new AlreadyLoadedException( "loadGraph: NFFG already loaded" );
 
 
-        Neo4jSimpleWebAPI neo4jWS;
-        try {
-            neo4jWS = new Neo4jSimpleWebAPI();
-        } catch ( Neo4jSimpleWebAPIException e ) {
-            throw new ServiceException( e );
-        }
-
         try {
 
             /* init relationsihpID mappings for this NFFG */
@@ -112,77 +59,12 @@ public class NfvSystemDeployer {
             NffgReader nffg = this.system.getNffg( nffgName );
 
             for ( NodeReader nodeI : nffg.getNodes() ) {
-
                 deployNode( nodeI );
-
-//                Node nodeXMLNode =
-//                        builder.createXMLNodeFromNodeReader( nodeI );
-//
-//                String nodeGraphNodeID =
-//                        neo4jWS.createGraphNode( nodeXMLNode );
-//
-//                neo4jWS.createNodeLabel(
-//                        nodeGraphNodeID,
-//                        nodeXMLNode.getLabels() );
-//                this.IDService.addNode( nodeGraphNodeID, nodeI.getName() );
-//
-//                HostReader hostI       = nodeI.getHost();
-//                String hostGraphNodeID = null;
-//
-//                if ( this.IDService.hostNameIsPresent( hostI.getName() ) ) {
-//                    hostGraphNodeID  =
-//                            this.IDService.getGraphNodeIDFromHostName( hostI.getName() );
-//
-//                } else {
-//                    Node hostXMLNode =
-//                            builder.createXMLNodeFromHostReader( hostI );
-//
-//                    hostGraphNodeID  =
-//                            neo4jWS.createGraphNode( hostXMLNode );
-//
-//                    neo4jWS.createNodeLabel(
-//                            hostGraphNodeID,
-//                            hostXMLNode.getLabels() );
-//
-//                    this.IDService.addHost( hostGraphNodeID, hostI.getName() );
-//                }
-//
-//                Relationship allocatedOnRelationship =
-//                        builder.createXMLAllocatedOnRel(
-//                                nodeGraphNodeID,
-//                                hostGraphNodeID );
-//                String allocatedOnRelationshipID =
-//                        neo4jWS.createNodeRelationship(
-//                                nodeGraphNodeID,
-//                                allocatedOnRelationship );
-//                this.IDService.addLink(
-//                        nffgName,
-//                        new String( nodeI.getName() + "TO" + hostI.getName() ), /* "nodeNameTOhostName" */
-//                        allocatedOnRelationshipID );
-
                 setOFLinkInterfaces.addAll( nodeI.getLinks() );
             }
 
             for ( LinkReader linkI : setOFLinkInterfaces ) {
-
                 deployLink( linkI );
-//                String srcNodeName    = linkI.getSourceNode().getName();
-//                String dstNodeName    = linkI.getDestinationNode().getName();
-//                String srcGraphNodeID = this.IDService.getGraphNodeIDFromNodeName( srcNodeName );
-//                String dstGraphNodeID = this.IDService.getGraphNodeIDFromNodeName( dstNodeName );
-//
-//                Relationship forwardsToRelationship =
-//                        this.builder.createXMLForwardToRel(
-//                                srcGraphNodeID,
-//                                dstGraphNodeID );
-//                String forwardsToRelationshipID =
-//                        neo4jWS.createNodeRelationship(
-//                                srcGraphNodeID,
-//                                forwardsToRelationship);
-//                this.IDService.addLink(
-//                        nffgName,
-//                        linkI.getName(),
-//                        forwardsToRelationshipID );
             }
 
         } catch ( WebApplicationException
@@ -192,7 +74,7 @@ public class NfvSystemDeployer {
             throw new ServiceException( e.getMessage() );
 
         } catch ( Exception e ) {
-            System.err.println( "Unknown exception" );
+//            System.err.println( "Unknown exception" );
             throw new ServiceException( e.getMessage() );
 
         }
@@ -207,8 +89,6 @@ public class NfvSystemDeployer {
 
     public void deployNode( NodeReader nodeI )
             throws ServiceException {
-
-//        Neo4jSimpleXMLBuilder builder = new Neo4jSimpleXMLBuilder();
 
         Neo4jSimpleWebAPI neo4jWS;
         try {
@@ -305,6 +185,7 @@ public class NfvSystemDeployer {
     }
 
 
+
     public void unDeployNffg( NffgReader nffg ) {
 
         if ( nffg == null )
@@ -330,6 +211,7 @@ public class NfvSystemDeployer {
     }
 
 
+
     public void unDeployLink( LinkReader link ) {
 
         String relationshipID =
@@ -349,6 +231,7 @@ public class NfvSystemDeployer {
             } catch ( Exception e ) {}
         }
     }
+
 
     public void unDeployNode( NodeReader node ) {
 

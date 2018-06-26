@@ -2,6 +2,7 @@ package it.polito.dp2.NFV.sol3.service.resources;
 
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -20,6 +21,7 @@ import javax.ws.rs.core.UriInfo;
 
 import it.polito.dp2.NFV.LinkReader;
 import it.polito.dp2.NFV.NffgReader;
+import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.lab3.ServiceException;
 import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvArc;
 import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvArcs;
@@ -28,7 +30,7 @@ import it.polito.dp2.NFV.sol3.service.nfvSystem.NfvSystem;
 
 @Path( "/nffgs/{nffgName: [a-zA-Z][a-zA-Z0-9]*}/links" )
 public class LinksResource {
-
+    private final static Logger    logger = Logger.getLogger( LinksResource.class.getName() );
     private final static NfvSystem system = new NfvSystem();
 
     @Context
@@ -124,21 +126,35 @@ public class LinksResource {
             throw new WebApplicationException(
                     Response.Status.BAD_REQUEST ); // 400
 
-        if ( system.getLink( nffgName, link.getName() ) != null ) {
+        NodeReader srcNode = system.getNode( link.getSrc() );
+        NodeReader dstNode = system.getNode( link.getDst() );
 
-            if ( this.update != 1 )
-                throw new WebApplicationException(
-                        Response.Status.FORBIDDEN ); // 403
-            else {
-                system.deleteLink( nffgName, link.getName() );
+        if ( (srcNode == null) || (dstNode == null) )
+            throw new WebApplicationException(
+                    Response.Status.NOT_FOUND ); // 404
+
+        if ( srcNode.getNffg().getName().compareTo(
+                dstNode.getNffg().getName() ) != 0 )
+            throw new WebApplicationException(
+                    Response.Status.NOT_FOUND ); // 404
+
+        String linkName = link.getName();
+        for ( LinkReader linkI : srcNode.getLinks() ) {
+            if ( linkI.getDestinationNode().getName().compareTo( dstNode.getName()) == 0 ) {
+                if ( this.update != 1 )
+                    throw new WebApplicationException(
+                            Response.Status.NOT_ACCEPTABLE ); // 406
+                else {
+                    linkName = linkI.getName();
+                    system.deleteLink( nffgName, linkI.getName() );
+                }
             }
         }
-
 
         try {
 
             system.addLink(
-                    link.getName(),
+                    linkName,
                     link.getSrc(),
                     link.getDst(),
                     link.getThroughput(),
@@ -146,12 +162,12 @@ public class LinksResource {
 
         } catch ( ServiceException e ) {
 
-            system.deleteLink( nffgName, link.getName() );
+            system.deleteLink( nffgName, linkName );
             throw new WebApplicationException(
                     Response.Status.FORBIDDEN ); // 403
         }
 
-        LinkReader linkI =  system.getLink( nffgName, link.getName() );
+        LinkReader linkI =  system.getLink( nffgName, linkName );
         NfvArc result = buildNfvLink( linkI, this.uriInfo, true );
 
         if ( result == null )

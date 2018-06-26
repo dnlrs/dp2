@@ -5,7 +5,7 @@
 
 Resource                                | XML representation |  URL                               | Meaning
 --------------------------------------- | ------------------ | ---------------------------------- | -------------------------------------------------
-services                                | services           | /services                          | the set of all collections accessible through this API
+services                                | services           | /                                  | the set of all collections accessible through this API
 hosts                                   | nfvHosts           | /hosts                             | the set of all Hosts in the NFV System
 hosts > {hostName}                      | nfvHost            | /hosts/{hostName}                  | a single Host
 hosts > {hostName} > nodes              | nfvNodes           | /hosts/{hostName}/nodes            | the set of Nodes allocated on this Host

@@ -181,6 +181,10 @@ public class RealHost extends RealNamedEntity implements HostReader {
         for ( RealNode node : this.nodes ) {
             if ( node.getName().compareTo( nodeName ) == 0 ) {
                 this.nodes.remove( node );
+
+                this.usedMemory.addAndGet( -(node.getFuncType().getRequiredMemory()) );
+                this.usedStorage.addAndGet( -(node.getFuncType().getRequiredStorage()) );
+                this.usedVNFs.addAndGet( -1 );
                 break;
             }
         }
@@ -193,13 +197,8 @@ public class RealHost extends RealNamedEntity implements HostReader {
         if ( freeVNFs < 1 )
             return false;
 
-        int freeMemory  = this.availableMemory.get();
-        int freeStorage = this.availableStorage.get();
-
-        for ( RealNode node : this.nodes ) {
-            freeMemory  -= node.getFuncType().getRequiredMemory();
-            freeStorage -= node.getFuncType().getRequiredStorage();
-        }
+        int freeMemory  = this.availableMemory.get() - this.usedMemory.get();
+        int freeStorage = this.availableStorage.get() - this.usedStorage.get();
 
         if ( (freeMemory < requiredMemory) || (freeStorage < requiredStorage) )
             return false;

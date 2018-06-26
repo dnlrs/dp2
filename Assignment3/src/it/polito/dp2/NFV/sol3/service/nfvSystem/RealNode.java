@@ -24,9 +24,6 @@ public class RealNode extends RealNamedEntity implements NodeReader {
 
     private final CopyOnWriteArraySet<RealLink> links;
 
-    private final Object lockHost     = new Object();
-    private final Object lockNffg     = new Object();
-    private final Object lockFuncType = new Object();
     private final Object lockLinks    = new Object();
 
 
@@ -67,16 +64,12 @@ public class RealNode extends RealNamedEntity implements NodeReader {
 
     @Override
     public VNFTypeReader getFuncType() {
-        synchronized ( this.lockFuncType ) {
             return this.funcType;
-        }
     }
 
     @Override
     public HostReader getHost() {
-        synchronized ( this.lockHost ) {
             return this.host;
-        }
     }
 
     @Override
@@ -88,9 +81,7 @@ public class RealNode extends RealNamedEntity implements NodeReader {
 
     @Override
     public NffgReader getNffg() {
-        synchronized ( this.lockNffg ) {
             return this.nffg;
-        }
     }
 
 
@@ -113,8 +104,10 @@ public class RealNode extends RealNamedEntity implements NodeReader {
         synchronized ( this.lockLinks ) {
 
             for ( RealLink l : this.links )
-                if ( l.getName().compareTo( link.getName() ) == 0 )
-                    throw new NullPointerException( "addLink: duplicate link" );
+                if ( l.getName().compareTo( link.getName() ) == 0 ) {
+                    this.links.remove( l );
+//                    throw new NullPointerException( "addLink: duplicate link" );
+                }
 
             this.links.add( link );
         }
