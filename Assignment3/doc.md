@@ -30,7 +30,7 @@ nodes > {nodeName} > links              | nfvArcs            | /nodes/{nodeName}
 #### Get all Hosts in the NFV System
 
 ```HTTP
-GET .../hosts[?page=??&itemsPerPage=??]
+GET .../hosts[?page=XX&itemsPerPage=XX]
 ```
 
 ###### Content Type
@@ -45,16 +45,16 @@ itemsPerPage  | int         | optional | 20
 
 ###### Responses
 
-Code          | Status          | Body
---------------|-----------------|------------
-200           | OK              | nfvHosts
-204           | No Content      |
-500           | Server Error    |
+Code          | Status          | Body      
+--------------|-----------------|---------- 
+200           | OK              | nfvHosts  
+204           | No Content      |           
+500           | Server Error    |           
 
 ###### Example Request
 
 ```HTTP
-GET http://localhost:8080/NfvDeployer/rest/hosts/hosts
+GET http://localhost:8080/NfvDeployer/rest/hosts
 ```
 
 ###### Example Response
@@ -99,10 +99,9 @@ GET .../hosts/{hostName}
 
 ###### Responses
 
-Code          | Status          | Body
---------------|-----------------|------------
+Code          | Status          | Body     
+--------------|-----------------|---------
 200           | OK              | nfvHost
-400           | Bad Request     |
 404           | Not Found       |
 500           | Server Error    |
 
@@ -110,7 +109,7 @@ Code          | Status          | Body
 ###### Example Request
 
 ```HTTP
-GET http://localhost:8080/NfvDeployer/rest/hosts/hosts/H0
+GET http://localhost:8080/NfvDeployer/rest/hosts/H0
 ```
 
 ###### Example Response
@@ -155,8 +154,7 @@ will be reported
 Code          | Status          | Body
 --------------|-----------------|------------
 200           | OK              | nfvNodes
-204           | No content      |
-400           | Bad Request     |
+204           | No content      | 
 404           | Not Found       |
 500           | Server Error    |
 
@@ -215,7 +213,7 @@ GET http://localhost:8080/NfvDeployer/rest/hosts/hosts/H0/nodes
 #### Get all Connections
 
 ```HTTP
-GET .../connections[?sourceHost=??&destinationHost=??]
+GET .../connections[?sourceHost={hostName}&destinationHost={hostName}]
 ```
 
 If *sourceHost* and *destinationHost* are specified, only the connection between these Hosts, if it exists, will be returned.
@@ -336,7 +334,7 @@ GET .../vnfs/{vnfName}
 Code          | Status          | Body
 --------------|-----------------|------------
 200           | OK              | nfvVNF
-204           | No content      |
+404           | Not Found       |
 500           | Server Error    |
 
 ###### Example Request
@@ -363,14 +361,14 @@ GET http://localhost:8080/NfvDeployer/rest/vnfs/CACHEa
 #### Get all NFFGs
 
 ```HTTP
-GET .../nffgs[?detailed=??&page=??&itemsPerPage=??&date=??]
+GET .../nffgs[?detailed={0|1}&page={int}&itemsPerPage={int}&date={dateTime}]
 ```
 
 If *page* number is specified the results will be returned paginated.
 
-If *detailed* is `true` for each NFFG also details about allocated Nodes (and their Links) will be returned.
+If *detailed* is **true** for each NFFG also details about allocated Nodes (and their Links) will be returned.
 
-if *date* is specified only NFFG deployed after specified date will be returned.  
+if *date* is specified only NFFG deployed after the specified date will be returned.  
 
 ###### Content Type
  - application/xml
@@ -379,8 +377,8 @@ if *date* is specified only NFFG deployed after specified date will be returned.
 
 Name            | Value Type  | Use      | Default
 ----------------|-------------|----------|---------
-detailed        | int         | optional | 1 (`true`)
-date            | dateTime    | optional |
+detailed        | int         | optional | 1 (true)
+date            | dateTime    | optional | null
 page            | int         | optional | 0 (all pages)
 itemsPerPage    | int         | optional | 20
 
@@ -396,6 +394,7 @@ Code          | Status          | Body
 ```HTML
 GET http://localhost:8080/NfvDeployer/rest/nffgs
 ```
+
 ###### Example Response
 *200* OK
 ```XML
@@ -436,16 +435,17 @@ GET http://localhost:8080/NfvDeployer/rest/nffgs
   <self href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg1"/>
   <allocatedNodesLink href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg1/nodes"/>
  </nfvNFFG>
-
 </nfvNFFGs>
 ```
 
+
+
 #### Get a specific NFFG
 ```HTTP
-GET .../nffgs/{nffgName}[?detailed=??]
+GET .../nffgs/{nffgName}[?detailed={0|1}]
 ```
 
-If *detailed* is `true` then also details about allocated Nodes (and their Links) will be returned.
+If *detailed* is **true** then also details about allocated Nodes (and their Links) will be returned.
 
 ###### Content Type
  - application/xml
@@ -454,14 +454,13 @@ If *detailed* is `true` then also details about allocated Nodes (and their Links
 
 Name            | Value Type  | Use      | Default
 ----------------|-------------|----------|---------
-detailed        | int         | optional | 1 (`true`)
+detailed        | int         | optional | 1 (true)
 
 ###### Responses
 
 Code          | Status          | Body
 --------------|-----------------|------------
 200           | OK              | nfvNFFG
-400           | Bad Request     |
 404           | Not Found       |
 500           | Server Error    |
 
@@ -469,6 +468,7 @@ Code          | Status          | Body
 ```HTML
 GET http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0
 ```
+
 ###### Example Response
 *200* OK
 ```XML
@@ -492,10 +492,15 @@ GET http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0
 </nfvNFFG>
 ```
 
+
+
 #### Deploy a new NFFG
 ```HTTP
 POST .../nffgs
 ```
+
+Deploys a NFFG with its nodes and links into the system and the nodes and relationships into the Neo4j Service accordingly. 
+
 
 ###### Content Type
  - application/xml
@@ -526,6 +531,7 @@ GET http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0
   </nfvNode>
  </nfvNFFG>
 ```
+
 ###### Example Response
 *200 OK*
 ```XML
@@ -536,6 +542,9 @@ GET http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0
   <allocatedNodesLink href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/nodes"/>
  </nfvNFFG>
 ```
+
+
+
 
 #### Undeploy an NFFG
 ```HTTP
@@ -561,12 +570,12 @@ DELETE http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0
 #### Get all Nodes belonging to a specific NFFG
 
 ```HTTP
-GET .../nffgs/{nffgName}/nodes[?detailed=??&page=??&itemsPerPage=??]
+GET .../nffgs/{nffgName}/nodes[?detailed={0|1}&page={int}&itemsPerPage={int}]
 ```
 
 If *page* number is specified the results will be returned paginated.
 
-If *detailed* is `true` for each Node also details about their Links will be returned.
+If *detailed* is **true** for each Node also details about their Links will be returned.
 
 ###### Content Type
  - application/xml
@@ -575,7 +584,7 @@ If *detailed* is `true` for each Node also details about their Links will be ret
 
 Name            | Value Type  | Use      | Default
 ----------------|-------------|----------|---------
-detailed        | int         | optional | 1 (`true`)
+detailed        | int         | optional | 1 (true)
 page            | int         | optional | 0 (all pages)
 itemsPerPage    | int         | optional | 20
 
@@ -636,7 +645,7 @@ GET http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/nodes
 #### Get all Links existing in a specific NFFG
 
 ```HTTP
-GET .../nffgs/{nffgName}/links[?page=??&itemsPerPage=??]
+GET .../nffgs/{nffgName}/links[?page={int}&itemsPerPage={int}]
 ```
 
 ###### Content Type
@@ -662,6 +671,7 @@ Code          | Status          | Body
 ```HTML
 GET http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/links
 ```
+
 ###### Example Response
 *200* OK
 ```XML
@@ -684,7 +694,8 @@ GET http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/links
   <latency>0</latency>
   <self href="http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/links/Link1"/>
   <srcLink href="http://localhost:8080/NfvDeployer/rest/nodes/FWb6Nffg0"/>
-  <dstLink href="http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0"/></nfvArc>
+  <dstLink href="http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0"/>
+ </nfvArc>
 </nfvArcs>
 ```
 
@@ -724,6 +735,7 @@ GET http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/links/Link0
 ```
 
 
+
 #### Add a new Link in an NFFG
 ```HTTP
 POST .../nffgs/{nffgName}/links[?update={0|1}]
@@ -739,7 +751,7 @@ If instead is set to 0, if the link exists already an error will be returned.
 
 Name            | Value Type  | Use      | Default
 ----------------|-------------|----------|---------
-update          | int         | optional | 1 
+update          | int         | optional | 1 (true)
  
 ###### Responses
 
@@ -748,6 +760,8 @@ Code          | Status          | Body
 200           | OK              | nfvArc
 400           | Bad Request     |
 403           | Forbidden       |
+404           | Not Found       |
+406           | Not Acceptable  |
 500           | Server Error    |
 
 ###### Example Request
@@ -807,15 +821,17 @@ DELETE http://localhost:8080/NfvDeployer/rest/nffgs/Nffg0/links/Link0
 *204 No Content*
 
 
+
+
 ### Operations on Nodes
 
 #### Get all Nodes
 
 ```HTTP
-GET .../nodes[?detailed=??&page=??&itemsPerPage=??]
+GET .../nodes[?detailed={0|1}&page={int}&itemsPerPage={int}]
 ```
 
-If *detailed* is **1** (`true`) then for each node also detailed info about its Links is returned.
+If *detailed* is **1** (true) then for each node also detailed info about its Links is returned.
 
 ###### Content Type
  - application/xml
@@ -824,7 +840,7 @@ If *detailed* is **1** (`true`) then for each node also detailed info about its 
 
 Name            | Value Type  | Use      | Default
 ----------------|-------------|----------|---------
-detailed        | int         | optional | 1 (`true`)
+detailed        | int         | optional | 1 (true)
 page            | int         | optional | 0 (all pages)
 itemsPerPage    | int         | optional | 20
 
@@ -840,6 +856,7 @@ Code          | Status          | Body
 ```HTML
 GET http://localhost:8080/NfvDeployer/rest/nodes
 ```
+
 ###### Example Response
 *200* OK
 ```XML
@@ -885,8 +902,10 @@ GET http://localhost:8080/NfvDeployer/rest/nodes
 #### Get a specific Node
 
 ```HTTP
-GET .../nodes/{nodeName}[?detailed=??]
+GET .../nodes/{nodeName}[?detailed={0|1}]
 ```
+
+If *detailed* is set to 1 the also all links starting from the node are returned.
 
 ###### Content Type
  - application/xml
@@ -895,7 +914,7 @@ GET .../nodes/{nodeName}[?detailed=??]
 
 Name            | Value Type  | Use      | Default
 ----------------|-------------|----------|---------
-detailed        | int         | optional | 1 (`true`)
+detailed        | int         | optional | 1 (true)
 
 ###### Responses
 
@@ -909,6 +928,7 @@ Code          | Status          | Body
 ```HTML
 GET http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0
 ```
+
 ###### Example Response
 *200* OK
 ```XML
@@ -935,6 +955,8 @@ GET http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0
  <reachableHostsLink href="http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0/reachableHosts"/>
 </nfvNode>
 ```
+
+
 
 #### Add a new Node (and deploy it)
 ```HTTP
@@ -970,6 +992,7 @@ POST http://localhost:8080/NfvDeployer/rest/nodes
  <associatedNFFG>Nffg0</associatedNFFG> 
 </nfvNode>
 ```
+
 ###### Example Response
 *200* OK
 ```XML
@@ -986,6 +1009,8 @@ POST http://localhost:8080/NfvDeployer/rest/nodes
  <reachableHostsLink href="http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0/reachableHosts"/>
 </nfvNode>
 ```
+
+
 
 
 #### Delete a Node (and undeploy it)
@@ -1010,6 +1035,8 @@ DELETE http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0
 *204 No Content*
 
 
+
+
 #### Get all reachable Hosts for a specific Node
 ```HTTP
 GET .../nodes/{nodeName}/reachableHosts
@@ -1031,7 +1058,7 @@ Code          | Status          | Body
 GET http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0/reachableHosts
 ```
 ###### Example Response
-*200* OK
+*200 OK*
 ```XML
 <nfvHosts xmlns="http://www.example.org/NfvDeployer">
  <nfvHost>
@@ -1057,6 +1084,9 @@ GET http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0/reachableHost
 </nfvHosts>
 ```
 
+
+
+
 #### Get all Links starting from a specific Node
 ```HTTP
 GET .../nodes/{nodeName}/links
@@ -1077,8 +1107,9 @@ Code          | Status          | Body
 ```HTTP
 GET http://localhost:8080/NfvDeployer/rest/nodes/MAILCLIENTt0Nffg0/links
 ```
+
 ###### Example Response
-*200* Ok
+*200 Ok*
 ```XML
 <nfvArcs xmlns="http://www.example.org/NfvDeployer">
  <nfvArc>

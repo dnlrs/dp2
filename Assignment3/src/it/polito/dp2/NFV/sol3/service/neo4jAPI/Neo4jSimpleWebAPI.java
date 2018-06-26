@@ -12,13 +12,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
-import it.polito.dp2.NFV.sol3.service.model.neo4j.Labels;
-import it.polito.dp2.NFV.sol3.service.model.neo4j.Node;
-import it.polito.dp2.NFV.sol3.service.model.neo4j.Nodes;
-import it.polito.dp2.NFV.sol3.service.model.neo4j.Properties;
-import it.polito.dp2.NFV.sol3.service.model.neo4j.Property;
-import it.polito.dp2.NFV.sol3.service.model.neo4j.Relationship;
-import it.polito.dp2.NFV.sol3.service.model.neo4j.Relationships;
+import it.polito.dp2.NFV.sol3.model.neo4j.Labels;
+import it.polito.dp2.NFV.sol3.model.neo4j.Node;
+import it.polito.dp2.NFV.sol3.model.neo4j.Nodes;
+import it.polito.dp2.NFV.sol3.model.neo4j.Properties;
+import it.polito.dp2.NFV.sol3.model.neo4j.Property;
+import it.polito.dp2.NFV.sol3.model.neo4j.Relationship;
+import it.polito.dp2.NFV.sol3.model.neo4j.Relationships;
 
 
 /**

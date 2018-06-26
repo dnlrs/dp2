@@ -8,8 +8,8 @@ import javax.ws.rs.core.MediaType;
 
 import it.polito.dp2.NFV.LinkReader;
 import it.polito.dp2.NFV.NodeReader;
-import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvArc;
-import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvNode;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArc;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNode;
 
 /**
  * An implementation of the {@link LinkReader} interface that retrieves
@@ -57,6 +57,7 @@ public class Client1Link implements LinkReader {
 
     @Override
     public int getLatency() {
+        // NOTE: this may be gotten from the service since link may be updated
         return this.link.getLatency();
     }
 
@@ -85,6 +86,7 @@ public class Client1Link implements LinkReader {
 
     @Override
     public float getThroughput() {
+        // NOTE: this may have to be gotten from the service since link may be updated
         return this.link.getThroughput();
     }
 

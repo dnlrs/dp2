@@ -14,9 +14,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import it.polito.dp2.NFV.VNFTypeReader;
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.FunctionalTypeEnum;
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvVNF;
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvVNFs;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.FunctionalTypeEnum;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvVNF;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvVNFs;
 import it.polito.dp2.NFV.sol3.service.nfvSystem.NfvSystem;
 
 @Path( "/vnfs" )
@@ -61,10 +61,6 @@ public class VNFsResource {
     @Produces( MediaType.APPLICATION_XML )
     public NfvVNF getVNF(
             @PathParam("vnfName") String vnfName ) {
-
-        if ( vnfName == null )
-            throw new WebApplicationException(
-                    Response.Status.BAD_REQUEST ); // 400
 
         VNFTypeReader vnfI = system.getVNF( vnfName );
 

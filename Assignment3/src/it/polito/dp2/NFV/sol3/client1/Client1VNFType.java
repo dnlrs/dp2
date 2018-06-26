@@ -4,7 +4,7 @@ import java.net.URI;
 
 import it.polito.dp2.NFV.FunctionalType;
 import it.polito.dp2.NFV.VNFTypeReader;
-import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvVNF;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvVNF;
 
 /**
  * An implementation of the {@link VNFTypeReader} interface that retrieves
@@ -29,7 +29,7 @@ public class Client1VNFType implements VNFTypeReader {
 
     @Override
     public FunctionalType getFunctionalType() {
-        return FunctionalType.fromValue( this.vnf.getFunctionalType() );
+        return FunctionalType.fromValue( this.vnf.getFunctionalType().value() );
     }
 
     @Override

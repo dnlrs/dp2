@@ -16,8 +16,8 @@ import javax.ws.rs.core.UriInfo;
 
 import it.polito.dp2.NFV.ConnectionPerformanceReader;
 import it.polito.dp2.NFV.HostReader;
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvArc;
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvArcs;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArc;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArcs;
 import it.polito.dp2.NFV.sol3.service.nfvSystem.NfvSystem;
 
 @Path( "/connections" )

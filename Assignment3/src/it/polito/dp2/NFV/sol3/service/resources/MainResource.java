@@ -9,7 +9,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.Services;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.Services;
+
 
 @Path( "/" )
 public class MainResource {

@@ -23,8 +23,8 @@ import it.polito.dp2.NFV.LinkReader;
 import it.polito.dp2.NFV.NffgReader;
 import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.lab3.ServiceException;
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvArc;
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvArcs;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArc;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArcs;
 import it.polito.dp2.NFV.sol3.service.nfvSystem.NfvSystem;
 
 
@@ -103,7 +103,7 @@ public class LinksResource {
 
         if ( linkI == null )
             throw new WebApplicationException(
-                    Response.Status.NO_CONTENT ); // 404
+                    Response.Status.NOT_FOUND ); // 404
 
         NfvArc result = buildNfvLink( linkI, this.uriInfo, true );
 
@@ -136,7 +136,7 @@ public class LinksResource {
         if ( srcNode.getNffg().getName().compareTo(
                 dstNode.getNffg().getName() ) != 0 )
             throw new WebApplicationException(
-                    Response.Status.NOT_FOUND ); // 404
+                    Response.Status.BAD_REQUEST ); // 400
 
         String linkName = link.getName();
         for ( LinkReader linkI : srcNode.getLinks() ) {

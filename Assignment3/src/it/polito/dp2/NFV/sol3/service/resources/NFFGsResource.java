@@ -26,11 +26,11 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import it.polito.dp2.NFV.NffgReader;
 import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.lab3.ServiceException;
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvArc;
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvNFFG;
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvNFFGs;
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvNode;
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvNodes;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArc;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNFFG;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNFFGs;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNode;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNodes;
 import it.polito.dp2.NFV.sol3.service.nfvSystem.NfvSystem;
 
 @Path( "/nffgs" )
@@ -112,10 +112,6 @@ public class NFFGsResource {
     public NfvNFFG getNFFG(
             @PathParam( "nffgName" ) String nffgName ) {
 
-        if ( nffgName == null )
-            throw new WebApplicationException(
-                    Response.Status.BAD_REQUEST ); // 400
-
         NffgReader nffgI = system.getNffg( nffgName );
 
         if ( nffgI == null )
@@ -184,7 +180,6 @@ public class NFFGsResource {
         if ( !(isValid( nffg )) )
             throw new WebApplicationException(
                     Response.Status.BAD_REQUEST ); // 400
-
 
         try {
             system.addNffg( nffg.getName() );

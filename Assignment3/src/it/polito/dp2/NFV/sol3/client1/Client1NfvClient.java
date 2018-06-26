@@ -18,8 +18,9 @@ import it.polito.dp2.NFV.lab3.NfvClientException;
 import it.polito.dp2.NFV.lab3.NodeDescriptor;
 import it.polito.dp2.NFV.lab3.ServiceException;
 import it.polito.dp2.NFV.lab3.UnknownEntityException;
-import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvNFFG;
-import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.Services;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNFFG;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNode;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.Services;
 
 /**
  * An implementation of the {@link NfvClient} interface.
@@ -66,11 +67,12 @@ public class Client1NfvClient implements NfvClient {
         xmlNffg.setName( new String( "Nffg" + nffgCounter ) );
         nffgCounter++;
 
-        List<NfvNFFG.NfvNode> xmlNffgNodes = xmlNffg.getNfvNode();
+//        List<NfvNFFG.NfvNode> xmlNffgNodes = xmlNffg.getNfvNode();
+        List<NfvNode> xmlNffgNodes = xmlNffg.getNfvNode();
 
         for ( NodeDescriptor node : nffg.getNodes() ) {
-
-            NfvNFFG.NfvNode xmlNode = new NfvNFFG.NfvNode();
+            NfvNode xmlNode = new NfvNode();
+//            NfvNFFG.NfvNode xmlNode = new NfvNFFG.NfvNode();
             xmlNode.setName( new String( "Node" + nodeCounter + xmlNffg.getName() ) );
             nodeCounter++;
 

@@ -2,12 +2,12 @@ package it.polito.dp2.NFV.sol3.service.neo4jAPI;
 
 import it.polito.dp2.NFV.HostReader;
 import it.polito.dp2.NFV.NodeReader;
-import it.polito.dp2.NFV.sol3.service.model.neo4j.Labels;
-import it.polito.dp2.NFV.sol3.service.model.neo4j.Node;
-import it.polito.dp2.NFV.sol3.service.model.neo4j.ObjectFactory;
-import it.polito.dp2.NFV.sol3.service.model.neo4j.Properties;
-import it.polito.dp2.NFV.sol3.service.model.neo4j.Property;
-import it.polito.dp2.NFV.sol3.service.model.neo4j.Relationship;
+import it.polito.dp2.NFV.sol3.model.neo4j.Labels;
+import it.polito.dp2.NFV.sol3.model.neo4j.Node;
+import it.polito.dp2.NFV.sol3.model.neo4j.ObjectFactory;
+import it.polito.dp2.NFV.sol3.model.neo4j.Properties;
+import it.polito.dp2.NFV.sol3.model.neo4j.Property;
+import it.polito.dp2.NFV.sol3.model.neo4j.Relationship;
 
 /**
  * Builds XML marshallable Objects starting from NFV System objects interfaces.

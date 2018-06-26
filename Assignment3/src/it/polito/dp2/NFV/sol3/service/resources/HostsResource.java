@@ -17,10 +17,10 @@ import javax.ws.rs.core.UriInfo;
 
 import it.polito.dp2.NFV.HostReader;
 import it.polito.dp2.NFV.NodeReader;
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvHost;
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvHosts;
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvNode;
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvNodes;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvHost;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvHosts;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNode;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNodes;
 import it.polito.dp2.NFV.sol3.service.nfvSystem.NfvSystem;
 
 @Path( "/hosts" )
@@ -95,10 +95,6 @@ public class HostsResource {
     public NfvHost getHost(
             @PathParam("hostName") String hostName ) {
 
-        if ( hostName == null )
-            throw new WebApplicationException(
-                    Response.Status.BAD_REQUEST ); // 400
-
         HostReader hostI = system.getHost( hostName );
 
         if ( hostI == null )
@@ -123,10 +119,6 @@ public class HostsResource {
     public NfvNodes getHostNodes(
             @PathParam("hostName") String hostName ) {
 
-        if ( hostName == null )
-            throw new WebApplicationException(
-                    Response.Status.BAD_REQUEST ); // 400
-
         HostReader hostI = system.getHost( hostName );
 
         if ( hostI == null )
@@ -144,7 +136,10 @@ public class HostsResource {
         NfvNode node = null;
         for ( NodeReader nodeI : hostI.getNodes() ) {
 
-            node = NodesResource.buildNfvNode( nodeI, this.uriInfo, true );
+            node = NodesResource.buildNfvNode(
+                                    nodeI,
+                                    this.uriInfo,
+                                    (this.detailed == 1 ? true : false) );
 
             if ( node == null )
                 throw new WebApplicationException(
@@ -169,13 +164,9 @@ public class HostsResource {
         host.setInstalledMemory( new Integer( hostI.getAvailableMemory()) );
         host.setInstalledStorage( new Integer( hostI.getAvailableStorage() ) );
 
-        try {
-            List<String> hostedNodes = host.getHostedNodes();
-            for ( NodeReader hostedNodeI : hostI.getNodes() ) {
-                hostedNodes.add( hostedNodeI.getName() );
-            }
-        } catch ( Exception e ) {
-            return null;
+        List<String> hostedNodes = host.getHostedNodes();
+        for ( NodeReader hostedNodeI : hostI.getNodes() ) {
+            hostedNodes.add( hostedNodeI.getName() );
         }
 
         host.setSelf( Utils.getHostLink( uriInfo, hostI.getName() ) );

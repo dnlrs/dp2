@@ -11,11 +11,16 @@ import javax.ws.rs.core.MediaType;
 
 import it.polito.dp2.NFV.FunctionalType;
 import it.polito.dp2.NFV.NfvReaderException;
-import it.polito.dp2.NFV.sol3.client2.model.nfvdeployer.NfvArcs;
-import it.polito.dp2.NFV.sol3.client2.model.nfvdeployer.NfvHosts;
-import it.polito.dp2.NFV.sol3.client2.model.nfvdeployer.NfvNFFGs;
-import it.polito.dp2.NFV.sol3.client2.model.nfvdeployer.NfvVNFs;
-import it.polito.dp2.NFV.sol3.client2.model.nfvdeployer.Services;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArc;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArcs;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvHost;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvHosts;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNFFG;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNFFGs;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNode;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvVNF;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvVNFs;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.Services;
 
 public class NfvSystemLoader {
 
@@ -72,7 +77,7 @@ public class NfvSystemLoader {
                                       .request( MediaType.APPLICATION_XML )
                                       .get( NfvHosts.class );
 
-            for ( NfvHosts.NfvHost hostI : xmlHosts.getNfvHost() ) {
+            for ( NfvHost hostI : xmlHosts.getNfvHost() ) {
 
                 RealHost host =
                         new RealHost(
@@ -88,7 +93,7 @@ public class NfvSystemLoader {
                                            .get( NfvArcs.class );
 
 
-            for ( NfvArcs.NfvArc connectionI : xmlconnections.getNfvArc() ) {
+            for ( NfvArc connectionI : xmlconnections.getNfvArc() ) {
 
                 RealConnection connection =
                         new RealConnection(
@@ -103,12 +108,12 @@ public class NfvSystemLoader {
                                     .request( MediaType.APPLICATION_XML )
                                     .get( NfvVNFs.class );
 
-            for ( NfvVNFs.NfvVNF vnfI : xmlVNFs.getNfvVNF() ) {
+            for ( NfvVNF vnfI : xmlVNFs.getNfvVNF() ) {
 
                 RealVNFType vnf =
                         new RealVNFType(
                                 vnfI.getName(),
-                                FunctionalType.fromValue( vnfI.getFunctionalType() ),
+                                FunctionalType.fromValue( vnfI.getFunctionalType().toString() ),
                                 vnfI.getRequiredMemory(), vnfI.getRequiredStorage() );
 
                 vnfs.put( vnf.getName(), vnf );
@@ -122,7 +127,7 @@ public class NfvSystemLoader {
                                       .get( NfvNFFGs.class );
 
 
-            for ( NfvNFFGs.NfvNFFG nffgI : xmlNffgs.getNfvNFFG() ) {
+            for ( NfvNFFG nffgI : xmlNffgs.getNfvNFFG() ) {
                 RealNffg nffg =
                         new RealNffg(
                                 nffgI.getName(),
@@ -132,7 +137,7 @@ public class NfvSystemLoader {
                 HashMap<String, RealNode> nffgNodes = new HashMap<String, RealNode>();
                 HashMap<String, RealLink> nffgLinks = new HashMap<String, RealLink>();
 
-                for ( NfvNFFGs.NfvNFFG.NfvNode nodeI : nffgI.getNfvNode() ) {
+                for ( NfvNode nodeI : nffgI.getNfvNode() ) {
 
                     RealNode node =
                             new RealNode(
@@ -149,8 +154,8 @@ public class NfvSystemLoader {
                     nffgNodes.put( node.getName(), node );
                 }
 
-                for ( NfvNFFGs.NfvNFFG.NfvNode nodeI : nffgI.getNfvNode() ) {
-                    for ( NfvNFFGs.NfvNFFG.NfvNode.NfvArc linkI : nodeI.getNfvArc() ) {
+                for ( NfvNode nodeI : nffgI.getNfvNode() ) {
+                    for ( NfvArc linkI : nodeI.getNfvArc() ) {
 
                         RealLink link =
                                 new RealLink(

@@ -13,12 +13,12 @@ import it.polito.dp2.NFV.LinkReader;
 import it.polito.dp2.NFV.NffgReader;
 import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.VNFTypeReader;
-import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvArc;
-import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvArcs;
-import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvHost;
-import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvNFFG;
-import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvNode;
-import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvVNF;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArc;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArcs;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvHost;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNFFG;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNode;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvVNF;
 
 /**
  * An implementation of the {@link NodeReader} interface that retrieves
@@ -95,24 +95,27 @@ public class Client1Node implements NodeReader {
                              .get( NfvArcs.class );
 
         } catch ( Exception e ) {
-            return null;
+            return new HashSet<LinkReader>();
         } finally {
             client.close();
         }
 
         Set<Client1Link> result = new HashSet<Client1Link>();
-        for ( NfvArcs.NfvArc linkI : response.getNfvArc() ) {
 
-            NfvArc link = new NfvArc();
+        for ( NfvArc link : response.getNfvArc() ) {
 
-            link.setName( linkI.getName() );
-            link.setSrc( linkI.getSrc() );
-            link.setDst( linkI.getDst() );
-            link.setThroughput( linkI.getThroughput() );
-            link.setLatency( linkI.getLatency() );
-            link.setSelf( linkI.getSelf() );
-            link.setSrcLink( linkI.getSrcLink() );
-            link.setDstLink( linkI.getDstLink() );
+//        for ( NfvArcs.NfvArc linkI : response.getNfvArc() ) {
+
+//            NfvArc link = new NfvArc();
+//
+//            link.setName( linkI.getName() );
+//            link.setSrc( linkI.getSrc() );
+//            link.setDst( linkI.getDst() );
+//            link.setThroughput( linkI.getThroughput() );
+//            link.setLatency( linkI.getLatency() );
+//            link.setSelf( linkI.getSelf() );
+//            link.setSrcLink( linkI.getSrcLink() );
+//            link.setDstLink( linkI.getDstLink() );
 
             result.add( new Client1Link( link, this.BASE_URI ) );
         }

@@ -18,9 +18,9 @@ import it.polito.dp2.NFV.lab3.DeployedNffg;
 import it.polito.dp2.NFV.lab3.LinkAlreadyPresentException;
 import it.polito.dp2.NFV.lab3.NoNodeException;
 import it.polito.dp2.NFV.lab3.ServiceException;
-import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvArc;
-import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvNFFG;
-import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvNode;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArc;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNFFG;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNode;
 
 /**
  * An implementation of the {@link DeployedNffg} interface.

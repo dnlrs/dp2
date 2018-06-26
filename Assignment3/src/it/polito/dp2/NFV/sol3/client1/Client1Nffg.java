@@ -12,9 +12,9 @@ import javax.ws.rs.core.UriBuilder;
 
 import it.polito.dp2.NFV.NffgReader;
 import it.polito.dp2.NFV.NodeReader;
-import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvNFFG;
-import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvNode;
-import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvNodes;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNFFG;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNode;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNodes;
 
 /**
  * An implementation of the {@link NffgReader} interface that retrieves
@@ -88,20 +88,20 @@ public class Client1Nffg implements NffgReader {
         }
 
         Set<Client1Node> result = new HashSet<Client1Node>();
-
-        for ( NfvNodes.NfvNode nodeI : response.getNfvNode() ) {
-            NfvNode node = new NfvNode();
-
-            node.setName( nodeI.getName() );
-            node.setFunctionalType( nodeI.getFunctionalType() );
-            node.setHostingHost( nodeI.getHostingHost() );
-            node.setAssociatedNFFG( nodeI.getAssociatedNFFG() );
-            node.setSelf( nodeI.getSelf() );
-            node.setFunctionalTypeLink( nodeI.getFunctionalTypeLink() );
-            node.setHostingHostLink( nodeI.getHostingHostLink() );
-            node.setAssociatedNFFGLink( nodeI.getAssociatedNFFGLink() );
-            node.setLinksLink( nodeI.getLinksLink() );
-            node.setReachableHostsLink( nodeI.getReachableHostsLink() );
+        for ( NfvNode node : response.getNfvNode() ) {
+//        for ( NfvNodes.NfvNode nodeI : response.getNfvNode() ) {
+//            NfvNode node = new NfvNode();
+//
+//            node.setName( nodeI.getName() );
+//            node.setFunctionalType( nodeI.getFunctionalType() );
+//            node.setHostingHost( nodeI.getHostingHost() );
+//            node.setAssociatedNFFG( nodeI.getAssociatedNFFG() );
+//            node.setSelf( nodeI.getSelf() );
+//            node.setFunctionalTypeLink( nodeI.getFunctionalTypeLink() );
+//            node.setHostingHostLink( nodeI.getHostingHostLink() );
+//            node.setAssociatedNFFGLink( nodeI.getAssociatedNFFGLink() );
+//            node.setLinksLink( nodeI.getLinksLink() );
+//            node.setReachableHostsLink( nodeI.getReachableHostsLink() );
 
             result.add( new Client1Node( node, this.BASE_URI ) );
         }

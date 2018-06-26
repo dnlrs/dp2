@@ -10,7 +10,7 @@ import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
 import it.polito.dp2.NFV.NamedEntityReader;
-import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.Link;
+import it.polito.dp2.NFV.sol3.model.nfvdeployer.Link;
 
 
 public class Utils {
