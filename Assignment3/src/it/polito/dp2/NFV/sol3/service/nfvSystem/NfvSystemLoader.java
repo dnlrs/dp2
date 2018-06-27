@@ -1,5 +1,6 @@
 package it.polito.dp2.NFV.sol3.service.nfvSystem;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.logging.Level;
@@ -126,7 +127,8 @@ public class NfvSystemLoader {
                 RealNffg nffg =
                         new RealNffg(
                                 nffgI.getName(),
-                                nffgI.getDeployTime(),
+//                                nffgI.getDeployTime(),
+                                Calendar.getInstance(),
                                 new HashSet<RealNode>() /* no nodes for now */
                                 );
 

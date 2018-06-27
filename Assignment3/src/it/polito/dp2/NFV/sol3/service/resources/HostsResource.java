@@ -17,10 +17,10 @@ import javax.ws.rs.core.UriInfo;
 
 import it.polito.dp2.NFV.HostReader;
 import it.polito.dp2.NFV.NodeReader;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvHost;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvHosts;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNode;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNodes;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvHost;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvHosts;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvNode;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvNodes;
 import it.polito.dp2.NFV.sol3.service.nfvSystem.NfvSystem;
 
 @Path( "/hosts" )
@@ -172,9 +172,6 @@ public class HostsResource {
         host.setSelf( Utils.getHostLink( uriInfo, hostI.getName() ) );
         host.setHostedNodesLink(
                 Utils.getHostNodesLink( uriInfo, hostI.getName() ) );
-
-        if ( (host.getSelf() == null) || (host.getHostedNodes() == null) )
-            return null;
 
         return host;
     }

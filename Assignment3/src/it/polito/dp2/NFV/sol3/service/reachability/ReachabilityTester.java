@@ -11,11 +11,11 @@ import javax.ws.rs.client.ClientBuilder;
 
 import it.polito.dp2.NFV.HostReader;
 import it.polito.dp2.NFV.NodeReader;
-import it.polito.dp2.NFV.lab3.NoNodeException;
-import it.polito.dp2.NFV.lab3.ServiceException;
-import it.polito.dp2.NFV.sol3.model.neo4j.Nodes;
-import it.polito.dp2.NFV.sol3.model.neo4j.Property;
+import it.polito.dp2.NFV.sol3.service.NoNodeException;
+import it.polito.dp2.NFV.sol3.service.ServiceException;
 import it.polito.dp2.NFV.sol3.service.UnknownNameException;
+import it.polito.dp2.NFV.sol3.service.model.neo4j.Nodes;
+import it.polito.dp2.NFV.sol3.service.model.neo4j.Property;
 import it.polito.dp2.NFV.sol3.service.neo4jAPI.Neo4jSimpleWebAPI;
 import it.polito.dp2.NFV.sol3.service.neo4jAPI.Neo4jSimpleWebAPIException;
 import it.polito.dp2.NFV.sol3.service.neo4jAPI.Neo4jSimpleXMLBuilder;

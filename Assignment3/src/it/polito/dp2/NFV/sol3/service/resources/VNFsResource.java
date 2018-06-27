@@ -14,9 +14,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import it.polito.dp2.NFV.VNFTypeReader;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.FunctionalTypeEnum;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvVNF;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvVNFs;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.FunctionalTypeEnum;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvVNF;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvVNFs;
 import it.polito.dp2.NFV.sol3.service.nfvSystem.NfvSystem;
 
 @Path( "/vnfs" )
@@ -93,9 +93,6 @@ public class VNFsResource {
         vnf.setRequiredStorage( new Integer( vnfI.getRequiredStorage() ) );
 
         vnf.setSelf( Utils.getVNFLink( uriInfo, vnfI.getName() ) );
-
-        if ( vnf.getSelf() == null )
-            return null;
 
         return vnf;
     }

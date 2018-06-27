@@ -22,9 +22,9 @@ import javax.ws.rs.core.UriInfo;
 import it.polito.dp2.NFV.LinkReader;
 import it.polito.dp2.NFV.NffgReader;
 import it.polito.dp2.NFV.NodeReader;
-import it.polito.dp2.NFV.lab3.ServiceException;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArc;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArcs;
+import it.polito.dp2.NFV.sol3.service.ServiceException;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvArc;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvArcs;
 import it.polito.dp2.NFV.sol3.service.nfvSystem.NfvSystem;
 
 
@@ -217,12 +217,6 @@ public class LinksResource {
                 Utils.getNodeLink( uriInfo, linkI.getSourceNode().getName() ) );
         link.setDstLink(
                 Utils.getNodeLink( uriInfo, linkI.getDestinationNode().getName() ) );
-
-        if ( (link.getSelf() == null)
-                || (link.getSrcLink() == null)
-                || (link.getDstLink() == null) )
-            return null;
-
 
         return link;
     }

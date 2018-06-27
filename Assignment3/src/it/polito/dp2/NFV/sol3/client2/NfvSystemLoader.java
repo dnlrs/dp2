@@ -8,19 +8,21 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
 
 import it.polito.dp2.NFV.FunctionalType;
 import it.polito.dp2.NFV.NfvReaderException;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArc;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArcs;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvHost;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvHosts;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNFFG;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNFFGs;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNode;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvVNF;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvVNFs;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.Services;
+import it.polito.dp2.NFV.sol3.client2.model.nfvdeployer.Link;
+import it.polito.dp2.NFV.sol3.client2.model.nfvdeployer.NfvArc;
+import it.polito.dp2.NFV.sol3.client2.model.nfvdeployer.NfvArcs;
+import it.polito.dp2.NFV.sol3.client2.model.nfvdeployer.NfvHost;
+import it.polito.dp2.NFV.sol3.client2.model.nfvdeployer.NfvHosts;
+import it.polito.dp2.NFV.sol3.client2.model.nfvdeployer.NfvNFFG;
+import it.polito.dp2.NFV.sol3.client2.model.nfvdeployer.NfvNFFGs;
+import it.polito.dp2.NFV.sol3.client2.model.nfvdeployer.NfvNode;
+import it.polito.dp2.NFV.sol3.client2.model.nfvdeployer.NfvVNF;
+import it.polito.dp2.NFV.sol3.client2.model.nfvdeployer.NfvVNFs;
+import it.polito.dp2.NFV.sol3.client2.model.nfvdeployer.Services;
 
 public class NfvSystemLoader {
 
@@ -32,11 +34,13 @@ public class NfvSystemLoader {
             throws NfvReaderException {
 
         try {
+
             String url = System.getProperty(
                                     PROPERTY_URL,
                                     "http://localhost:8080/NfvDeployer/rest/");
 
             BASE_URI   = URI.create( url );
+
         } catch (SecurityException
                 | NullPointerException
                 | IllegalArgumentException e ) {
@@ -52,19 +56,43 @@ public class NfvSystemLoader {
         Services service = null;
         try {
 
-            service = client.target( BASE_URI )
+            service = client.target( UriBuilder.fromUri( BASE_URI ).path( "" ).build() )
                             .request( MediaType.APPLICATION_XML )
                             .get( Services.class );
 
         } catch ( WebApplicationException e ) {
-            throw new NfvReaderException( e.getMessage() );
-        }
 
+            service = new Services();
+
+            Link link = new Link();
+            URI target_uri = UriBuilder.fromUri( BASE_URI ).path( "hosts" ).build();
+            link.setHref( target_uri.toString() );
+            service.setHostsLink( link );
+
+            link = new Link();
+            target_uri = UriBuilder.fromUri( BASE_URI ).path( "connections" ).build();
+            link.setHref( target_uri.toString() );
+            service.setConnectionsLink( link );
+
+            link = new Link();
+            target_uri = UriBuilder.fromUri( BASE_URI ).path( "vnfs" ).build();
+            link.setHref( target_uri.toString() );
+            service.setVnfsLink( link );
+
+            link = new Link();
+            target_uri = UriBuilder.fromUri( BASE_URI ).path( "nffgs" ).build();
+            link.setHref( target_uri.toString() );
+            service.setNffgsLink( link );
+
+            link = new Link();
+            target_uri = UriBuilder.fromUri( BASE_URI ).path( "nodes" ).build();
+            link.setHref( target_uri.toString() );
+            service.setNodesLink( link );
+        }
 
         /*
          * Retrieve hosts and connections from web service
          */
-
         HashMap<String, RealHost> hosts = new HashMap<String, RealHost>();
         HashMap<String, RealConnection> connections =
                 new HashMap<String, RealConnection>();
@@ -72,7 +100,6 @@ public class NfvSystemLoader {
         HashMap<String, RealNffg> nffgs = new HashMap<String, RealNffg>();
 
         try {
-
             NfvHosts xmlHosts = client.target( service.getHostsLink().getHref() )
                                       .request( MediaType.APPLICATION_XML )
                                       .get( NfvHosts.class );

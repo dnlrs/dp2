@@ -7,7 +7,7 @@ import java.util.Set;
 
 import it.polito.dp2.NFV.HostReader;
 import it.polito.dp2.NFV.NodeReader;
-import it.polito.dp2.NFV.lab3.ServiceException;
+import it.polito.dp2.NFV.sol3.service.ServiceException;
 
 /**
  * This interface is a NodeReader that also lets one get reachable Hosts

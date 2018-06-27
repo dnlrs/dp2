@@ -21,15 +21,15 @@ import javax.ws.rs.core.UriInfo;
 import it.polito.dp2.NFV.HostReader;
 import it.polito.dp2.NFV.LinkReader;
 import it.polito.dp2.NFV.NodeReader;
-import it.polito.dp2.NFV.lab3.NoNodeException;
-import it.polito.dp2.NFV.lab3.ServiceException;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArc;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArcs;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvHost;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvHosts;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNode;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNodes;
+import it.polito.dp2.NFV.sol3.service.NoNodeException;
+import it.polito.dp2.NFV.sol3.service.ServiceException;
 import it.polito.dp2.NFV.sol3.service.UnknownNameException;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvArc;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvArcs;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvHost;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvHosts;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvNode;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvNodes;
 import it.polito.dp2.NFV.sol3.service.nfvSystem.NfvSystem;
 import it.polito.dp2.NFV.sol3.service.reachability.NoGraphException;
 import it.polito.dp2.NFV.sol3.service.reachability.ReachabilityTester;
@@ -298,15 +298,6 @@ public class NodesResource {
                 Utils.getNodeLinksLink( uriInfo, nodeI.getName() ) );
         node.setReachableHostsLink(
                 Utils.getNodeReachableHostsLink( uriInfo, nodeI.getName() ) );
-
-        if ( (node.getName() == null)
-                || (node.getSelf() == null)
-                || (node.getFunctionalTypeLink() == null)
-                || (node.getHostingHostLink() == null)
-                || (node.getAssociatedNFFGLink() == null)
-                || (node.getLinksLink() == null)
-                || (node.getReachableHostsLink() == null) )
-            return null;
 
         return node;
     }

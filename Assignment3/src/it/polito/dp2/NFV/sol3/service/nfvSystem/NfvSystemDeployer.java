@@ -10,11 +10,11 @@ import it.polito.dp2.NFV.HostReader;
 import it.polito.dp2.NFV.LinkReader;
 import it.polito.dp2.NFV.NffgReader;
 import it.polito.dp2.NFV.NodeReader;
-import it.polito.dp2.NFV.lab3.ServiceException;
-import it.polito.dp2.NFV.sol3.model.neo4j.Node;
-import it.polito.dp2.NFV.sol3.model.neo4j.Relationship;
 import it.polito.dp2.NFV.sol3.service.AlreadyLoadedException;
+import it.polito.dp2.NFV.sol3.service.ServiceException;
 import it.polito.dp2.NFV.sol3.service.UnknownNameException;
+import it.polito.dp2.NFV.sol3.service.model.neo4j.Node;
+import it.polito.dp2.NFV.sol3.service.model.neo4j.Relationship;
 import it.polito.dp2.NFV.sol3.service.neo4jAPI.Neo4jSimpleWebAPI;
 import it.polito.dp2.NFV.sol3.service.neo4jAPI.Neo4jSimpleWebAPIException;
 import it.polito.dp2.NFV.sol3.service.neo4jAPI.Neo4jSimpleXMLBuilder;
@@ -191,9 +191,7 @@ public class NfvSystemDeployer {
         if ( nffg == null )
             return;
 
-        Neo4jSimpleWebAPI neo4jWS;
         try {
-            neo4jWS = new Neo4jSimpleWebAPI();
 
             for ( NodeReader nodeI : nffg.getNodes() ) {
                 for ( LinkReader linkI : nodeI.getLinks() ) {

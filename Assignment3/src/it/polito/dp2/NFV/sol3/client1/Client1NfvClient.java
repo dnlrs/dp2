@@ -18,9 +18,10 @@ import it.polito.dp2.NFV.lab3.NfvClientException;
 import it.polito.dp2.NFV.lab3.NodeDescriptor;
 import it.polito.dp2.NFV.lab3.ServiceException;
 import it.polito.dp2.NFV.lab3.UnknownEntityException;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNFFG;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNode;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.Services;
+import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.Link;
+import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvNFFG;
+import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvNode;
+import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.Services;
 
 /**
  * An implementation of the {@link NfvClient} interface.
@@ -67,12 +68,10 @@ public class Client1NfvClient implements NfvClient {
         xmlNffg.setName( new String( "Nffg" + nffgCounter ) );
         nffgCounter++;
 
-//        List<NfvNFFG.NfvNode> xmlNffgNodes = xmlNffg.getNfvNode();
         List<NfvNode> xmlNffgNodes = xmlNffg.getNfvNode();
 
         for ( NodeDescriptor node : nffg.getNodes() ) {
             NfvNode xmlNode = new NfvNode();
-//            NfvNFFG.NfvNode xmlNode = new NfvNFFG.NfvNode();
             xmlNode.setName( new String( "Node" + nodeCounter + xmlNffg.getName() ) );
             nodeCounter++;
 
@@ -96,7 +95,34 @@ public class Client1NfvClient implements NfvClient {
                              .request( MediaType.APPLICATION_XML )
                              .get( Services.class );
         } catch ( WebApplicationException e ) {
-            throw new ServiceException( "Could not contact Nfvdeployer service" );
+
+            services = new Services();
+
+            Link link = new Link();
+            URI target_uri = UriBuilder.fromUri( BASE_URI ).path( "hosts" ).build();
+            link.setHref( target_uri.toString() );
+            services.setHostsLink( link );
+
+            link = new Link();
+            target_uri = UriBuilder.fromUri( BASE_URI ).path( "connections" ).build();
+            link.setHref( target_uri.toString() );
+            services.setConnectionsLink( link );
+
+            link = new Link();
+            target_uri = UriBuilder.fromUri( BASE_URI ).path( "vnfs" ).build();
+            link.setHref( target_uri.toString() );
+            services.setVnfsLink( link );
+
+            link = new Link();
+            target_uri = UriBuilder.fromUri( BASE_URI ).path( "nffgs" ).build();
+            link.setHref( target_uri.toString() );
+            services.setNffgsLink( link );
+
+            link = new Link();
+            target_uri = UriBuilder.fromUri( BASE_URI ).path( "nodes" ).build();
+            link.setHref( target_uri.toString() );
+            services.setNodesLink( link );
+
         } catch ( Exception e ) {
             throw new ServiceException( "Failed getting services access points" );
         }
@@ -149,7 +175,33 @@ public class Client1NfvClient implements NfvClient {
                                       .request( MediaType.APPLICATION_XML )
                                       .get( Services.class );
         } catch ( WebApplicationException e ) {
-            throw new ServiceException( "Could not contact Nfvdeployer service" );
+
+            services = new Services();
+
+            Link link = new Link();
+            URI target_uri = UriBuilder.fromUri( BASE_URI ).path( "hosts" ).build();
+            link.setHref( target_uri.toString() );
+            services.setHostsLink( link );
+
+            link = new Link();
+            target_uri = UriBuilder.fromUri( BASE_URI ).path( "connections" ).build();
+            link.setHref( target_uri.toString() );
+            services.setConnectionsLink( link );
+
+            link = new Link();
+            target_uri = UriBuilder.fromUri( BASE_URI ).path( "vnfs" ).build();
+            link.setHref( target_uri.toString() );
+            services.setVnfsLink( link );
+
+            link = new Link();
+            target_uri = UriBuilder.fromUri( BASE_URI ).path( "nffgs" ).build();
+            link.setHref( target_uri.toString() );
+            services.setNffgsLink( link );
+
+            link = new Link();
+            target_uri = UriBuilder.fromUri( BASE_URI ).path( "nodes" ).build();
+            link.setHref( target_uri.toString() );
+            services.setNodesLink( link );
         }
 
         /* GET requested NFFG (if deployed) */
@@ -158,7 +210,7 @@ public class Client1NfvClient implements NfvClient {
 
             UriBuilder uriBuilder =
                     UriBuilder.fromPath( services.getNffgsLink().getHref() );
-            URI target_uri = uriBuilder.path( name ).build();
+            URI target_uri = uriBuilder.path( "/{nffgName}" ).build( name );
 
             xmlNffg = client.target( target_uri )
                                     .request( MediaType.APPLICATION_XML )

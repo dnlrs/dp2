@@ -9,32 +9,31 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.Services;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.Services;
 
 
 @Path( "/" )
 public class MainResource {
 
-    @Context
-    UriInfo uriInfo;
-
-
     public MainResource() {}
 
     @GET
     @Produces( MediaType.APPLICATION_XML )
-    public Services getEntryPoint() {
+    public Services getEntryPoint(
+            @Context UriInfo uriInfo ) {
 
         Services result = new Services();
 
-        result.setServiceLink( Utils.getServiceLink(this.uriInfo) );
-        result.setHostsLink( Utils.getHostsLink( this.uriInfo ) );
-        result.setConnectionsLink( Utils.getConnectionsLink( this.uriInfo ) );
-        result.setVnfsLink( Utils.getVNFsLink( this.uriInfo ) );
-        result.setNffgsLink( Utils.getNFFGsLink( this.uriInfo ) );
-        result.setNodesLink( Utils.getNodesLink( this.uriInfo ) );
 
-        if ( (result.getHostsLink() == null)
+        result.setServiceLink( Utils.getServiceLink( uriInfo.getBaseUri() ) );
+        result.setHostsLink( Utils.getHostsLink( uriInfo.getBaseUri() ) );
+        result.setConnectionsLink( Utils.getConnectionsLink( uriInfo.getBaseUri() ) );
+        result.setVnfsLink( Utils.getVNFsLink( uriInfo.getBaseUri() ) );
+        result.setNffgsLink( Utils.getNFFGsLink( uriInfo.getBaseUri() ) );
+        result.setNodesLink( Utils.getNodesLink( uriInfo.getBaseUri() ) );
+
+        if ( (result.getServiceLink() == null)
+                || (result.getHostsLink()       == null)
                 || (result.getConnectionsLink() == null)
                 || (result.getVnfsLink()        == null)
                 || (result.getNffgsLink()       == null)

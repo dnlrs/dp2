@@ -1,16 +1,18 @@
 package it.polito.dp2.NFV.sol3.service.resources;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
 import it.polito.dp2.NFV.NamedEntityReader;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.Link;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.Link;
 
 
 public class Utils {
@@ -60,7 +62,7 @@ public class Utils {
      * @return
      */
     protected static Link getHostsLink(
-            UriInfo uriInfo ) {
+            URI uriInfo ) {
 
         if ( uriInfo == null )
             return null;
@@ -69,7 +71,7 @@ public class Utils {
 
         try {
 
-            result.setHref( uriInfo.getBaseUriBuilder()
+            result.setHref( UriBuilder.fromUri( uriInfo )
                                    .path( "/hosts" )
                                    .build()
                                    .toString() );
@@ -96,11 +98,11 @@ public class Utils {
         if ( (uriInfo == null) || (hostName == null) )
             return null;
 
-        Link result = new Link();
+        Link link = new Link();
 
         try {
 
-            result.setHref( uriInfo.getBaseUriBuilder()
+            link.setHref( uriInfo.getBaseUriBuilder()
                                    .path( "/hosts/{hostName}" )
                                    .build( hostName )
                                    .toString() );
@@ -110,7 +112,7 @@ public class Utils {
           return null;
       }
 
-        return result;
+        return link;
     }
 
     /**
@@ -155,7 +157,7 @@ public class Utils {
      * @return
      */
     protected static Link getConnectionsLink(
-            UriInfo uriInfo ) {
+            URI uriInfo ) {
 
         if ( uriInfo == null )
             return null;
@@ -164,7 +166,7 @@ public class Utils {
 
         try {
 
-            result.setHref( uriInfo.getBaseUriBuilder()
+            result.setHref( UriBuilder.fromUri( uriInfo )
                                    .path( "/connections" )
                                    .build()
                                    .toString() );
@@ -188,11 +190,11 @@ public class Utils {
                 || (dstHostName == null) )
             return null;
 
-        Link result = new Link();
+        Link link = new Link();
 
         try {
 
-            result.setHref( uriInfo.getBaseUriBuilder()
+            link.setHref( uriInfo.getBaseUriBuilder()
                                    .path( "/connections" )
                                    .queryParam( "sourceHost", srcHostName )
                                    .queryParam( "destinationHost", dstHostName )
@@ -204,7 +206,7 @@ public class Utils {
           return null;
         }
 
-        return result;
+        return link;
     }
 
 
@@ -215,7 +217,7 @@ public class Utils {
      * @return
      */
     protected static Link getVNFsLink(
-            UriInfo uriInfo ) {
+            URI uriInfo ) {
 
         if ( uriInfo == null )
             return null;
@@ -224,7 +226,7 @@ public class Utils {
 
         try {
 
-            result.setHref( uriInfo.getBaseUriBuilder()
+            result.setHref( UriBuilder.fromUri( uriInfo )
                                    .path( "/vnfs" )
                                    .build()
                                    .toString() );
@@ -277,7 +279,7 @@ public class Utils {
      * @return
      */
     protected static Link getNFFGsLink(
-            UriInfo uriInfo ) {
+            URI uriInfo ) {
 
         if ( uriInfo == null )
             return null;
@@ -286,7 +288,7 @@ public class Utils {
 
         try {
 
-            result.setHref( uriInfo.getBaseUriBuilder()
+            result.setHref( UriBuilder.fromUri( uriInfo )
                                    .path( "/nffgs" )
                                    .build()
                                    .toString() );
@@ -436,7 +438,7 @@ public class Utils {
      * @return
      */
     protected static Link getNodesLink(
-            UriInfo uriInfo ) {
+            URI uriInfo ) {
 
 
         if ( uriInfo == null )
@@ -446,7 +448,7 @@ public class Utils {
 
         try {
 
-            result.setHref( uriInfo.getBaseUriBuilder()
+            result.setHref( UriBuilder.fromUri( uriInfo)
                                    .path( "/nodes" )
                                    .build()
                                    .toString() );
@@ -559,13 +561,15 @@ public class Utils {
 
 
     protected static Link getServiceLink(
-            UriInfo uriInfo ) {
+            URI uriInfo ) {
 
         if ( uriInfo == null )
             return null;
 
         Link result = new Link();
-        result.setHref( uriInfo.getBaseUri().toString() );
+
+        result.setHref( uriInfo.toString() );
+//        result.setHref( uriInfo.getBaseUri().toString() );
 
         return result;
     }

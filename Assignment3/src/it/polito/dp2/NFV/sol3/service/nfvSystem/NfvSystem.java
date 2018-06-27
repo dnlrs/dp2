@@ -15,8 +15,8 @@ import it.polito.dp2.NFV.NfvReader;
 import it.polito.dp2.NFV.NfvReaderException;
 import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.VNFTypeReader;
-import it.polito.dp2.NFV.lab3.ServiceException;
 import it.polito.dp2.NFV.sol3.service.AlreadyLoadedException;
+import it.polito.dp2.NFV.sol3.service.ServiceException;
 import it.polito.dp2.NFV.sol3.service.UnknownNameException;
 
 

@@ -7,18 +7,19 @@ import java.util.Set;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
 
 import it.polito.dp2.NFV.HostReader;
 import it.polito.dp2.NFV.LinkReader;
 import it.polito.dp2.NFV.NffgReader;
 import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.VNFTypeReader;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArc;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArcs;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvHost;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNFFG;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNode;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvVNF;
+import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvArc;
+import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvArcs;
+import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvHost;
+import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvNFFG;
+import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvNode;
+import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvVNF;
 
 /**
  * An implementation of the {@link NodeReader} interface that retrieves
@@ -48,7 +49,17 @@ public class Client1Node implements NodeReader {
         NfvVNF response = null;
         try {
 
-            response = client.target( this.node.getFunctionalTypeLink().getHref() )
+            String path = null;
+            if ( this.node.getFunctionalTypeLink() == null ) {
+                path = UriBuilder.fromUri( this.BASE_URI )
+                                    .path( "vnfs/{vnfName}" )
+                                    .build( this.node.getFunctionalType() )
+                                    .toString();
+            } else {
+                path = this.node.getFunctionalTypeLink().getHref();
+            }
+
+            response = client.target( path )
                              .request( MediaType.APPLICATION_XML )
                              .get( NfvVNF.class );
 
@@ -69,7 +80,17 @@ public class Client1Node implements NodeReader {
         NfvHost response = null;
         try {
 
-            response = client.target( this.node.getHostingHostLink().getHref() )
+            String path = null;
+            if ( this.node.getHostingHostLink() == null ) {
+                path = UriBuilder.fromUri( this.BASE_URI )
+                                    .path( "hosts/{hostName}" )
+                                    .build( this.node.getHostingHost() )
+                                    .toString();
+            } else {
+                path = this.node.getHostingHostLink().getHref();
+            }
+
+            response = client.target( path )
                              .request( MediaType.APPLICATION_XML )
                              .get( NfvHost.class );
 
@@ -90,7 +111,17 @@ public class Client1Node implements NodeReader {
         NfvArcs response = null;
         try {
 
-            response = client.target( this.node.getLinksLink().getHref() )
+            String path = null;
+            if ( this.node.getLinksLink() == null ) {
+                path = UriBuilder.fromUri( this.BASE_URI )
+                                    .path( "nodes/{nodeName}/links" )
+                                    .build( this.node.getName() )
+                                    .toString();
+            } else {
+                path = this.node.getLinksLink().getHref();
+            }
+
+            response = client.target( path )
                              .request( MediaType.APPLICATION_XML )
                              .get( NfvArcs.class );
 
@@ -103,20 +134,6 @@ public class Client1Node implements NodeReader {
         Set<Client1Link> result = new HashSet<Client1Link>();
 
         for ( NfvArc link : response.getNfvArc() ) {
-
-//        for ( NfvArcs.NfvArc linkI : response.getNfvArc() ) {
-
-//            NfvArc link = new NfvArc();
-//
-//            link.setName( linkI.getName() );
-//            link.setSrc( linkI.getSrc() );
-//            link.setDst( linkI.getDst() );
-//            link.setThroughput( linkI.getThroughput() );
-//            link.setLatency( linkI.getLatency() );
-//            link.setSelf( linkI.getSelf() );
-//            link.setSrcLink( linkI.getSrcLink() );
-//            link.setDstLink( linkI.getDstLink() );
-
             result.add( new Client1Link( link, this.BASE_URI ) );
         }
 
@@ -130,7 +147,17 @@ public class Client1Node implements NodeReader {
         NfvNFFG response = null;
         try {
 
-            response = client.target( this.node.getAssociatedNFFGLink().getHref() )
+            String path = null;
+            if ( this.node.getAssociatedNFFGLink() == null ) {
+                path = UriBuilder.fromUri( this.BASE_URI )
+                                    .path( "nffgs/{nffgName}" )
+                                    .build( this.node.getAssociatedNFFG() )
+                                    .toString();
+            } else {
+                path = this.node.getAssociatedNFFGLink().getHref();
+            }
+
+            response = client.target( path )
                              .request( MediaType.APPLICATION_XML )
                              .get( NfvNFFG.class );
 

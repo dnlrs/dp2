@@ -5,11 +5,12 @@ import java.net.URI;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
 
 import it.polito.dp2.NFV.LinkReader;
 import it.polito.dp2.NFV.NodeReader;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArc;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNode;
+import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvArc;
+import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvNode;
 
 /**
  * An implementation of the {@link LinkReader} interface that retrieves
@@ -40,7 +41,18 @@ public class Client1Link implements LinkReader {
         NfvNode response = null;
         try {
 
-            response = client.target( this.link.getDstLink().getHref() )
+            String path = null;
+
+            if ( this.link.getDstLink() == null ) {
+                path = UriBuilder.fromUri( this.BASE_URI )
+                            .path( "nodes/{nodeName}" )
+                            .build( this.link.getDst() )
+                            .toString();
+            } else {
+                path = this.link.getDstLink().getHref();
+            }
+
+            response = client.target( path )
                              .request( MediaType.APPLICATION_XML )
                              .get( NfvNode.class );
 
@@ -69,7 +81,18 @@ public class Client1Link implements LinkReader {
         NfvNode response = null;
         try {
 
-            response = client.target( this.link.getSrcLink().getHref() )
+            String path = null;
+            if ( this.link.getSrcLink() == null ) {
+                path = UriBuilder.fromUri( this.BASE_URI )
+                            .path( "nodes/{nodeName}" )
+                            .build( this.link.getSrc() )
+                            .toString();
+            } else {
+                path = this.link.getSrcLink().getHref();
+            }
+
+
+            response = client.target( path )
                              .request( MediaType.APPLICATION_XML )
                              .get( NfvNode.class );
 

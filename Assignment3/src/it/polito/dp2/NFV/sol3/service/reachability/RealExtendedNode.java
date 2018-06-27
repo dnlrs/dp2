@@ -8,7 +8,7 @@ import it.polito.dp2.NFV.LinkReader;
 import it.polito.dp2.NFV.NffgReader;
 import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.VNFTypeReader;
-import it.polito.dp2.NFV.lab3.ServiceException;
+import it.polito.dp2.NFV.sol3.service.ServiceException;
 
 /**
  * An implementation of the {@link ExtendedNodeReader} interface.

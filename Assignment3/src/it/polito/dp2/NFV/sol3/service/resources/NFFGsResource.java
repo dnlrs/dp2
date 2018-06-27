@@ -19,18 +19,17 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import it.polito.dp2.NFV.NffgReader;
 import it.polito.dp2.NFV.NodeReader;
-import it.polito.dp2.NFV.lab3.ServiceException;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArc;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNFFG;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNFFGs;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNode;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNodes;
+import it.polito.dp2.NFV.sol3.service.ServiceException;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvArc;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvNFFG;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvNFFGs;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvNode;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvNodes;
 import it.polito.dp2.NFV.sol3.service.nfvSystem.NfvSystem;
 
 @Path( "/nffgs" )
@@ -252,9 +251,8 @@ public class NFFGsResource {
         XMLGregorianCalendar time = null;
         try {
             time = DatatypeFactory.newInstance().newXMLGregorianCalendar( gc );
-        } catch ( DatatypeConfigurationException e ) {
-            return null;
-        }
+        } catch ( Exception e ) {}
+
         nffg.setDeployTime( time );
 
         if ( detailed ) {
@@ -270,9 +268,6 @@ public class NFFGsResource {
                 Utils.getNFFGNodesLink( uriInfo, nffgI.getName() ) );
         nffg.setLinksLink(
                 Utils.getNFFGLinksLink( uriInfo, nffgI.getName() ) );
-
-        if ( (nffg.getSelf() == null) || (nffg.getAllocatedNodesLink() == null) )
-            return null;
 
         return nffg;
     }

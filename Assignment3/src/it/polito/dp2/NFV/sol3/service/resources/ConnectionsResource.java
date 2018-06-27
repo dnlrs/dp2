@@ -12,12 +12,14 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilderException;
 import javax.ws.rs.core.UriInfo;
 
 import it.polito.dp2.NFV.ConnectionPerformanceReader;
 import it.polito.dp2.NFV.HostReader;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArc;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArcs;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.Link;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvArc;
+import it.polito.dp2.NFV.sol3.service.model.nfvdeployer.NfvArcs;
 import it.polito.dp2.NFV.sol3.service.nfvSystem.NfvSystem;
 
 @Path( "/connections" )
@@ -170,19 +172,34 @@ public class ConnectionsResource {
         connection.setThroughput( new Float( connectionI.getThroughput() ) );
         connection.setLatency( new Integer( connectionI.getLatency() ) );
 
-        connection.setSelf(
-                Utils.getConnectionLink(
-                        uriInfo,
-                        srcHost.getName(),
-                        dstHost.getName() ) );
+        try {
+            Link link = new Link();
+            link.setHref( uriInfo.getBaseUriBuilder()
+                                   .path( "/connections" )
+                                   .queryParam( "sourceHost", srcHost.getName() )
+                                   .queryParam( "destinationHost", dstHost.getName() )
+                                   .build()
+                                   .toString() );
+            connection.setSelf( link );
 
-        connection.setSrcLink( Utils.getHostLink( uriInfo, srcHost.getName() ) );
-        connection.setDstLink( Utils.getHostLink( uriInfo, dstHost.getName() ) );
 
-        if ( (connection.getSelf() == null)
-                || (connection.getSrcLink() == null)
-                || (connection.getDstLink() == null) )
-            return null;
+            link = new Link();
+            link.setHref( uriInfo.getBaseUriBuilder()
+                                   .path( "/hosts/{hostName}" )
+                                   .build( srcHost.getName() )
+                                   .toString() );
+            connection.setSrcLink( link );
+
+
+            link = new Link();
+            link.setHref( uriInfo.getBaseUriBuilder()
+                                   .path( "/hosts/{hostName}" )
+                                   .build( dstHost.getName() )
+                                   .toString() );
+            connection.setDstLink( link );
+
+        } catch ( IllegalArgumentException
+                | UriBuilderException e ) {}
 
         return connection;
     }

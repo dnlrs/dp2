@@ -18,9 +18,9 @@ import it.polito.dp2.NFV.lab3.DeployedNffg;
 import it.polito.dp2.NFV.lab3.LinkAlreadyPresentException;
 import it.polito.dp2.NFV.lab3.NoNodeException;
 import it.polito.dp2.NFV.lab3.ServiceException;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvArc;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNFFG;
-import it.polito.dp2.NFV.sol3.model.nfvdeployer.NfvNode;
+import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvArc;
+import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvNFFG;
+import it.polito.dp2.NFV.sol3.client1.model.nfvdeployer.NfvNode;
 
 /**
  * An implementation of the {@link DeployedNffg} interface.
@@ -126,16 +126,32 @@ public class Client1DeployedNffg implements DeployedNffg {
         NfvArc newLink = null;
         try {
 
-            UriBuilder uriBuilder =
-                    UriBuilder.fromPath( this.deployedNffg.getLinksLink().getHref() );
+            URI target_uri = null;
+            if ( this.deployedNffg.getLinksLink() == null  ) { // HATEOAS didn't work?
 
-            if ( overwrite ) {
-                uriBuilder = uriBuilder.queryParam( "update", "1" );
+                UriBuilder uriBuilder = UriBuilder.fromUri( this.BASE_URI )
+                                    .path( "nffgs/{nffgName}/links" );
+                if ( overwrite ) {
+                    uriBuilder = uriBuilder.queryParam( "update", "1" );
+                } else {
+                    uriBuilder = uriBuilder.queryParam( "update", "0" );
+                }
+                target_uri = uriBuilder.build( this.deployedNffg.getName() );
+
             } else {
-                uriBuilder = uriBuilder.queryParam( "update", "0" );
+
+                UriBuilder uriBuilder =
+                        UriBuilder.fromPath(
+                                this.deployedNffg.getLinksLink().getHref() );
+                if ( overwrite ) {
+                    uriBuilder = uriBuilder.queryParam( "update", "1" );
+                } else {
+                    uriBuilder = uriBuilder.queryParam( "update", "0" );
+                }
+
+                target_uri = uriBuilder.build();
             }
 
-            URI target_uri = uriBuilder.build();
 
             newLink = client.target( target_uri )
                             .request( MediaType.APPLICATION_XML )
@@ -176,7 +192,18 @@ public class Client1DeployedNffg implements DeployedNffg {
         NfvNFFG newNffg = null;
         try {
 
-            newNffg = client.target( this.deployedNffg.getSelf().getHref() )
+            String path = null;
+            if ( this.deployedNffg.getSelf() == null ) {
+                path = UriBuilder.fromUri( this.BASE_URI )
+                                 .path( "nffgs/{nffgName}" )
+                                 .build( this.deployedNffg.getName() )
+                                 .toString();
+            } else {
+                path = this.deployedNffg.getSelf().getHref();
+            }
+
+
+            newNffg = client.target( path )
                             .request( MediaType.APPLICATION_XML )
                             .get( NfvNFFG.class );
 
