@@ -24,3 +24,9 @@ junit*
 
 # ingnore runner
 run.sh
+
+# ignore generated zip file (ant make-zip)
+lab1.zip
+
+#ignore generated artifacts
+gen/

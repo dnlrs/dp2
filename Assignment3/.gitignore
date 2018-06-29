@@ -19,3 +19,11 @@ log*.txt
 debug*.txt
 
 target/
+
+# ignore artifacts
+src/it/polito/dp2/NFV/sol3/client1/model
+src/it/polito/dp2/NFV/sol3/client2/model
+src/it/polito/dp2/NFV/sol3/service/model
+
+# ignore generated war
+war/NfvDeployer.war
