@@ -1,13 +1,14 @@
 package it.polito.dp2.NFV.sol3.service.nfvSystem;
 
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 import it.polito.dp2.NFV.NffgReader;
 import it.polito.dp2.NFV.NodeReader;
+import it.polito.dp2.NFV.sol3.service.AlreadyLoadedException;
 
 /**
  * An implementation of the {@link NffgReader} interface.
@@ -17,8 +18,9 @@ import it.polito.dp2.NFV.NodeReader;
  */
 public class RealNffg extends RealNamedEntity implements NffgReader {
 
-    private final GregorianCalendar             deployTime;
-    private final CopyOnWriteArraySet<RealNode> nodes;
+    private final GregorianCalendar deployTime;
+    private final HashSet<RealNode> nodes;
+
 
     private final Object lockNodes = new Object();
 
@@ -49,7 +51,7 @@ public class RealNffg extends RealNamedEntity implements NffgReader {
         /*
          * Set nodes
          */
-        this.nodes = new CopyOnWriteArraySet<RealNode>( nodes );
+        this.nodes = new HashSet<RealNode>( nodes );
     }
 
 
@@ -62,14 +64,12 @@ public class RealNffg extends RealNamedEntity implements NffgReader {
     }
 
     @Override
-    public Set<NodeReader> getNodes() {
-        synchronized ( this.lockNodes ) {
-            return new HashSet<NodeReader> ( this.nodes );
-        }
+    public synchronized Set<NodeReader> getNodes() {
+        return Collections.unmodifiableSet( new HashSet<NodeReader>(this.nodes) );
     }
 
     @Override
-    public NodeReader getNode( String nodeName ) {
+    public synchronized NodeReader getNode( String nodeName ) {
 
         if ( nodeName == null )
             return null;
@@ -77,42 +77,39 @@ public class RealNffg extends RealNamedEntity implements NffgReader {
         if ( !( RealNamedEntity.nameIsValid( nodeName ) ) )
             return null;
 
-        synchronized ( this.lockNodes ) {
-            for ( NodeReader nodeI : this.nodes )
-                if ( nodeI.getName().compareTo( nodeName ) == 0 )
-                    return nodeI;
-        }
+        for ( NodeReader nodeI : this.nodes )
+            if ( nodeI.getName().compareTo( nodeName ) == 0 )
+                return nodeI;
 
         return null;
     }
 
 
-    protected Set<RealNode> getRealNodes() {
-        synchronized ( this.lockNodes ) {
-            return new HashSet<RealNode>( this.nodes );
-        }
+    protected synchronized Set<RealNode> getRealNodes() {
+        return Collections.unmodifiableSet( this.nodes );
     }
 
 
 
     // setters
-    protected void addNode( RealNode node )
-            throws NullPointerException {
+
+
+    protected synchronized void addNode( RealNode node )
+            throws NullPointerException, AlreadyLoadedException {
 
         if ( node == null )
             throw new NullPointerException( "addNode: null argument" );
 
-        synchronized ( this.lockNodes ) {
+        for ( RealNode n : this.nodes )
+            if ( n.getName().compareTo( node.getName() ) == 0 )
+                throw new AlreadyLoadedException( "addNode: duplicate node" );
 
-            for ( RealNode n : this.nodes )
-                if ( n.getName().compareTo( node.getName() ) == 0 )
-                    throw new NullPointerException( "addNode: duplicate node" );
-
-            this.nodes.add( node );
-        }
+        this.nodes.add( node );
     }
 
-    protected void removeNode( String nodeName ) {
+
+
+    protected synchronized void removeNode( String nodeName ) {
         for ( RealNode node : this.nodes ) {
             if ( node.getName().compareTo( nodeName ) == 0 ) {
                 this.nodes.remove( node );

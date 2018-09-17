@@ -169,7 +169,7 @@ public class Client1DeployedNffg implements DeployedNffg {
             else if ( status == 406 )
                 throw new LinkAlreadyPresentException( "Link already present" );
             else
-                throw new ServiceException( "Service error" );
+                throw new ServiceException( "Service error (status " + status + ")" );
 
         } catch ( Exception e ) {
             throw new ServiceException();

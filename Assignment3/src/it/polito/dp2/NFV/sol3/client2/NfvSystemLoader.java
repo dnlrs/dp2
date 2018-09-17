@@ -104,8 +104,8 @@ public class NfvSystemLoader {
                                       .request( MediaType.APPLICATION_XML )
                                       .get( NfvHosts.class );
 
+            int i = 0;
             for ( NfvHost hostI : xmlHosts.getNfvHost() ) {
-
                 RealHost host =
                         new RealHost(
                                 hostI.getName(), hostI.getInstalledMemory(),
@@ -114,6 +114,7 @@ public class NfvSystemLoader {
 
                 hosts.put( host.getName(), host );
             }
+
 
             NfvArcs xmlconnections = client.target( service.getConnectionsLink().getHref() )
                                            .request( MediaType.APPLICATION_XML )
@@ -131,6 +132,8 @@ public class NfvSystemLoader {
                 connections.put( connection.getName(), connection );
             }
 
+
+
             NfvVNFs xmlVNFs = client.target( service.getVnfsLink().getHref() )
                                     .request( MediaType.APPLICATION_XML )
                                     .get( NfvVNFs.class );
@@ -145,6 +148,8 @@ public class NfvSystemLoader {
 
                 vnfs.put( vnf.getName(), vnf );
             }
+
+
 
             /*
              * Retrieve NFFGs from Web Service

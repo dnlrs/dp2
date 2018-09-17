@@ -1,12 +1,13 @@
 package it.polito.dp2.NFV.sol3.service.nfvSystem;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import it.polito.dp2.NFV.HostReader;
 import it.polito.dp2.NFV.NodeReader;
+import it.polito.dp2.NFV.sol3.service.AlreadyLoadedException;
 
 
 /**
@@ -25,13 +26,10 @@ public class RealHost extends RealNamedEntity implements HostReader {
     private final AtomicInteger usedStorage;
     private final AtomicInteger usedVNFs;
 
-    private final CopyOnWriteArraySet<RealNode> nodes;
-
-    private final Object lockNodes = new Object();
+    private final HashSet<RealNode> nodes;
 
 
     // constructors
-
 
     protected RealHost(
             String name, int availableMemory, int availableStorage,
@@ -98,8 +96,8 @@ public class RealHost extends RealNamedEntity implements HostReader {
             throw new IllegalArgumentException(
                     "new Host: too much storage required" );
 
-        this.nodes = new CopyOnWriteArraySet<RealNode>( nodes );
 
+        this.nodes = new HashSet<RealNode>( nodes );
         this.usedMemory.set( requiredMemory );
         this.usedStorage.set( requiredStorage );
         this.usedVNFs.set( nodes.size() );
@@ -113,33 +111,30 @@ public class RealHost extends RealNamedEntity implements HostReader {
 
     @Override
     public int getAvailableMemory() {
-
         return this.availableMemory.intValue();
     }
 
 
     @Override
     public int getAvailableStorage() {
-
         return this.availableStorage.intValue();
     }
 
     @Override
     public int getMaxVNFs() {
-
         return this.maxVNFs.intValue();
     }
 
     @Override
     public synchronized Set<NodeReader> getNodes() {
-        return new HashSet<NodeReader>( this.nodes );
+        return Collections.unmodifiableSet( this.nodes );
     }
 
     // setters
 
 
-    protected void addNode( RealNode node )
-            throws IllegalArgumentException {
+    protected synchronized void addNode( RealNode node )
+            throws IllegalArgumentException, AlreadyLoadedException {
 
         if ( node == null )
             throw new IllegalArgumentException( "addNode: null argument" );
@@ -147,36 +142,31 @@ public class RealHost extends RealNamedEntity implements HostReader {
         int requiredMemory  = node.getFuncType().getRequiredMemory();
         int requiredStorage = node.getFuncType().getRequiredStorage();
 
-        synchronized ( this.lockNodes ) {
 
-            for ( RealNode n : this.nodes )
-                if ( n.getName().compareTo( node.getName() ) == 0 )
-                    throw new NullPointerException( "addNode: duplicate node" );
+        if ( this.nodes.contains( node ) )
+            throw new AlreadyLoadedException( "addNode: duplicate node" );
 
-            if ( (this.usedMemory.get()  + requiredMemory)  > this.availableMemory.get() )
-                throw new IllegalArgumentException(
-                        "addNode: no memory available" );
+        for ( RealNode n : this.nodes )
+            if ( n.getName().compareTo( node.getName() ) == 0 )
+                throw new AlreadyLoadedException( "addNode: duplicate node" );
 
-            if ( (this.usedStorage.get() + requiredStorage) > this.availableStorage.get() )
-                throw new IllegalArgumentException(
-                        "addNode: no storage available" );
+        if ( (this.usedMemory.get()  + requiredMemory)  > this.availableMemory.get() )
+            throw new IllegalArgumentException( "addNode: no memory available" );
 
-            if ( this.usedVNFs.get() == this.maxVNFs.get() )
-                throw new IllegalArgumentException(
-                        "addNode: host has no VNF slots available" );
+        if ( (this.usedStorage.get() + requiredStorage) > this.availableStorage.get() )
+            throw new IllegalArgumentException( "addNode: no storage available" );
 
-            if ( this.nodes.contains( node ) )
-                throw new NullPointerException( "addNode: duplicate node" );
+        if ( this.usedVNFs.get() == this.maxVNFs.get() )
+            throw new IllegalArgumentException( "addNode: host has no VNF slots available" );
 
-            this.nodes.add( node );
+        this.nodes.add( node );
 
-            this.usedMemory.addAndGet( requiredMemory );
-            this.usedStorage.addAndGet( requiredStorage );
-            this.usedVNFs.incrementAndGet();
-        }
+        this.usedMemory.addAndGet( requiredMemory );
+        this.usedStorage.addAndGet( requiredStorage );
+        this.usedVNFs.incrementAndGet();
     }
 
-    protected void removeNode( String nodeName ) {
+    protected synchronized void removeNode( String nodeName ) {
 
         for ( RealNode node : this.nodes ) {
             if ( node.getName().compareTo( nodeName ) == 0 ) {
@@ -190,9 +180,17 @@ public class RealHost extends RealNamedEntity implements HostReader {
         }
     }
 
+    /**
+     * Checks if there is a VNF slot available and if there is enough memory
+     * and storage as requested.
+     *
+     * @param requiredMemory
+     * @param requiredStorage
+     * @return
+     */
     protected boolean isAvailable( int requiredMemory, int requiredStorage ) {
 
-        int freeVNFs = (this.maxVNFs.get() - this.nodes.size());
+        int freeVNFs = (this.maxVNFs.get() - this.usedVNFs.get());
 
         if ( freeVNFs < 1 )
             return false;

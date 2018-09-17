@@ -3,7 +3,6 @@ package it.polito.dp2.NFV.sol3.service.nfvSystem;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import it.polito.dp2.NFV.ConnectionPerformanceReader;
@@ -16,7 +15,16 @@ import it.polito.dp2.NFV.NfvReaderException;
 import it.polito.dp2.NFV.NfvReaderFactory;
 import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.VNFTypeReader;
+import it.polito.dp2.NFV.sol3.service.AlreadyLoadedException;
 
+
+/**
+ * Loads NFFG, Hosts and Nodes data from the random generator to the NfvDeployer
+ * System database.
+ *
+ * @author    Daniel C. Rusu
+ * @studentID 234428
+ */
 public class NfvSystemLoader {
 
     private final static Logger logger = Logger.getLogger( NfvSystemLoader.class.getName() );
@@ -32,6 +40,7 @@ public class NfvSystemLoader {
             monitor = factory.newNfvReader();
 
         } catch ( FactoryConfigurationError error ) {
+            logger.severe( "loadFromGenerator: " + error.getMessage() );
             throw new NfvReaderException( error.getMessage() );
         }
 
@@ -86,8 +95,8 @@ public class NfvSystemLoader {
                 }
             }
         } catch ( NullPointerException | IllegalArgumentException e ) {
-            logger.log( Level.WARNING, e.getMessage() );
-//            throw new NfvReaderException( e.getMessage() );
+            logger.severe( "loadFromGenerator: " + e.getMessage() );
+            throw new NfvReaderException( e.getMessage() );
         }
 
 
@@ -106,6 +115,7 @@ public class NfvSystemLoader {
                 vnfs.put( vnf.getName(), vnf );
             }
         } catch ( NullPointerException | IllegalArgumentException e ) {
+            logger.severe( "loadFromGenerator: " + e.getMessage() );
             throw new NfvReaderException( e.getMessage() );
         }
 
@@ -116,101 +126,99 @@ public class NfvSystemLoader {
         HashMap<String, RealNffg> nffgs = new HashMap<String, RealNffg>();
         try {
 
-//            for ( NffgReader nffgI : monitor.getNffgs( null ) ) {
-            {
-                NffgReader nffgI = monitor.getNffg( "Nffg0" ); // load only "Nffg0"
+            NffgReader nffgI = monitor.getNffg( "Nffg0" ); // load only "Nffg0"
 
-                /* This checks
-                 *  - if NFFG name is valid
-                 *  - if deploy time is valid
+            /* This checks
+             *  - if NFFG name is valid
+             *  - if deploy time is valid
+             */
+            RealNffg nffg =
+                    new RealNffg(
+                            nffgI.getName(),
+                            Calendar.getInstance(), /* current time */
+                            new HashSet<RealNode>() /* no nodes for now */
+                            );
+
+            HashMap<String, RealNode> nffgNodes = new HashMap<String, RealNode>();
+            HashMap<String, RealLink> nffgLinks = new HashMap<String, RealLink>();
+
+
+            for ( NodeReader nodeI : nffgI.getNodes() ) {
+
+                /* This checks:
+                 *  - if node name is valid
+                 *  - is node is hosted by an existent host
+                 *  - if VNF type exists in the NFV System
                  */
-                RealNffg nffg =
-                        new RealNffg(
-                                nffgI.getName(),
-//                                nffgI.getDeployTime(),
-                                Calendar.getInstance(),
-                                new HashSet<RealNode>() /* no nodes for now */
+                RealNode node =
+                        new RealNode(
+                                nodeI.getName(), hosts.get( nodeI.getHost().getName() ),
+                                nffg, vnfs.get( nodeI.getFuncType().getName() ),
+                                new HashSet<RealLink>() /* no links for now */
                                 );
+                /* This checks:
+                 *  - if Host can host node (memory, storage and maxVNFs on Host
+                 */
+                hosts.get( nodeI.getHost().getName() ).addNode( node );
 
-                HashMap<String, RealNode> nffgNodes = new HashMap<String, RealNode>();
-                HashMap<String, RealLink> nffgLinks = new HashMap<String, RealLink>();
+                /* This checks:
+                 *  - if the node really belongs to current NFFG
+                 */
+                if ( nodeI.getNffg().getName().compareTo(nffgI.getName()) != 0 )
+                    throw new NullPointerException( "loadFromGenerator: nffg-node inconsistency" );
+
+                /*
+                 * Add node to NFFG
+                 */
+                nffg.addNode( node );
+
+                nffgNodes.put( node.getName(), node );
+            }
 
 
-                for ( NodeReader nodeI : nffgI.getNodes() ) {
+            for ( NodeReader nodeI : nffgI.getNodes() ) {
+                for ( LinkReader linkI : nodeI.getLinks() ) {
 
-                    /* This checks:
-                     *  - if node name is valid
-                     *  - is node is hosted by an existent host
-                     *  - if VNF type exists in the NFV System
+                    /* This checks
+                     *  - if link name is valid
+                     *  - if source and destination node belong to current NFFG
+                     *  - if latency an throughput have valid values ( >0 )
                      */
-                    RealNode node =
-                            new RealNode(
-                                    nodeI.getName(), hosts.get( nodeI.getHost().getName() ),
-                                    nffg, vnfs.get( nodeI.getFuncType().getName() ),
-                                    new HashSet<RealLink>() /* no links for now */
+                    RealLink link =
+                            new RealLink(
+                                    linkI.getName(),
+                                    nffgNodes.get( linkI.getSourceNode().getName() ),
+                                    nffgNodes.get( linkI.getDestinationNode().getName() ),
+                                    linkI.getLatency(),
+                                    linkI.getThroughput()
                                     );
-                    /* This checks:
-                     *  - if Host can host node (memory, storage and maxVNFs on Host
-                     */
-                    hosts.get( nodeI.getHost().getName() ).addNode( node );
 
                     /* This checks:
-                     *  - if the node really belongs to current NFFG
+                     *  - if the link follows an existent connection
+                     *  - if required latency and throughput of the link are available in the connection
                      */
-                    if ( nodeI.getNffg().getName().compareTo(nffgI.getName()) != 0 )
-                        throw new NullPointerException( "loadFromGenerator: nffg-node inconsistency" );
+                    RealConnection connection =
+                            connections.get(
+                                    link.getSourceNode().getHost().getName() +
+                                    "TO" + link.getDestinationNode().getHost().getName() );
+                    if ( ( connection.getLatency()    < link.getLatency() )  ||
+                         ( connection.getThroughput() < link.getThroughput() ) )
+                        throw new NullPointerException( "loadFromGenerator: link-connection inconsistency" );
 
                     /*
-                     * Add node to NFFG
+                     * Add link to node
                      */
-                    nffg.addNode( node );
-
-                    nffgNodes.put( node.getName(), node );
+                    nffgNodes.get( nodeI.getName() ).addLink( link );
+                    nffgLinks.put( link.getName(), link );
                 }
-
-
-                for ( NodeReader nodeI : nffgI.getNodes() ) {
-                    for ( LinkReader linkI : nodeI.getLinks() ) {
-
-                        /* This checks
-                         *  - if link name is valid
-                         *  - if source and destination node belong to current NFFG
-                         *  - if latency an throughput have valid values ( >0 )
-                         */
-                        RealLink link =
-                                new RealLink(
-                                        linkI.getName(),
-                                        nffgNodes.get( linkI.getSourceNode().getName() ),
-                                        nffgNodes.get( linkI.getDestinationNode().getName() ),
-                                        linkI.getLatency(),
-                                        linkI.getThroughput()
-                                        );
-
-                        /* This checks:
-                         *  - if the link follows an existent connection
-                         *  - if required latency and throughput of the link are available in the connection
-                         */
-                        RealConnection connection =
-                                connections.get(
-                                        link.getSourceNode().getHost().getName() +
-                                        "TO" + link.getDestinationNode().getHost().getName() );
-                        if ( ( connection.getLatency()    < link.getLatency() )  ||
-                             ( connection.getThroughput() < link.getThroughput() ) )
-                            throw new NullPointerException( "loadFromGenerator: link-connection inconsistency" );
-
-                        /*
-                         * Add link to node
-                         */
-                        nffgNodes.get( nodeI.getName()).addLink( link );
-                        nffgLinks.put( link.getName(), link );
-                    }
-                }
-
-                nffgs.put( nffg.getName(), nffg );
             }
-        } catch ( NullPointerException | IllegalArgumentException e ) {
-            logger.log( Level.WARNING, e.getMessage() );
-//            throw new NfvReaderException( e.getMessage() );
+
+            nffgs.put( nffg.getName(), nffg );
+        } catch ( NullPointerException
+                    | IllegalArgumentException
+                    | AlreadyLoadedException e ) {
+            logger.severe( "loadFromGenerator: " + e.getMessage() );
+            throw new NfvReaderException( e.getMessage() );
         }
 
         /*
@@ -228,9 +236,11 @@ public class NfvSystemLoader {
             /* add NFFGs, nodes and links */
             db.addNFFGs( new HashSet<RealNffg>( nffgs.values() ) );
 
-        } catch ( NullPointerException | IllegalArgumentException e ) {
-            logger.log( Level.WARNING, e.getMessage() );
-//            throw new NfvReaderException( e.getMessage() );
+        } catch ( NullPointerException
+                    | IllegalArgumentException
+                    | AlreadyLoadedException e ) {
+            logger.severe( "loadFromGenerator: " + e.getMessage() );
+            throw new NfvReaderException( e.getMessage() );
         }
     }
 

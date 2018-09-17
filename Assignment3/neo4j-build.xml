@@ -5,8 +5,10 @@
 		Script for Controlling Neo4j (to be imported in main build)
 	</description>
 
-	
+	<!--
 	<property name="neo4j.location" value="/opt/neo4j-community-3.2.3"/>
+	-->
+	<property name="neo4j.location" value="/opt/neo4j-community-3.2.12"/>
 
 	<target name="start-neo4j" description="start NEO4J server">
 		<exec executable="/bin/bash">

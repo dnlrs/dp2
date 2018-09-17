@@ -28,6 +28,7 @@
 <th>XML representation</th>
 <th>URL</th>
 <th>Meaning</th>
+<th>Operations</th>
 </tr>
 </thead>
 <tbody>
@@ -36,96 +37,112 @@
 <td>services</td>
 <td>/</td>
 <td>the set of all collections accessible through this API</td>
+<td>GET</td>
 </tr>
 <tr>
 <td>hosts</td>
 <td>nfvHosts</td>
 <td>/hosts</td>
 <td>the set of all Hosts in the NFV System</td>
+<td>GET</td>
 </tr>
 <tr>
 <td>hosts &gt; {hostName}</td>
 <td>nfvHost</td>
 <td>/hosts/{hostName}</td>
 <td>a single Host</td>
+<td>GET</td>
 </tr>
 <tr>
 <td>hosts &gt; {hostName} &gt; nodes</td>
 <td>nfvNodes</td>
 <td>/hosts/{hostName}/nodes</td>
 <td>the set of Nodes allocated on this Host</td>
+<td>GET</td>
 </tr>
 <tr>
 <td>connections</td>
 <td>nfvArcs</td>
 <td>/connections</td>
 <td>the set of all Connections in the NFV System</td>
+<td>GET</td>
 </tr>
 <tr>
 <td>vnfs</td>
 <td>nfvVNFs</td>
 <td>/vnfs</td>
 <td>the set of all VNFs in the NFV System</td>
+<td>GET</td>
 </tr>
 <tr>
 <td>vnfs &gt; {vnfName}</td>
 <td>nfvVNF</td>
 <td>/vnfs/{vnfName}</td>
 <td>a single VNF</td>
+<td>GET</td>
 </tr>
 <tr>
 <td>nffgs</td>
 <td>nfvNFFGs</td>
 <td>/nffgs</td>
 <td>the set of all NFFGs in the NFV System</td>
+<td>GET, POST</td>
 </tr>
 <tr>
 <td>nffgs &gt; {nffgName}</td>
 <td>nfvNFFG</td>
 <td>/nffgs/{nffgName}</td>
 <td>a single NFFG</td>
+<td>GET, DELETE</td>
 </tr>
 <tr>
 <td>nffgs &gt; {nffgName} &gt; nodes</td>
 <td>nfvNodes</td>
 <td>/nffgs/{nffgName}/nodes</td>
 <td>the set of all Nodes in this NFFG</td>
+<td>GET</td>
 </tr>
 <tr>
 <td>nffgs &gt; {nffgName} &gt; links</td>
 <td>nfvArcs</td>
 <td>/nffgs/{nffgName}/links</td>
 <td>the set of all Links in this NFFG</td>
+<td>GET, POST</td>
 </tr>
 <tr>
 <td>nffgs &gt; {nffgName} &gt; links &gt; {linkName}</td>
 <td>nfvArc</td>
 <td>/nffgs/{nffgName}/links/{linkName}</td>
 <td>a single Link in this NFFG</td>
+<td>GET, DELETE</td>
 </tr>
 <tr>
 <td>nodes</td>
 <td>nfvNodes</td>
 <td>/nodes</td>
 <td>the set of all Nodes in the NFV System</td>
+<td>GET, POST</td>
 </tr>
 <tr>
 <td>nodes &gt; {nodeName}</td>
 <td>nfvNode</td>
 <td>/nodes/{nodeName}</td>
 <td>a single Node</td>
+<td>GET, DELETE</td>
 </tr>
 <tr>
 <td>nodes &gt; {nodeName} &gt; reachableHosts</td>
 <td>nfvHosts</td>
 <td>/nodes/{nodeName}/reachableHosts</td>
 <td>the set of all reachable Hosts from this Node</td>
+<td>GET</td>
 </tr>
 <tr>
 <td>nodes &gt; {nodeName} &gt; links</td>
 <td>nfvArcs</td>
 <td>/nodes/{nodeName}/links</td>
 <td>the set of all links with this Node as the source</td>
+<td>GET</td>
 </tr>
 </tbody>
 </table>

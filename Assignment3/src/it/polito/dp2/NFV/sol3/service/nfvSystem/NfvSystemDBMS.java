@@ -1,10 +1,13 @@
 package it.polito.dp2.NFV.sol3.service.nfvSystem;
 
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.logging.Logger;
+
+import it.polito.dp2.NFV.sol3.service.AlreadyLoadedException;
 
 
 public class NfvSystemDBMS {
@@ -19,6 +22,19 @@ public class NfvSystemDBMS {
     private final ConcurrentSkipListMap<String, RealConnection> dbConns;
     private final ConcurrentSkipListMap<String, ConcurrentSkipListMap<String, RealLink>> dbLinks;
 
+    /**
+     * Since, NFFG, Nodes and links are highly inter-dependent, we need to make sure that
+     * when adding an NFFG with all its nodes and links the system database remains in a
+     * consistent state while updating collections.
+     * Strictly related collections are:
+     *  - dbNFFGs
+     *  - dbNodes
+     *  - dbLinks
+     */
+    private final Object lock = new Object();
+
+
+
     private final static NfvSystemDBMS instance;
 
     static {
@@ -26,12 +42,14 @@ public class NfvSystemDBMS {
     }
 
     private NfvSystemDBMS() {
+        logger.info( "DB initialization started.." );
         this.dbHosts = new ConcurrentSkipListMap<String, RealHost>();
         this.dbNFFGs = new ConcurrentSkipListMap<String, RealNffg>();
         this.dbNodes = new ConcurrentSkipListMap<String, RealNode>();
         this.dbVNFs  = new ConcurrentSkipListMap<String, RealVNFType>();
         this.dbConns = new ConcurrentSkipListMap<String, RealConnection>();
         this.dbLinks = new ConcurrentSkipListMap<String, ConcurrentSkipListMap<String, RealLink>>();
+        logger.info( "DB initilized." );
     }
 
 
@@ -39,6 +57,7 @@ public class NfvSystemDBMS {
         return instance;
     }
 
+    // TODO: change nullpointer exceptions to alreadyLoadedException
 
 
     /* ----------------------------------------------------------------------
@@ -69,13 +88,10 @@ public class NfvSystemDBMS {
     protected void addConnectionPerformance(
             String connectionID,
             RealConnection connection )
-                    throws NullPointerException {
+                    throws NullPointerException, AlreadyLoadedException {
 
-        RealConnection oldOne =
-                this.dbConns.putIfAbsent( connectionID, connection );
-
-        if ( oldOne != null )
-            throw new NullPointerException(
+        if ( this.dbConns.putIfAbsent( connectionID, connection ) != null )
+            throw new AlreadyLoadedException(
                     "nfvSystem: duplicate connection detected" );
     }
 
@@ -91,20 +107,22 @@ public class NfvSystemDBMS {
     protected RealHost getHost( String hostName )
             throws NullPointerException {
 
-        if ( !(RealNamedEntity.nameIsValid( hostName )) )
-            return null;
-
-            return this.dbHosts.get( hostName );
+        return ( RealNamedEntity.nameIsValid( hostName ) ?
+                        this.dbHosts.get( hostName ) : null );
     }
 
+
+    /**
+     * Adds a {@link RealHost} to the database if not already present.
+     *
+     * @param host
+     * @throws NullPointerException
+     */
     protected void addHost( RealHost host )
-            throws NullPointerException {
+            throws NullPointerException, AlreadyLoadedException {
 
-        RealHost oldOne =
-                this.dbHosts.putIfAbsent( host.getName() , host );
-
-        if ( oldOne != null )
-            throw new NullPointerException(
+        if ( this.dbHosts.putIfAbsent( host.getName(), host ) != null )
+            throw new AlreadyLoadedException(
                     "nfvSystem: duplicate host detected " + host.getName() );
     }
 
@@ -115,11 +133,18 @@ public class NfvSystemDBMS {
      *         the set may be empty.
      */
     protected Set<RealHost> getHosts() {
-        return new LinkedHashSet<RealHost>( this.dbHosts.values() );
+        Set<RealHost> result = new LinkedHashSet<RealHost>(this.dbHosts.values());
+        return Collections.unmodifiableSet( result );
     }
 
+    /**
+     * Adds a set of {@link RealHost}s.
+     *
+     * @param hosts
+     * @throws NullPointerException
+     */
     protected void addHosts( Set<RealHost> hosts )
-            throws NullPointerException {
+            throws NullPointerException, AlreadyLoadedException {
 
         for ( RealHost host : hosts ) {
             addHost( host );
@@ -138,30 +163,34 @@ public class NfvSystemDBMS {
     protected RealNffg getNFFG( String nffgName )
             throws NullPointerException {
 
-            return this.dbNFFGs.get( nffgName );
+        synchronized ( this.lock ) {
+            return ( RealNamedEntity.nameIsValid( nffgName ) ?
+                            this.dbNFFGs.get( nffgName ) : null);
+        }
     }
 
 
+    /**
+     * Adds a {@link RealNffg} with nodes and links to the NfvSystem database.
+     *
+     * @param nffg
+     * @throws NullPointerException
+     */
     protected void addNffg( RealNffg nffg )
-            throws NullPointerException {
+            throws NullPointerException, AlreadyLoadedException {
 
         ConcurrentSkipListMap<String, RealLink> mapLinks =
                 new ConcurrentSkipListMap<String, RealLink>();
 
-        synchronized ( this ) {
-            RealNffg oldNffg = this.dbNFFGs.putIfAbsent( nffg.getName(), nffg);
+        synchronized ( this.lock ) {
 
-            if ( oldNffg != null )
-                throw new NullPointerException(
+            if ( this.dbNFFGs.putIfAbsent( nffg.getName(), nffg) != null )
+                throw new AlreadyLoadedException(
                         "nfvSystem: duplicate NFFG detected" );
 
-            ConcurrentSkipListMap<String, RealLink> oldMap =
-                    this.dbLinks.putIfAbsent( nffg.getName(), mapLinks);
-
-            if ( oldMap != null )
+            if ( this.dbLinks.putIfAbsent( nffg.getName(), mapLinks) != null )
                 throw new NullPointerException(
                         "nfvSystem: DB NFFG-links inconsistency problem" );
-
 
             for ( RealNode node : nffg.getRealNodes() ) {
                 addNode( node );
@@ -173,10 +202,16 @@ public class NfvSystemDBMS {
         }
     }
 
+    /**
+     * Removes a {@link RealNffg} from the NfvSystem database.
+     *
+     * @param nffgName
+     */
     protected void removeNffg( String nffgName ) {
-
-        this.dbLinks.remove( nffgName );
-        this.dbNFFGs.remove( nffgName );
+        synchronized ( this.lock ) {
+            this.dbLinks.remove( nffgName );
+            this.dbNFFGs.remove( nffgName );
+        }
     }
 
 
@@ -192,27 +227,37 @@ public class NfvSystemDBMS {
     protected Set<RealNffg> getNFFGs( Calendar date )
             throws NullPointerException {
 
-
-        if ( date == null )
-            return new LinkedHashSet<RealNffg>( this.dbNFFGs.values() );
-
         Set<RealNffg> result = new LinkedHashSet<RealNffg>();
 
-        for ( RealNffg nffg : this.dbNFFGs.values() ) {
-            if ( nffg.getDeployTime().compareTo( date ) >= 0 ) {
-                result.add( nffg );
-            }
-        }
+        synchronized ( this.lock ) {
 
-        return result;
+            if ( date == null ) {
+                result.addAll( this.dbNFFGs.values() );
+            } else {
+                for ( RealNffg nffg : this.dbNFFGs.values() ) {
+                    if ( nffg.getDeployTime().compareTo( date ) >= 0 ) {
+                        result.add( nffg );
+                    }
+                }
+            }
+            return Collections.unmodifiableSet( result );
+        }
     }
 
 
+    /**
+     * adds a set of {@link RealNffg} with associated nodes and links to the
+     * NfvSystem database.
+     *
+     * @param nffgs
+     * @throws NullPointerException
+     */
     protected void addNFFGs( Set<RealNffg> nffgs )
-            throws NullPointerException {
-
-        for ( RealNffg nffg : nffgs ) {
-            addNffg( nffg );
+            throws NullPointerException, AlreadyLoadedException {
+        synchronized ( this.lock ) {
+            for ( RealNffg nffg : nffgs ) {
+                addNffg( nffg );
+            }
         }
     }
 
@@ -223,7 +268,8 @@ public class NfvSystemDBMS {
      *         the set may be empty if the NFV System is empty
      */
     protected Set<RealVNFType> getVNFCatalog() {
-        return new LinkedHashSet<RealVNFType>( this.dbVNFs.values() );
+        Set<RealVNFType> result = new LinkedHashSet<RealVNFType>( this.dbVNFs.values() );
+        return Collections.unmodifiableSet( result );
     }
 
 
@@ -237,23 +283,22 @@ public class NfvSystemDBMS {
      */
     protected RealVNFType getVNF( String vnfName )
             throws NullPointerException {
-            return this.dbVNFs.get( vnfName );
+            return ( RealNamedEntity.nameIsValid( vnfName ) ?
+                                    this.dbVNFs.get( vnfName ) : null);
     }
 
 
     protected void addVNF( RealVNFType vnf )
-            throws NullPointerException {
+            throws NullPointerException, AlreadyLoadedException {
 
-        RealVNFType oldVNF = this.dbVNFs.putIfAbsent( vnf.getName(), vnf );
-
-        if ( oldVNF != null )
-            throw new NullPointerException(
+        if ( this.dbVNFs.putIfAbsent( vnf.getName(), vnf ) != null )
+            throw new AlreadyLoadedException(
                     "nfvSystem: duplicate VNFType detected" );
     }
 
 
     protected void addCatalog( Set<RealVNFType> vnfs )
-            throws NullPointerException {
+            throws NullPointerException, AlreadyLoadedException {
 
         for ( RealVNFType vnf : vnfs ) {
             addVNF( vnf );
@@ -272,36 +317,47 @@ public class NfvSystemDBMS {
     protected Set<RealLink> getLinks( String nffgName, Set<String> links )
                     throws NullPointerException {
 
-        ConcurrentSkipListMap<String, RealLink> hmLinks =
-                this.dbLinks.get( nffgName );
-
-        if ( links == null )
-            return new LinkedHashSet<RealLink>( hmLinks.values() );
-
         Set<RealLink> result = new LinkedHashSet<RealLink>();
 
-        for ( RealLink link : hmLinks.values() ) {
-            if ( hmLinks.containsKey( link.getName() ) ) {
-                result.add( link );
-            }
-        }
+        synchronized ( this.lock ) {
+            ConcurrentSkipListMap<String, RealLink> hmLinks =
+                    this.dbLinks.get( nffgName );
 
-        return result;
+            if ( links == null ) {
+                result.addAll( hmLinks.values() );
+            } else {
+                for ( RealLink link : hmLinks.values() ) {
+                    if ( links.contains( link.getName() ) ) {
+                        result.add( link );
+                    }
+                }
+            }
+
+            return Collections.unmodifiableSet( result );
+        }
     }
 
 
     protected RealLink getLink( String nffgName, String linkName )
                     throws NullPointerException {
 
-        return (this.dbLinks.get( nffgName )).get( linkName );
+        if ( !RealNamedEntity.nameIsValid( nffgName ) ||
+                !RealNamedEntity.nameIsValid( linkName ) )
+            return null;
+
+        synchronized ( this.lock ) {
+            return (this.dbLinks.get( nffgName )).get( linkName );
+        }
     }
 
 
     protected void addLinks( String nffgName, Set<RealLink> links )
-            throws NullPointerException {
+            throws NullPointerException, AlreadyLoadedException {
 
-        for ( RealLink link : links ) {
-            addLink( nffgName, link );
+        synchronized ( this.lock ) {
+            for ( RealLink link : links ) {
+                addLink( nffgName, link );
+            }
         }
     }
 
@@ -309,21 +365,33 @@ public class NfvSystemDBMS {
     protected void addLink(
             String   nffgName,
             RealLink link      )
-                    throws NullPointerException {
+                    throws NullPointerException, AlreadyLoadedException {
 
-        (this.dbLinks.get( nffgName )).put(link.getName(), link);
-//        RealLink oldLink =
-//                (this.dbLinks.get( nffgName )).putIfAbsent(link.getName(), link);
-//
-//        if ( oldLink != null )
-//            throw new NullPointerException(
-//                    "nfvSystem: duplicate Link within NFFG detected" );
+        synchronized ( this.lock ) {
+
+        if ( (this.dbLinks.get( nffgName )).putIfAbsent(link.getName(), link) != null )
+            throw new AlreadyLoadedException(
+                    "nfvSystem: duplicate Link within NFFG detected" );
+        }
     }
+
+//    protected void addLinkOrReplace(
+//            String nffgName,
+//            RealLink link           )
+//                    throws NullPointerException {
+//
+//        synchronized ( this.lock ) {
+//            (this.dbLinks.get( nffgName )).put(link.getName(), link);
+//        }
+//
+//    }
 
     protected void removeLink(
             String nffgName,
             String linkName ) {
-        (this.dbLinks.get( nffgName )).remove( linkName );
+        synchronized ( this.lock ) {
+            (this.dbLinks.get( nffgName )).remove( linkName );
+        }
     }
 
 
@@ -337,7 +405,9 @@ public class NfvSystemDBMS {
      */
     protected RealNode getNode( String nodeName )
             throws NullPointerException {
-        return this.dbNodes.get( nodeName );
+        synchronized ( this.lock ) {
+            return this.dbNodes.get( nodeName );
+        }
     }
 
     /**
@@ -351,39 +421,48 @@ public class NfvSystemDBMS {
     protected Set<RealNode> getNodes( Set<String> nodes )
             throws NullPointerException {
 
-        if ( nodes == null )
-            return new LinkedHashSet<RealNode>( this.dbNodes.values() );
-
         Set<RealNode> result = new LinkedHashSet<RealNode>();
-        for ( RealNode node : this.dbNodes.values() ) {
-            if ( nodes.contains( node.getName() ) ) {
-                result.add( node );
-            }
-        }
 
-        return result;
+        synchronized ( this.lock ) {
+
+            if ( nodes == null ) {
+                result.addAll( this.dbNodes.values() );
+            } else {
+                for ( RealNode node : this.dbNodes.values() ) {
+                    if ( nodes.contains( node.getName() ) ) {
+                        result.add( node );
+                    }
+                }
+            }
+
+            return Collections.unmodifiableSet( result );
+        }
     }
 
     protected void addNode( RealNode node )
-            throws NullPointerException {
+            throws NullPointerException, AlreadyLoadedException {
 
-        RealNode oldNode =
-                this.dbNodes.put( node.getName(), node );
+        synchronized ( this.lock ) {
 
-        if ( oldNode != null )
-            throw new NullPointerException(
-                    "nfvSystem: duplicate Node detected" );
+            if ( this.dbNodes.putIfAbsent( node.getName(), node ) != null )
+                throw new AlreadyLoadedException(
+                        "nfvSystem: duplicate Node detected" );
+        }
     }
 
     protected void addNodes( Set<RealNode> nodes )
-            throws NullPointerException {
+            throws NullPointerException, AlreadyLoadedException {
 
-        for ( RealNode node : nodes ) {
-            addNode( node );
+        synchronized ( this.lock ) {
+            for ( RealNode node : nodes ) {
+                addNode( node );
+            }
         }
     }
 
     protected void removeNode( String nodeName ) {
-        this.dbNodes.remove( nodeName );
+        synchronized ( this.lock ) {
+            this.dbNodes.remove( nodeName );
+        }
     }
 }

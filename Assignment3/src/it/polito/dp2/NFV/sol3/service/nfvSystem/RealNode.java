@@ -1,14 +1,15 @@
 package it.polito.dp2.NFV.sol3.service.nfvSystem;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 import it.polito.dp2.NFV.HostReader;
 import it.polito.dp2.NFV.LinkReader;
 import it.polito.dp2.NFV.NffgReader;
 import it.polito.dp2.NFV.NodeReader;
 import it.polito.dp2.NFV.VNFTypeReader;
+import it.polito.dp2.NFV.sol3.service.AlreadyLoadedException;
 
 /**
  * An implementation of the {@link NodeReader} interface.
@@ -22,10 +23,7 @@ public class RealNode extends RealNamedEntity implements NodeReader {
     private final RealNffg    nffg;
     private final RealVNFType funcType;
 
-    private final CopyOnWriteArraySet<RealLink> links;
-
-    private final Object lockLinks    = new Object();
-
+    private final HashSet<RealLink> links;
 
     // constructors
 
@@ -55,7 +53,7 @@ public class RealNode extends RealNamedEntity implements NodeReader {
         this.host     = host;
         this.nffg     = nffg;
         this.funcType = funcType;
-        this.links    = new CopyOnWriteArraySet<RealLink>( links );
+        this.links    = new HashSet<RealLink>( links );
     }
 
 
@@ -73,10 +71,8 @@ public class RealNode extends RealNamedEntity implements NodeReader {
     }
 
     @Override
-    public Set<LinkReader> getLinks() {
-        synchronized ( this.lockLinks ) {
-            return new HashSet<LinkReader>( this.links );
-        }
+    public synchronized Set<LinkReader> getLinks() {
+        return Collections.unmodifiableSet( new HashSet<LinkReader>( this.links ) );
     }
 
     @Override
@@ -85,33 +81,48 @@ public class RealNode extends RealNamedEntity implements NodeReader {
     }
 
 
-    protected Set<RealLink> getRealLinks() {
-        synchronized ( this.lockLinks ) {
-            return new HashSet<RealLink>( this.links );
-        }
+    protected synchronized Set<RealLink> getRealLinks() {
+            return Collections.unmodifiableSet( this.links );
     }
 
 
 
     // other
 
-    protected void addLink( RealLink link )
-            throws NullPointerException {
+    /**
+     * Adds a link to the node, if another link with the same name was present
+     * then it is replaced.
+     *
+     * @param link
+     * @throws NullPointerException
+     */
+    protected synchronized void addLink( RealLink link )
+            throws NullPointerException, AlreadyLoadedException {
 
         if ( link == null )
             throw new NullPointerException( "addLink: null argument" );
 
-        synchronized ( this.lockLinks ) {
-
-            for ( RealLink l : this.links )
-                if ( l.getName().compareTo( link.getName() ) == 0 ) {
-                    this.links.remove( l );
-//                    throw new NullPointerException( "addLink: duplicate link" );
-                }
+        for ( RealLink l : this.links )
+            if ( l.getName().compareTo( link.getName() ) == 0 )
+                throw new AlreadyLoadedException( "addLink: duplicate link" );
 
             this.links.add( link );
-        }
     }
+
+
+//    protected synchronized void addLinkOrReplace( RealLink link )
+//            throws NullPointerException {
+//
+//        if ( link == null )
+//            throw new NullPointerException( "addLink: null argument" );
+//
+//        for ( RealLink l : this.links )
+//            if ( l.getName().compareTo( link.getName() ) == 0 ) {
+//                this.links.remove( l );
+//            }
+//
+//            this.links.add( link );
+//    }
 
     protected void removeLink( RealLink link ) {
         for ( RealLink l : this.links )

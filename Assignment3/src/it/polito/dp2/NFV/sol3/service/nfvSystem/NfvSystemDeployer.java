@@ -22,8 +22,8 @@ import it.polito.dp2.NFV.sol3.service.neo4jAPI.Neo4jSimpleXMLBuilder;
 public class NfvSystemDeployer {
 
 
-    NfvSystem          system;
-    NfvSystemIDService IDService;
+    NfvSystem             system;
+    NfvSystemIDService    IDService;
     Neo4jSimpleXMLBuilder builder;
 
     public NfvSystemDeployer() {

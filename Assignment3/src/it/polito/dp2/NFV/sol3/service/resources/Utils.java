@@ -569,7 +569,6 @@ public class Utils {
         Link result = new Link();
 
         result.setHref( uriInfo.toString() );
-//        result.setHref( uriInfo.getBaseUri().toString() );
 
         return result;
     }

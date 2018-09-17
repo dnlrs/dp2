@@ -4,7 +4,6 @@ import java.util.Calendar;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import it.polito.dp2.NFV.ConnectionPerformanceReader;
@@ -28,14 +27,14 @@ import it.polito.dp2.NFV.sol3.service.UnknownNameException;
  */
 public class NfvSystem implements NfvReader {
 
-    private final static Logger        logger = Logger.getLogger( NfvSystem.class.getName() );
+    private final static Logger        logger = Logger.getLogger( System.class.getName() );
     private final static NfvSystemDBMS db     = NfvSystemDBMS.getInstance();
 
 
     static {
         try {
 
-            logger.log( Level.INFO, "NfvDeployer initialization started.");
+            logger.info( "NfvDeployer initialization started.");
 
             NfvSystemLoader loader = new NfvSystemLoader();
             loader.loadFromGenerator( db );
@@ -43,23 +42,18 @@ public class NfvSystem implements NfvReader {
             NfvSystemDeployer deployer = new NfvSystemDeployer();
             deployer.deployNFFG( "Nffg0" );
 
-            logger.log( Level.INFO, "NfvDeployer initialized correctly." );
+            logger.info( "NfvDeployer initialized correctly." );
 
         } catch ( NfvReaderException e ) {
-            logger.log( Level.SEVERE,
-                    "Could not initialize application: " + e.getMessage() );
+            logger.severe( "Could not initialize application: " + e.getMessage() );
         } catch ( UnknownNameException e ) {
-            logger.log( Level.SEVERE,
-                    "Could not find \"Nffg0\": " + e.getMessage() );
+            logger.severe( "Could not find \"Nffg0\": " + e.getMessage() );
         } catch ( AlreadyLoadedException e ) {
-            logger.log( Level.SEVERE,
-                    "\"Nffg0\" is already loaded: " + e.getMessage() );
+            logger.severe( "\"Nffg0\" is already loaded: " + e.getMessage() );
         } catch ( ServiceException e ) {
-            logger.log( Level.SEVERE,
-                    "Service exception: " + e.getMessage() );
+            logger.severe( "Service exception: " + e.getMessage() );
         } catch ( Exception e ) {
-            logger.log( Level.SEVERE,
-                    "Unknown exception: " + e.getMessage() );
+            logger.severe( "Unknown exception: " + e.getMessage() );
         }
     }
 
@@ -78,9 +72,10 @@ public class NfvSystem implements NfvReader {
         try {
             result = db.getConnectionPerformance( srcHostI.getName()+"TO"+dstHostI.getName() );
         } catch ( NullPointerException e ) {
+            logger.severe(  "getConnectionPerformance:" + e.getMessage() );
             return null;
         } catch ( Exception e ) {
-            System.err.println( "getConnectionPerformance: unexpected exception" );
+            logger.severe( "getConnectionPerformance: unexpected exception " + e.getMessage() );
             return null;
         }
 
@@ -97,13 +92,14 @@ public class NfvSystem implements NfvReader {
     @Override
     public HostReader getHost( String hostName ) {
 
+
         HostReader result = null;
         try {
             result = db.getHost( hostName );
         } catch ( NullPointerException e ) {
             return null;
         } catch ( Exception e ) {
-            System.err.println( "getHost: unexpected exception" );
+            logger.severe( "getHost: unexpected exception " + e.getMessage() );
             return null;
         }
 
@@ -118,8 +114,7 @@ public class NfvSystem implements NfvReader {
         try {
             result = new LinkedHashSet<HostReader>( db.getHosts() );
         } catch ( Exception e ) {
-            logger.log( Level.SEVERE,
-                    "getHosts exception: " + e.getMessage() );
+            logger.severe( "getHosts: " + e.getMessage() );
             return new LinkedHashSet<HostReader>();
         }
 
@@ -141,8 +136,7 @@ public class NfvSystem implements NfvReader {
         try {
             result = db.getNFFG( nffgName );
         } catch ( Exception e ) {
-            logger.log( Level.SEVERE,
-                    "getNffg exception: " + e.getMessage() );
+            logger.severe( "getNffg: " + e.getMessage() );
             return null;
         }
 
@@ -156,8 +150,7 @@ public class NfvSystem implements NfvReader {
         try {
             result = new LinkedHashSet<NffgReader>( db.getNFFGs( date ) );
         } catch ( Exception e ) {
-            logger.log( Level.SEVERE,
-                    "getNffgs exception: " + e.getMessage() );
+            logger.severe( "getNffgs: " + e.getMessage() );
             return new LinkedHashSet<NffgReader>();
         }
 
@@ -188,6 +181,7 @@ public class NfvSystem implements NfvReader {
         } catch ( NullPointerException
                   | AlreadyLoadedException
                   | UnknownNameException e ) {
+            logger.severe( "addNffg: " + e.getMessage() );
             throw new ServiceException( e.getMessage() );
         }
     }
@@ -240,8 +234,7 @@ public class NfvSystem implements NfvReader {
         try {
             result = new LinkedHashSet<VNFTypeReader>( db.getVNFCatalog() );
         } catch ( Exception e ) {
-            logger.log( Level.SEVERE,
-                    "getVNFCatalog exception: " + e.getMessage() );
+            logger.severe( "getVNFCatalog: " + e.getMessage() );
             return new LinkedHashSet<VNFTypeReader>();
         }
 
@@ -254,8 +247,7 @@ public class NfvSystem implements NfvReader {
         try {
             result = db.getVNF( vnfName );
         } catch ( Exception e ) {
-            logger.log( Level.SEVERE,
-                    "getVNF exception: " + e.getMessage() );
+            logger.severe( "getVNF: " + e.getMessage() );
             return null;
         }
 
@@ -276,8 +268,7 @@ public class NfvSystem implements NfvReader {
         try {
             result = new LinkedHashSet<NodeReader>( db.getNodes( null ) );
         } catch ( Exception e ) {
-            logger.log( Level.SEVERE,
-                    "getNodes exception: " + e.getMessage() );
+            logger.severe( "getNodes: " + e.getMessage() );
             return new LinkedHashSet<NodeReader>();
         }
 
@@ -290,8 +281,7 @@ public class NfvSystem implements NfvReader {
         try {
             result = db.getNode( nodeName );
         } catch ( Exception e ) {
-            logger.log( Level.SEVERE,
-                    "getNode exception: " + e.getMessage() );
+            logger.severe( "getNode: " + e.getMessage() );
             return null;
         }
 
@@ -309,7 +299,7 @@ public class NfvSystem implements NfvReader {
      */
     public void addNode(
             String nodeName,
-            String hostingHost,
+            String hostingHost,         /* may be null if no suggested host */
             String functionalType,
             String associatedNFFG )
             throws ServiceException {
@@ -358,6 +348,7 @@ public class NfvSystem implements NfvReader {
             deployer.deployNode( node );
 
         } catch ( NullPointerException
+                  | AlreadyLoadedException
                   | IllegalArgumentException e ) {
             throw new ServiceException();
         } catch ( ServiceException e ) {
@@ -447,8 +438,7 @@ public class NfvSystem implements NfvReader {
             result = new LinkedHashSet<LinkReader>(
                                 db.getLinks( nffgName, null ) );
         } catch ( Exception e ) {
-            logger.log( Level.SEVERE,
-                    "getLinkes exception: " + e.getMessage() );
+            logger.severe( "getLinkes: " + e.getMessage() );
             return new LinkedHashSet<LinkReader>();
         }
 
@@ -461,8 +451,7 @@ public class NfvSystem implements NfvReader {
         try {
             result = db.getLink( nffgName, linkName );
         } catch ( Exception e ) {
-            logger.log( Level.SEVERE,
-                    "getLink exception: " + e.getMessage() );
+            logger.severe( "getLink: " + e.getMessage() );
             return null;
         }
 
@@ -513,9 +502,9 @@ public class NfvSystem implements NfvReader {
             NfvSystemDeployer deployer = new NfvSystemDeployer();
             deployer.deployLink( link );
 
-        } catch ( NullPointerException e ) {
-            logger.log( Level.SEVERE,
-                    "addLink exception: " + e.getMessage() );
+        } catch ( NullPointerException
+                  | AlreadyLoadedException e ) {
+            logger.severe( "addLink: " + e.getMessage() );
             throw new ServiceException();
         }
 

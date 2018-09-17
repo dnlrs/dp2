@@ -47,14 +47,12 @@ public class RealConnection extends RealNamedEntity implements ConnectionPerform
 
     @Override
     public int getLatency() {
-
         return this.latency.intValue();
     }
 
 
     @Override
     public float getThroughput() {
-
         return (float) Double.longBitsToDouble( this.throughput.longValue() );
     }
 }
