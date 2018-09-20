@@ -31,6 +31,8 @@ public class NfvSystem implements NfvReader {
     private final static Logger        logger = Logger.getLogger( System.class.getName() );
     private final static NfvSystemDBMS db     = NfvSystemDBMS.getInstance();
 
+    private final static Object lock = new Object();
+
 
     static {
         try {
@@ -96,7 +98,9 @@ public class NfvSystem implements NfvReader {
 
         HostReader result = null;
         try {
-            result = db.getHost( hostName );
+            synchronized ( lock ) {
+                result = db.getHost( hostName );
+            }
         } catch ( NullPointerException e ) {
             return null;
         } catch ( Exception e ) {
@@ -113,7 +117,9 @@ public class NfvSystem implements NfvReader {
 
         Set<HostReader> result = null;
         try {
-            result = new LinkedHashSet<HostReader>( db.getHosts() );
+            synchronized ( lock ) {
+                result = new LinkedHashSet<HostReader>( db.getHosts() );
+            }
         } catch ( Exception e ) {
             logger.severe( "getHosts: " + e.getMessage() );
             return new LinkedHashSet<HostReader>();
@@ -135,7 +141,9 @@ public class NfvSystem implements NfvReader {
 
         NffgReader result = null;
         try {
-            result = db.getNFFG( nffgName );
+            synchronized ( lock ) {
+                result = db.getNFFG( nffgName );
+            }
         } catch ( Exception e ) {
             logger.severe( "getNffg: " + e.getMessage() );
             return null;
@@ -149,7 +157,9 @@ public class NfvSystem implements NfvReader {
 
         Set<NffgReader> result = null;
         try {
-            result = new LinkedHashSet<NffgReader>( db.getNFFGs( date ) );
+            synchronized ( lock ) {
+                result = new LinkedHashSet<NffgReader>( db.getNFFGs( date ) );
+            }
         } catch ( Exception e ) {
             logger.severe( "getNffgs: " + e.getMessage() );
             return new LinkedHashSet<NffgReader>();
@@ -174,10 +184,12 @@ public class NfvSystem implements NfvReader {
                                 new HashSet<RealNode>() );
 
         try {
-            db.addNffg( nffg );
+            synchronized ( lock ) {
+                db.addNffg( nffg );
 
-            NfvSystemDeployer deployer = new NfvSystemDeployer();
-            deployer.deployNFFG( nffg.getName() );
+                NfvSystemDeployer deployer = new NfvSystemDeployer();
+                deployer.deployNFFG( nffg.getName() );
+            }
 
         } catch ( NullPointerException
                   | AlreadyLoadedException
@@ -200,24 +212,25 @@ public class NfvSystem implements NfvReader {
         if ( nffg == null )
             return; // nffg already deleted or doesn't exist
 
+        synchronized ( lock ) {
+            NfvSystemDeployer deployer = new NfvSystemDeployer();
+            deployer.unDeployNffg( nffg );
 
-        NfvSystemDeployer deployer = new NfvSystemDeployer();
-        deployer.unDeployNffg( nffg );
 
-
-        for ( NodeReader node : nffg.getNodes() ) {
-            for ( LinkReader link : node.getLinks() ) {
-                deleteLink( nffgName, link.getName() );
-            }
-        }
-
-        try {
             for ( NodeReader node : nffg.getNodes() ) {
-                deleteNode( node.getName() );
+                for ( LinkReader link : node.getLinks() ) {
+                    deleteLink( nffgName, link.getName() );
+                }
             }
-        } catch ( ServiceException e ) {} // should never happen
 
-        db.removeNffg( nffgName );
+            try {
+                for ( NodeReader node : nffg.getNodes() ) {
+                    deleteNode( node.getName() );
+                }
+            } catch ( ServiceException e ) {} // should never happen
+
+            db.removeNffg( nffgName );
+        }
     }
 
 
@@ -267,7 +280,9 @@ public class NfvSystem implements NfvReader {
 
         Set<NodeReader> result = null;
         try {
-            result = new LinkedHashSet<NodeReader>( db.getNodes( null ) );
+            synchronized ( lock ) {
+                result = new LinkedHashSet<NodeReader>( db.getNodes( null ) );
+            }
         } catch ( Exception e ) {
             logger.severe( "getNodes: " + e.getMessage() );
             return new LinkedHashSet<NodeReader>();
@@ -280,7 +295,9 @@ public class NfvSystem implements NfvReader {
 
         NodeReader result = null;
         try {
-            result = db.getNode( nodeName );
+            synchronized ( lock ) {
+                result = db.getNode( nodeName );
+            }
         } catch ( Exception e ) {
             logger.severe( "getNode: " + e.getMessage() );
             return null;
@@ -319,42 +336,44 @@ public class NfvSystem implements NfvReader {
         int requiredMemory  = vnf.getRequiredMemory();
         int requiredStorage = vnf.getRequiredStorage();
 
-        
-        RealHost host = null;
-        if ( hostingHost != null ) {
 
-            host = db.getHost( hostingHost );
-            if ( host == null ) {
-                host = findAvailableHost( requiredMemory, requiredStorage, avoidHosts );
-            } else
-                if ( !(host.isAvailable( requiredMemory, requiredStorage )) ) {
+        synchronized ( lock ) {
+            RealHost host = null;
+            if ( hostingHost != null ) {
+
+                host = db.getHost( hostingHost );
+                if ( host == null ) {
                     host = findAvailableHost( requiredMemory, requiredStorage, avoidHosts );
-                }
+                } else
+                    if ( !(host.isAvailable( requiredMemory, requiredStorage )) ) {
+                        host = findAvailableHost( requiredMemory, requiredStorage, avoidHosts );
+                    }
 
 
-        } else {
-            host = findAvailableHost( requiredMemory, requiredStorage, avoidHosts );
-        }
+            } else {
+                host = findAvailableHost( requiredMemory, requiredStorage, avoidHosts );
+            }
 
-        if ( host == null )
-            throw new ServiceException();
+            if ( host == null )
+                throw new ServiceException();
 
-        RealNode node =
-                new RealNode( nodeName, host, nffg, vnf, new HashSet<RealLink>() );
+            RealNode node =
+                    new RealNode( nodeName, host, nffg, vnf, new HashSet<RealLink>() );
 
-        try {
-            db.addNode( node );
-            nffg.addNode( node );
-            host.addNode( node );
+            try {
+                db.addNode( node );
+                nffg.addNode( node );
+                host.addNode( node );
 
-            NfvSystemDeployer deployer = new NfvSystemDeployer();
-            deployer.deployNode( node );
+                NfvSystemDeployer deployer = new NfvSystemDeployer();
+                deployer.deployNode( node );
 
-        } catch ( NullPointerException
-                  | AlreadyLoadedException
-                  | IllegalArgumentException e ) {
-            throw new ServiceException();
-        } catch ( ServiceException e ) {
+            } catch ( NullPointerException
+                    | AlreadyLoadedException
+                    | IllegalArgumentException e ) {
+                throw new ServiceException();
+            } catch ( ServiceException e ) {
+            }
         }
     }
 
@@ -387,21 +406,23 @@ public class NfvSystem implements NfvReader {
         }
 
         NfvSystemDeployer deployer = new NfvSystemDeployer();
-        deployer.unDeployNode( node );
+        synchronized ( lock ) {
+            deployer.unDeployNode( node );
 
-        RealHost host = db.getHost( node.getHost().getName() );
+            RealHost host = db.getHost( node.getHost().getName() );
 
-        if ( host != null ) {
-            host.removeNode( node.getName() );
+            if ( host != null ) {
+                host.removeNode( node.getName() );
+            }
+
+            RealNffg nffg = db.getNFFG( node.getNffg().getName() );
+
+            if ( nffg != null ) {
+                nffg.removeNode( node.getName() );
+            }
+
+            db.removeNode( node.getName() );
         }
-
-        RealNffg nffg = db.getNFFG( node.getNffg().getName() );
-
-        if ( nffg != null ) {
-            nffg.removeNode( node.getName() );
-        }
-
-        db.removeNode( node.getName() );
     }
 
 
@@ -420,9 +441,10 @@ public class NfvSystem implements NfvReader {
 
         for ( RealHost host : db.getHosts() ) {
         	if ( avoidHosts != null )
-	        	if ( avoidHosts.contains(host.getName() ))
-	        		continue;
-        	
+	        	if ( avoidHosts.contains(host.getName() )) {
+                    continue;
+                }
+
             if ( host.isAvailable( requiredMemory, requiredStorage ) )
                 return host;
         }
@@ -443,8 +465,10 @@ public class NfvSystem implements NfvReader {
 
         Set<LinkReader> result = null;
         try {
-            result = new LinkedHashSet<LinkReader>(
+            synchronized ( lock ) {
+                result = new LinkedHashSet<LinkReader>(
                                 db.getLinks( nffgName, null ) );
+            }
         } catch ( Exception e ) {
             logger.severe( "getLinkes: " + e.getMessage() );
             return new LinkedHashSet<LinkReader>();
@@ -457,7 +481,9 @@ public class NfvSystem implements NfvReader {
 
         LinkReader result = null;
         try {
-            result = db.getLink( nffgName, linkName );
+            synchronized ( lock ) {
+                result = db.getLink( nffgName, linkName );
+            }
         } catch ( Exception e ) {
             logger.severe( "getLink: " + e.getMessage() );
             return null;
@@ -504,11 +530,13 @@ public class NfvSystem implements NfvReader {
                                     linkName, srcNode, dstNode,
                                     latency, throughput );
 
-            db.addLink( nffg.getName(), link );
-            srcNode.addLink( link );
+            synchronized ( lock ) {
+                db.addLink( nffg.getName(), link );
+                srcNode.addLink( link );
 
-            NfvSystemDeployer deployer = new NfvSystemDeployer();
-            deployer.deployLink( link );
+                NfvSystemDeployer deployer = new NfvSystemDeployer();
+                deployer.deployLink( link );
+            }
 
         } catch ( NullPointerException
                   | AlreadyLoadedException e ) {
@@ -533,12 +561,15 @@ public class NfvSystem implements NfvReader {
             return; // link already removed or not present
 
         NfvSystemDeployer deployer = new NfvSystemDeployer();
-        deployer.unDeployLink( link );
 
-        RealNode srcNode = db.getNode( link.getSourceNode().getName() );
+        synchronized ( lock ) {
+            deployer.unDeployLink( link );
 
-        srcNode.removeLink( link );
-        db.removeLink( nffgName, linkName );
+            RealNode srcNode = db.getNode( link.getSourceNode().getName() );
+
+            srcNode.removeLink( link );
+            db.removeLink( nffgName, linkName );
+        }
     }
 
 }
