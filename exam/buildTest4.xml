@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="NFV-Test4" default="run-tests" basedir=".">
+	<description>
+			Script for NFV Test 4
+	</description>
+	
+	<!-- The test class specific for this assignment -->
+	<property name="test4.test.class" value="it.polito.dp2.NFV.lab3.test4.tests.NFVTests4" />
+
+	<!-- The name to be given to the final zip -->
+	<property name="sol.zip" value="solution.zip" />
+	
+	<!-- this script is an extension of the build.xml script of Assignment 3 -->
+	<import file="build.xml"/>
+
+	<!-- The NfvClient3Factory for client3 of Test4 -->
+	<property name="Test4.NfvClient3Factory" value="it.polito.dp2.NFV.sol3.test4.client3.NfvClient3Factory" />
+
+	<target name="run-tests" depends="setseed, redeployNeo4JSimpleXML, redeployWS" description="runs the tests specific for this Final Test">
+		<echo>Running specific functional tests</echo>
+		<echo>Seed: ${seed}</echo>
+
+		<!-- Give time to service for initialization -->
+  		<sleep seconds="10"/>
+		
+  		<!-- Start real functional tests -->		
+		<antcall target="runFuncTest.real.test4">
+			<param name="exit.code1" value="126" />
+			<param name="exit.code2" value="125" />
+		</antcall>
+	</target>
+
+	<target name="run-tests-original" depends="setseed,redeployNeo4JSimpleXML,redeployWS" description="runs original tests of Assignment 3">
+		<echo>Running original functional tests </echo>
+		<echo>Seed: ${seed}</echo>
+
+		<!-- Give time to service for initialization -->
+  		<sleep seconds="10"/>
+  		
+  		<!-- Start real functional tests -->
+		<antcall target="runFuncTest.real.original">
+			<param name="exit.code1" value="126" />
+			<param name="exit.code2" value="125" />
+		</antcall>
+	</target>
+
+
+	<target name="run-tests-full" depends="run-tests-original" description="runs all the tests (the original ones and the ones specific for this Final Test)">
+		<echo>Running specific functional tests</echo>
+		<echo>Seed: ${seed}</echo>
+
+		<antcall target="reloadWS"/>
+		
+		<!-- Give time to service for initialization -->
+  		<sleep seconds="10"/>
+		
+  		<!-- Start real functional tests -->		
+		<antcall target="runFuncTest.real.test4">
+			<param name="exit.code1" value="126" />
+			<param name="exit.code2" value="125" />
+		</antcall>
+	</target>
+	
+	<target name="runFuncTest.real.original" depends="build-client">
+		<echo>Running original Junit tests (the same of Assignment 3) ...</echo>		
+		<junit printsummary="yes" dir="." fork="yes" haltonfailure="no" showoutput="no" filtertrace="true" timeout="120000">
+			<jvmarg value="-Djava.awt.headless=true" />
+			<sysproperty key="it.polito.dp2.NFV.Random.seed" value="${seed}"/>
+			<sysproperty key="it.polito.dp2.NFV.Random.testcase" value="${test.case}"/>
+			<sysproperty key="it.polito.dp2.NFV.lab3.URL" value="${URL}" />
+			<sysproperty key="it.polito.dp2.NFV.NfvClientFactory" value="${NfvClientFactory}"/>
+			<formatter type="plain" usefile="false"/>
+			<test haltonfailure="no" failureproperty="test_failed" name="${test.class}" outfile="originalTestReport">
+				<formatter type="xml"/>
+			</test>
+
+			<classpath>
+				<path refid="test.classpath" />
+			</classpath>
+		</junit>
+		<fail if="test_failed" status="${exit.code2}" message="*** Original Junit tests: Some Tests FAILED ***"/>
+		<echo>*** Original Junit tests: All Tests PASSED  ***</echo>	
+	</target>
+	
+	<!-- Target runFuncTest.real	-->
+	<target name="runFuncTest.real.test4" depends="build-client">
+		<echo>Running Junit tests specific for this Final Test...</echo>		
+		<junit printsummary="yes" dir="." fork="yes" haltonfailure="no" showoutput="no" filtertrace="true" timeout="120000">
+			<jvmarg value="-Djava.awt.headless=true" />
+			<sysproperty key="it.polito.dp2.NFV.Random.seed" value="${seed}"/>
+			<sysproperty key="it.polito.dp2.NFV.Random.testcase" value="${test.case}"/>
+			<sysproperty key="it.polito.dp2.NFV.lab3.URL" value="${URL}" />
+			<sysproperty key="it.polito.dp2.NFV.NfvClientFactory" value="${NfvClientFactory}"/>
+			<sysproperty key="it.polito.dp2.NFV.NfvClient3Factory" value="${Test4.NfvClient3Factory}"/>
+			<formatter type="plain" usefile="false"/>
+			<test haltonfailure="no" failureproperty="test_failed" name="${test4.test.class}" outfile="specificlTestReport">
+				<formatter type="xml"/>
+			</test>
+			<classpath>
+				<path refid="test.classpath" />
+				<pathelement location="${lab3.location}/lib/lab3_4.jar" />
+			</classpath>
+		</junit>
+		<fail if="test_failed" status="${exit.code2}" message="*** Junit tests specific for this Final Test: Some Tests FAILED ***"/>
+		<echo>*** Junit tests specific for this Final Test: All Tests PASSED  ***</echo>						
+	</target>
+
+	<!--target for building the final zip containing the solution -->
+	<target name="make-final-zip">
+		<zip destfile="${sol.zip}" 
+			basedir="${lab3.location}" 
+			includes="${sol.build.file} answer.txt custom/* xsd/* doc/* WebContent/**/* src/it/polito/dp2/NFV/sol3/service/**/*.java src/it/polito/dp2/NFV/sol3/client1/**/*.java src/it/polito/dp2/NFV/sol3/client2/**/*.java src/it/polito/dp2/NFV/sol3/test4/client3/**/*.java"
+		/>
+	</target>
+</project>

@@ -1,0 +1,24 @@
+
+[1]
+
+My service validates data at multiple levels when receiving it from the client:
+ - at a first level the http request body must be well formed with respect to XML syntax 
+ - at a second level it checks that all references of an object exists in the system, 
+   e.g. for nodes checks if the NFFG on which it should be allocated exists, if its 
+   hosting host (if any suggested) exists and if the VNF Type associated exists
+ - at a third level, when creating instances of my implementations of the objects in the
+   NFV system a series of other complex checks are performed, e.g. system constraints 
+   (available memory, storage, VNF slots for hosts, connection available for the link...)
+   
+   
+   
+[2]
+
+I managed to avoid to exchange too much data between client and service in 2 ways:
+ - a paginating system allowing the client to request only a specific page from a 
+   collection of objects also allowing it to decide how many items per page to view
+ - a level-of-detail system which allows the client to request data about objects at
+   different level of details, e.g. when requesting data about the node, the client
+   may decide to receive also data about all links starting from that node, or when
+   requesting data about an NFFG the client may decide to receive or not also data
+   about nodes allocated on that NFFG 

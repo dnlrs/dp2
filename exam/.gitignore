@@ -1,0 +1,34 @@
+
+# ignore eclipse project files
+.classpath
+.externalToolBuilders/
+.project
+.settings/
+
+# ignore prof's library
+lib/
+lib-src/
+
+# ignore builds
+bin/
+build/
+gen-src/
+
+# debug files
+log*.txt
+debug*.txt
+
+target/
+
+# ignore artifacts
+src/it/polito/dp2/NFV/sol3/client1/model
+src/it/polito/dp2/NFV/sol3/client2/model
+src/it/polito/dp2/NFV/sol3/service/model
+src/it/polito/dp2/NFV/sol3/test4/client3/model
+
+
+# ignore generated war
+war/NfvDeployer.war
+
+# ignore zip
+solution.zip 

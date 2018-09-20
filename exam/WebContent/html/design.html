@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+    <title>design</title>
+</head>
+<body id="preview" style="margin-left:1%">
+
+<h2><a id="Service_design_1"></a>Service design</h2>
+<p>
+The service is composed by 4 parts, or modules, that interact with each other.</p>
+
+<ul>
+	<li>The <b>neo4jAPI</b> module offers all the functionalities (methods) needed in order to 
+	access the Neo4J Service (deploy/undeploy/update nodes, properties, labels..).</li>
+
+	<li>The <b>nfvSystem</b> module is the central part of the service and it keeps 
+	an updated database with all the objects currently existing in the NFV system 
+	and also their correspondence with the nodes and relations deployed on the Neo4J 
+	Web Service. This package implements all the interfaces needed for accessing 
+	data in the NFV System, and it provides the necessary middle layer to add Nodes, 
+	NFFGs or Links and also to remove them from the system.
+	<br>
+	When any deployable object is added to the system it is also deployed into the 
+	Neo4J service and when it’s removed it is also undeployed from the Neo4J Service.
+    <br>
+    The database 
+	<ul>
+	    <li> keeps <b>objects ordered according to their name</b>, this is useful when 
+		paginating, we have O(log(n)) time when adding a new object but ordering is not 
+		necessary when returning a specific page.</li>
+		<li> and manages <b>concurrent access to data</b> avoiding any situation that 
+		may result in an inconsistent state of the data in the nfvSystem.</li>
+	</ul>
+	The main access point of this module is the <em>NfvSystem</em> and the parts that compose this module are:
+	<ul>
+	   <li>the <em>NfvSystemDBMS</em> which implements the database functionalities as 
+	   described above</li>
+	   
+	   <li>the <em>NfvSystemLoader</em> which loads NFV data from the random generator 
+	   at startup</li>
+	   
+	   <li>the <em>NfvSystemDeplyer</em> which interacts with the neo4jAPI module in order
+	   to deploy/undeploy complex objects such as whole NFFGs, Nodes, and Hosts</li>
+	   
+	   <li>the <em>NfvSystemIDService</em> which is a database used to keep track of the
+	   correspondence between objects in the NFV System and objects deployed in the Neo4J 
+	   Service (it manages concurrent access but no sorting is required in this case)</li>
+	   
+	   <li>the implementation of the NFV interfaces</li>
+	</ul></li>
+	
+	<li> The <b>reachability</b> package provides access to the advanced functions of 
+	the Neo4J Service (by using the neo4jAPI functionalities) and implements the 
+	necessary interfaces for getting the extended information about nodes.
+	<br>
+	Since the operations provided are quite expensive in terms of computational time this
+	module use <b>asynchronous requests</b> to retrieve data from the Neo4J Service.</li>
+	
+	<li>The <b>resources</b> package manages requests from clients and forwards them
+	to the nfvSystem. Since the number of objects in the system may be very large, 
+	it provides, when deemed useful, and according to the REST API documentation, 
+	options to paginate responses or to return less-detailed objects.</li>
+</ul>
+<p>
+The Service implements a <b>HATEOAS</b> functionality, yet it is not fully complete 
+and the client may have to add optional queries to URIs by himself.</p>
+<p>
+Since the number of objects in the system may be very large and in order to allow 
+clients to choose how much data to exchange with the service, the system provides, 
+when deemed useful options 
+<ul>
+	<li> to return data about Nodes, Hosts and NFFGs with <b>different levels of details</b>, 
+	for example when requesting data about an NFFG the client may choose to receive or not 
+	also detailed info about nodes belonging to that NFFG.</li>
+	<li> to request <b>pagination</b> of responses: the client may choose which 
+	page and how many items per page to receive.</li>
+</ul>
+<h2><a id="Deploying_an_NFFG_17"></a>Deploying an NFFG</h2>
+<p>
+The service offers the possibility to deploy a complete NFFG, with nodes and links, 
+in a single request. 
+When an NFFG is deployed all its Nodes and Links are added to the system, 
+corresponding and necessary GraphNodes and Relationships are created into the 
+Neo4J Service and if adding the complete NFFG fails, then loaded data is 
+removed from the system and undeployed from the Neo4J Service.</p>
+<p>
+An NFFG may also be deployed without nodes or link, or only with nodes.</p>
+<p>
+When adding nodes (within an NFFG or independently) the client may suggest the 
+hosting host. If this one has not enough memory or storage available or no VNFs 
+slots then another one may be chosen randomly.</p>
+
+<h2><a id="The_position_of_Links_25"></a>The position of Links</h2>
+<p>
+Since the Links have meaning only within an HFFG, there is not a global collection 
+resource with Links, but they may be accessed from NFFGs or from Nodes always relatively 
+to the “current” NFFG or Node.</p>
+
+</body>
+</html>
