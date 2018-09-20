@@ -27,3 +27,6 @@ src/it/polito/dp2/NFV/sol3/service/model
 
 # ignore generated war
 war/NfvDeployer.war
+
+# ignore zip
+lab3.zip 
